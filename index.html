@@ -7,6 +7,11 @@
 <body>
   <h2>Evidence Tracking DApp</h2>
 
+  <p><b>MetaMask Status:</b> <span id="metamask-status">Not connected</span></p>
+  <button onclick="connectMetaMask()">Connect MetaMask</button>
+
+  <hr>
+
   <label>Evidence ID:</label><br>
   <input type="number" id="id" /><br><br>
 
@@ -23,7 +28,7 @@
   <button onclick="updateEvidence()">Update Evidence</button>
   <button onclick="getEvidence()">Get Evidence</button>
 
-  <p id="message"></p>
+  <p id="message" style="color: red;"></p>
 
   <div id="evidenceDetails" style="margin-top:20px; border:1px solid #ccc; padding:10px; display:none;">
     <h3>Evidence Details</h3>
@@ -36,10 +41,10 @@
   </div>
 
 <script>
-  // Replace with your contract address
+  // Replace with your deployed contract address
   const contractAddress = "YOUR_CONTRACT_ADDRESS_HERE";
 
-  // Contract ABI (simplified, only needed functions/events)
+  // Contract ABI (simplified)
   const contractABI = [
     "function addEvidence(uint256 _id, string memory _description, string memory _status, string memory _notes) public",
     "function updateEvidence(uint256 _id, string memory _status, string memory _notes) public",
@@ -48,32 +53,60 @@
 
   let provider, signer, contract;
 
-  async function init() {
+  async function connectMetaMask() {
     if (!window.ethereum) {
       alert("MetaMask is required to use this DApp");
       return;
     }
-    provider = new ethers.providers.Web3Provider(window.ethereum);
-    await provider.send("eth_requestAccounts", []);
-    signer = provider.getSigner();
-    contract = new ethers.Contract(contractAddress, contractABI, signer);
+    try {
+      await window.ethereum.request({ method: 'eth_requestAccounts' });
+      document.getElementById('metamask-status').innerText = "Connected";
+      provider = new ethers.providers.Web3Provider(window.ethereum);
+      signer = provider.getSigner();
+      contract = new ethers.Contract(contractAddress, contractABI, signer);
+      setMessage('');
+    } catch (error) {
+      document.getElementById('metamask-status').innerText = "Connection failed";
+      setMessage(error.message);
+    }
+  }
+
+  async function checkConnection() {
+    if (window.ethereum) {
+      const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+      if (accounts.length > 0) {
+        document.getElementById('metamask-status').innerText = "Connected";
+        provider = new ethers.providers.Web3Provider(window.ethereum);
+        signer = provider.getSigner();
+        contract = new ethers.Contract(contractAddress, contractABI, signer);
+      } else {
+        document.getElementById('metamask-status').innerText = "Not connected";
+      }
+    } else {
+      document.getElementById('metamask-status').innerText = "MetaMask not installed";
+    }
   }
 
   async function addEvidence() {
     setMessage('');
     try {
+      if (!contract) {
+        setMessage('Please connect MetaMask first.');
+        return;
+      }
+
       const id = document.getElementById('id').value;
       const description = document.getElementById('description').value;
       const status = document.getElementById('status').value;
       const notes = document.getElementById('notes').value;
 
       if (!id || !description) {
-        setMessage('ID and Description are required');
+        setMessage('Evidence ID and Description are required.');
         return;
       }
 
       const tx = await contract.addEvidence(id, description, status, notes);
-      setMessage('Adding evidence... please wait for confirmation');
+      setMessage('Adding evidence... please wait for confirmation.');
       await tx.wait();
       setMessage('Evidence added successfully!');
     } catch (error) {
@@ -84,17 +117,22 @@
   async function updateEvidence() {
     setMessage('');
     try {
+      if (!contract) {
+        setMessage('Please connect MetaMask first.');
+        return;
+      }
+
       const id = document.getElementById('id').value;
       const status = document.getElementById('status').value;
       const notes = document.getElementById('notes').value;
 
       if (!id) {
-        setMessage('ID is required');
+        setMessage('Evidence ID is required.');
         return;
       }
 
       const tx = await contract.updateEvidence(id, status, notes);
-      setMessage('Updating evidence... please wait for confirmation');
+      setMessage('Updating evidence... please wait for confirmation.');
       await tx.wait();
       setMessage('Evidence updated successfully!');
     } catch (error) {
@@ -105,11 +143,17 @@
   async function getEvidence() {
     setMessage('');
     try {
-      const id = document.getElementById('id').value;
-      if (!id) {
-        setMessage('ID is required');
+      if (!contract) {
+        setMessage('Please connect MetaMask first.');
         return;
       }
+
+      const id = document.getElementById('id').value;
+      if (!id) {
+        setMessage('Evidence ID is required.');
+        return;
+      }
+
       const ev = await contract.getEvidence(id);
 
       document.getElementById('evId').innerText = ev[0].toString();
@@ -130,7 +174,25 @@
     document.getElementById('message').innerText = msg;
   }
 
-  window.onload = init;
+  if (window.ethereum) {
+    window.ethereum.on('accountsChanged', function(accounts) {
+      if (accounts.length === 0) {
+        document.getElementById('metamask-status').innerText = "Not connected";
+        contract = null;
+        provider = null;
+        signer = null;
+      } else {
+        document.getElementById('metamask-status').innerText = "Connected";
+        provider = new ethers.providers.Web3Provider(window.ethereum);
+        signer = provider.getSigner();
+        contract = new ethers.Contract(contractAddress, contractABI, signer);
+      }
+    });
+  }
+
+  window.onload = () => {
+    checkConnection();
+  };
 </script>
 </body>
 </html>
