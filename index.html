@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Evidence Tracking DApp</title>
+  <script src="https://cdn.ethers.io/lib/ethers-5.6.umd.min.js" type="application/javascript"></script>
+</head>
+<body>
+  <h2>Evidence Tracking DApp</h2>
+
+  <label>Evidence ID:</label><br>
+  <input type="number" id="id" /><br><br>
+
+  <label>Description:</label><br>
+  <input type="text" id="description" /><br><br>
+
+  <label>Status:</label><br>
+  <input type="text" id="status" /><br><br>
+
+  <label>Notes:</label><br>
+  <input type="text" id="notes" /><br><br>
+
+  <button onclick="addEvidence()">Add Evidence</button>
+  <button onclick="updateEvidence()">Update Evidence</button>
+  <button onclick="getEvidence()">Get Evidence</button>
+
+  <p id="message"></p>
+
+  <div id="evidenceDetails" style="margin-top:20px; border:1px solid #ccc; padding:10px; display:none;">
+    <h3>Evidence Details</h3>
+    <p><b>ID:</b> <span id="evId"></span></p>
+    <p><b>Description:</b> <span id="evDescription"></span></p>
+    <p><b>Timestamp:</b> <span id="evTimestamp"></span></p>
+    <p><b>Uploader:</b> <span id="evUploader"></span></p>
+    <p><b>Status:</b> <span id="evStatus"></span></p>
+    <p><b>Notes:</b> <span id="evNotes"></span></p>
+  </div>
+
+<script>
+  // Replace with your contract address
+  const contractAddress = "YOUR_CONTRACT_ADDRESS_HERE";
+
+  // Contract ABI (simplified, only needed functions/events)
+  const contractABI = [
+    "function addEvidence(uint256 _id, string memory _description, string memory _status, string memory _notes) public",
+    "function updateEvidence(uint256 _id, string memory _status, string memory _notes) public",
+    "function getEvidence(uint256 _id) public view returns (uint256, string memory, uint256, address, string memory, string memory)"
+  ];
+
+  let provider, signer, contract;
+
+  async function init() {
+    if (!window.ethereum) {
+      alert("MetaMask is required to use this DApp");
+      return;
+    }
+    provider = new ethers.providers.Web3Provider(window.ethereum);
+    await provider.send("eth_requestAccounts", []);
+    signer = provider.getSigner();
+    contract = new ethers.Contract(contractAddress, contractABI, signer);
+  }
+
+  async function addEvidence() {
+    setMessage('');
+    try {
+      const id = document.getElementById('id').value;
+      const description = document.getElementById('description').value;
+      const status = document.getElementById('status').value;
+      const notes = document.getElementById('notes').value;
+
+      if (!id || !description) {
+        setMessage('ID and Description are required');
+        return;
+      }
+
+      const tx = await contract.addEvidence(id, description, status, notes);
+      setMessage('Adding evidence... please wait for confirmation');
+      await tx.wait();
+      setMessage('Evidence added successfully!');
+    } catch (error) {
+      setMessage('Error: ' + error.message);
+    }
+  }
+
+  async function updateEvidence() {
+    setMessage('');
+    try {
+      const id = document.getElementById('id').value;
+      const status = document.getElementById('status').value;
+      const notes = document.getElementById('notes').value;
+
+      if (!id) {
+        setMessage('ID is required');
+        return;
+      }
+
+      const tx = await contract.updateEvidence(id, status, notes);
+      setMessage('Updating evidence... please wait for confirmation');
+      await tx.wait();
+      setMessage('Evidence updated successfully!');
+    } catch (error) {
+      setMessage('Error: ' + error.message);
+    }
+  }
+
+  async function getEvidence() {
+    setMessage('');
+    try {
+      const id = document.getElementById('id').value;
+      if (!id) {
+        setMessage('ID is required');
+        return;
+      }
+      const ev = await contract.getEvidence(id);
+
+      document.getElementById('evId').innerText = ev[0].toString();
+      document.getElementById('evDescription').innerText = ev[1];
+      document.getElementById('evTimestamp').innerText = new Date(ev[2].toNumber() * 1000).toLocaleString();
+      document.getElementById('evUploader').innerText = ev[3];
+      document.getElementById('evStatus').innerText = ev[4];
+      document.getElementById('evNotes').innerText = ev[5];
+
+      document.getElementById('evidenceDetails').style.display = 'block';
+    } catch (error) {
+      setMessage('Error: ' + error.message);
+      document.getElementById('evidenceDetails').style.display = 'none';
+    }
+  }
+
+  function setMessage(msg) {
+    document.getElementById('message').innerText = msg;
+  }
+
+  window.onload = init;
+</script>
+</body>
+</html>
