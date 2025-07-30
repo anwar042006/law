@@ -1,198 +1,184 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Evidence Tracking DApp</title>
-  <script src="https://cdn.ethers.io/lib/ethers-5.6.umd.min.js" type="application/javascript"></script>
+<meta charset="UTF-8" />
+<title>Evidence Tracking with Username/Password Login</title>
+<script src="https://cdn.jsdelivr.net/npm/web3@1.8.2/dist/web3.min.js"></script>
+<style>
+  body {
+    background: #121212; color: #f0f0f0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 2rem;
+  }
+  h1 { color: #00b894; }
+  .container {
+    background: #1e1e1e; padding: 2rem; border-radius: 12px;
+    box-shadow: 0 0 20px #00b894aa; max-width: 400px; width: 100%;
+    margin-bottom: 2rem;
+  }
+  input[type="text"], input[type="password"] {
+    width: 100%; padding: 0.7rem 1rem; margin-bottom: 1rem;
+    border-radius: 8px; border: none; background: #272727;
+    color: #f0f0f0; font-size: 1rem;
+  }
+  input[type="text"]:focus, input[type="password"]:focus {
+    outline: none; background: #00b894; color: #121212;
+    box-shadow: 0 0 8px #00b894cc;
+  }
+  button {
+    width: 100%; padding: 0.75rem; border-radius: 8px; border:none;
+    background: #00b894; color: #121212; font-weight: 700;
+    font-size: 1.1rem; cursor: pointer; box-shadow: 0 4px 12px #00b894bb;
+  }
+  button:hover {
+    background: #019e76; color: #e0ffe7; box-shadow: 0 6px 18px #019e7677;
+  }
+  #blockchainUI { display: none; }
+  pre {
+    background: #272727; border-radius: 10px; padding: 1rem;
+    white-space: pre-wrap; word-wrap: break-word; margin-top: 1rem;
+    box-shadow: inset 0 0 10px #00b89466; min-height: 5rem;
+  }
+</style>
 </head>
 <body>
-  <h2>Evidence Tracking DApp</h2>
 
-  <p><b>MetaMask Status:</b> <span id="metamask-status">Not connected</span></p>
-  <button onclick="connectMetaMask()">Connect MetaMask</button>
+<h1>Evidence Tracking System</h1>
 
-  <hr>
+<div class="container" id="loginContainer">
+  <h3>Login</h3>
+  <input type="text" id="username" placeholder="Username" />
+  <input type="password" id="password" placeholder="Password" />
+  <button onclick="handleLogin()">Login</button>
+  <p id="loginMessage" style="color:#ff6b6b; font-weight:600; margin-top: 0.5rem;"></p>
+</div>
 
-  <label>Evidence ID:</label><br>
-  <input type="number" id="id" /><br><br>
-
-  <label>Description:</label><br>
-  <input type="text" id="description" /><br><br>
-
-  <label>Status:</label><br>
-  <input type="text" id="status" /><br><br>
-
-  <label>Notes:</label><br>
-  <input type="text" id="notes" /><br><br>
-
-  <button onclick="addEvidence()">Add Evidence</button>
-  <button onclick="updateEvidence()">Update Evidence</button>
-  <button onclick="getEvidence()">Get Evidence</button>
-
-  <p id="message" style="color: red;"></p>
-
-  <div id="evidenceDetails" style="margin-top:20px; border:1px solid #ccc; padding:10px; display:none;">
-    <h3>Evidence Details</h3>
-    <p><b>ID:</b> <span id="evId"></span></p>
-    <p><b>Description:</b> <span id="evDescription"></span></p>
-    <p><b>Timestamp:</b> <span id="evTimestamp"></span></p>
-    <p><b>Uploader:</b> <span id="evUploader"></span></p>
-    <p><b>Status:</b> <span id="evStatus"></span></p>
-    <p><b>Notes:</b> <span id="evNotes"></span></p>
-  </div>
+<div id="blockchainUI" class="container">
+  <h3>Blockchain Evidence Tracking</h3>
+  
+  <input type="text" id="evidenceId" placeholder="Evidence ID" />
+  <input type="text" id="description" placeholder="Description" />
+  <input type="text" id="location" placeholder="Location" />
+  <button onclick="registerEvidence()">Register Evidence</button>
+  
+  <hr style="border-color:#00b89466; margin: 1.5rem 0;" />
+  
+  <input type="text" id="queryEvidenceId" placeholder="Evidence ID" />
+  <button onclick="getEvidence()">Get Evidence Details</button>
+  <pre id="evidenceDetails"></pre>
+</div>
 
 <script>
-  // Replace with your deployed contract address
-  const contractAddress = "YOUR_CONTRACT_ADDRESS_HERE";
+  // ======== Demo: Simple username-password auth ========
+  const validUsers = {
+    "officer1": "password123",
+    "admin": "adminpass"
+  };
 
-  // Contract ABI (simplified)
-  const contractABI = [
-    "function addEvidence(uint256 _id, string memory _description, string memory _status, string memory _notes) public",
-    "function updateEvidence(uint256 _id, string memory _status, string memory _notes) public",
-    "function getEvidence(uint256 _id) public view returns (uint256, string memory, uint256, address, string memory, string memory)"
-  ];
+  function handleLogin() {
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value.trim();
+    const message = document.getElementById('loginMessage');
 
-  let provider, signer, contract;
-
-  async function connectMetaMask() {
-    if (!window.ethereum) {
-      alert("MetaMask is required to use this DApp");
+    if (!username || !password) {
+      message.textContent = 'Please enter username and password.';
       return;
     }
-    try {
-      await window.ethereum.request({ method: 'eth_requestAccounts' });
-      document.getElementById('metamask-status').innerText = "Connected";
-      provider = new ethers.providers.Web3Provider(window.ethereum);
-      signer = provider.getSigner();
-      contract = new ethers.Contract(contractAddress, contractABI, signer);
-      setMessage('');
-    } catch (error) {
-      document.getElementById('metamask-status').innerText = "Connection failed";
-      setMessage(error.message);
+
+    if (validUsers[username] && validUsers[username] === password) {
+      // Login success
+      message.textContent = '';
+      document.getElementById('loginContainer').style.display = 'none';
+      document.getElementById('blockchainUI').style.display = 'block';
+      initBlockchain();
+    } else {
+      message.textContent = 'Invalid username or password.';
     }
   }
 
-  async function checkConnection() {
+  // ======= Blockchain interaction =======
+  let web3;
+  let contract;
+  const contractAddress = 'YOUR_CONTRACT_ADDRESS_HERE';
+  const contractABI = [
+    {
+      "inputs": [
+        {"internalType": "string","name": "evidenceId","type": "string"},
+        {"internalType": "string","name": "description","type": "string"},
+        {"internalType": "string","name": "location","type": "string"}
+      ],
+      "name": "registerEvidence",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {"internalType": "string","name": "evidenceId","type": "string"}
+      ],
+      "name": "getEvidence",
+      "outputs": [
+        {"internalType": "string","name": "","type": "string"},
+        {"internalType": "string","name": "","type": "string"},
+        {"internalType": "uint256","name": "","type": "uint256"},
+        {"internalType": "address","name": "","type": "address"}
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ];
+
+  async function initBlockchain() {
     if (window.ethereum) {
-      const accounts = await window.ethereum.request({ method: 'eth_accounts' });
-      if (accounts.length > 0) {
-        document.getElementById('metamask-status').innerText = "Connected";
-        provider = new ethers.providers.Web3Provider(window.ethereum);
-        signer = provider.getSigner();
-        contract = new ethers.Contract(contractAddress, contractABI, signer);
-      } else {
-        document.getElementById('metamask-status').innerText = "Not connected";
+      web3 = new Web3(window.ethereum);
+      try {
+        await window.ethereum.request({ method: 'eth_requestAccounts' });
+        contract = new web3.eth.Contract(contractABI, contractAddress);
+      } catch (err) {
+        alert('Please connect your MetaMask wallet.');
       }
     } else {
-      document.getElementById('metamask-status').innerText = "MetaMask not installed";
+      alert('Please install MetaMask to use this DApp.');
     }
   }
 
-  async function addEvidence() {
-    setMessage('');
-    try {
-      if (!contract) {
-        setMessage('Please connect MetaMask first.');
-        return;
-      }
+  async function registerEvidence() {
+    const evidenceId = document.getElementById('evidenceId').value.trim();
+    const description = document.getElementById('description').value.trim();
+    const location = document.getElementById('location').value.trim();
 
-      const id = document.getElementById('id').value;
-      const description = document.getElementById('description').value;
-      const status = document.getElementById('status').value;
-      const notes = document.getElementById('notes').value;
-
-      if (!id || !description) {
-        setMessage('Evidence ID and Description are required.');
-        return;
-      }
-
-      const tx = await contract.addEvidence(id, description, status, notes);
-      setMessage('Adding evidence... please wait for confirmation.');
-      await tx.wait();
-      setMessage('Evidence added successfully!');
-    } catch (error) {
-      setMessage('Error: ' + error.message);
+    if (!evidenceId || !description || !location) {
+      alert('Fill all fields to register evidence.');
+      return;
     }
-  }
+    const accounts = await web3.eth.getAccounts();
 
-  async function updateEvidence() {
-    setMessage('');
-    try {
-      if (!contract) {
-        setMessage('Please connect MetaMask first.');
-        return;
-      }
-
-      const id = document.getElementById('id').value;
-      const status = document.getElementById('status').value;
-      const notes = document.getElementById('notes').value;
-
-      if (!id) {
-        setMessage('Evidence ID is required.');
-        return;
-      }
-
-      const tx = await contract.updateEvidence(id, status, notes);
-      setMessage('Updating evidence... please wait for confirmation.');
-      await tx.wait();
-      setMessage('Evidence updated successfully!');
-    } catch (error) {
-      setMessage('Error: ' + error.message);
-    }
+    contract.methods.registerEvidence(evidenceId, description, location)
+      .send({ from: accounts[0] })
+      .on('receipt', () => alert('Evidence registered!'))
+      .on('error', e => alert('Error: ' + e.message));
   }
 
   async function getEvidence() {
-    setMessage('');
+    const evidenceId = document.getElementById('queryEvidenceId').value.trim();
+    if (!evidenceId) {
+      alert('Enter an Evidence ID.');
+      return;
+    }
     try {
-      if (!contract) {
-        setMessage('Please connect MetaMask first.');
-        return;
-      }
-
-      const id = document.getElementById('id').value;
-      if (!id) {
-        setMessage('Evidence ID is required.');
-        return;
-      }
-
-      const ev = await contract.getEvidence(id);
-
-      document.getElementById('evId').innerText = ev[0].toString();
-      document.getElementById('evDescription').innerText = ev[1];
-      document.getElementById('evTimestamp').innerText = new Date(ev[2].toNumber() * 1000).toLocaleString();
-      document.getElementById('evUploader').innerText = ev[3];
-      document.getElementById('evStatus').innerText = ev[4];
-      document.getElementById('evNotes').innerText = ev[5];
-
-      document.getElementById('evidenceDetails').style.display = 'block';
-    } catch (error) {
-      setMessage('Error: ' + error.message);
-      document.getElementById('evidenceDetails').style.display = 'none';
+      const result = await contract.methods.getEvidence(evidenceId).call();
+      const [description, location, timestamp, collectedBy] = result;
+      const date = new Date(timestamp * 1000);
+      document.getElementById('evidenceDetails').textContent =
+        `Description: ${description}\nLocation: ${location}\nCollected At: ${date.toLocaleString()}\nCollected By: ${collectedBy}`;
+    } catch (err) {
+      alert('Error fetching evidence or not found.');
+      document.getElementById('evidenceDetails').textContent = '';
     }
   }
-
-  function setMessage(msg) {
-    document.getElementById('message').innerText = msg;
-  }
-
-  if (window.ethereum) {
-    window.ethereum.on('accountsChanged', function(accounts) {
-      if (accounts.length === 0) {
-        document.getElementById('metamask-status').innerText = "Not connected";
-        contract = null;
-        provider = null;
-        signer = null;
-      } else {
-        document.getElementById('metamask-status').innerText = "Connected";
-        provider = new ethers.providers.Web3Provider(window.ethereum);
-        signer = provider.getSigner();
-        contract = new ethers.Contract(contractAddress, contractABI, signer);
-      }
-    });
-  }
-
-  window.onload = () => {
-    checkConnection();
-  };
 </script>
+
 </body>
 </html>
+
