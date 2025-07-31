@@ -5,188 +5,122 @@
   <title>Evidence Tracking System</title>
   <style>
     body {
-      background: #121212;
-      color: #f0f0f0;
+      background: #121212; color: #f0f0f0;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+      display: flex; flex-direction: column; align-items: center;
       padding: 2rem;
     }
-    h1 {
-      color: #00b894;
-      text-shadow: 0 0 10px #00b89488;
-    }
+    h1 { color: #00b894; margin-bottom: 2rem; }
     .container {
-      background: #1e1e1e;
-      padding: 2rem;
-      border-radius: 12px;
-      box-shadow: 0 0 20px #00b894aa;
-      max-width: 500px;
-      width: 100%;
+      background: #1e1e1e; padding: 2rem; border-radius: 12px;
+      box-shadow: 0 0 20px #00b894aa; max-width: 500px; width: 100%;
       margin-bottom: 2rem;
     }
-    input, textarea {
-      width: 100%;
-      padding: 0.7rem 1rem;
-      margin-bottom: 1rem;
-      border-radius: 8px;
-      border: none;
-      background: #272727;
-      color: #f0f0f0;
-      font-size: 1rem;
+    input {
+      width: 100%; padding: 0.7rem 1rem; margin-bottom: 1rem;
+      border-radius: 8px; border: none; background: #272727;
+      color: #f0f0f0; font-size: 1rem;
     }
-    input:focus, textarea:focus {
-      outline: none;
-      background: #00b894;
-      color: #121212;
-      box-shadow: 0 0 8px #00b894cc;
+    input:focus {
+      outline: none; background: #00b89433; box-shadow: 0 0 6px #00b894cc;
     }
     button {
-      width: 100%;
-      padding: 0.75rem;
-      border-radius: 8px;
-      border: none;
-      background: #00b894;
-      color: #121212;
-      font-weight: 700;
-      font-size: 1.1rem;
-      cursor: pointer;
-      box-shadow: 0 4px 12px #00b894bb;
+      width: 100%; padding: 0.75rem; border-radius: 8px; border:none;
+      background: #00b894; color: #121212; font-weight: bold;
+      font-size: 1.1rem; cursor: pointer; box-shadow: 0 4px 12px #00b894bb;
     }
     button:hover {
-      background: #019e76;
-      color: #e0ffe7;
-      box-shadow: 0 6px 18px #019e7677;
-    }
-    #blockchainUI {
-      display: none;
+      background: #019e76; color: #e0ffe7;
     }
     pre {
-      background: #272727;
-      border-radius: 10px;
-      padding: 1rem;
-      white-space: pre-wrap;
-      word-wrap: break-word;
-      margin-top: 1rem;
+      background: #272727; border-radius: 10px; padding: 1rem;
+      white-space: pre-wrap; word-wrap: break-word; margin-top: 1rem;
       box-shadow: inset 0 0 10px #00b89466;
-      min-height: 5rem;
     }
-    .readonly {
-      background: #2c2c2c;
-      color: #aaa;
-    }
+    #blockchainUI { display: none; }
   </style>
 </head>
 <body>
 
-  <h1>Evidence Tracking System</h1>
+<h1>Evidence Tracking System</h1>
 
-  <div class="container" id="loginContainer">
-    <h3>Login</h3>
-    <input type="text" id="username" placeholder="Username" />
-    <input type="password" id="password" placeholder="Password" />
-    <button onclick="handleLogin()">Login</button>
-    <p id="loginMessage"></p>
-  </div>
+<div class="container" id="loginContainer">
+  <h3>Login</h3>
+  <input type="text" id="username" placeholder="Username" />
+  <input type="password" id="password" placeholder="Password" />
+  <button onclick="handleLogin()">Login</button>
+  <p id="loginMessage"></p>
+</div>
 
-  <div id="blockchainUI" class="container">
-    <h3>Submit Case Evidence</h3>
+<div class="container" id="blockchainUI">
+  <h3>Blockchain Evidence Tracking</h3>
+  <input type="text" id="uniqueId" placeholder="Unique Case ID" />
+  <input type="text" id="caseName" placeholder="Case Name" />
+  <input type="text" id="accusedName" placeholder="Accused Name" />
+  <input type="text" id="evidenceId" placeholder="Evidence ID" />
+  <input type="text" id="location" placeholder="Location" />
+  <input type="datetime-local" id="registerTime" placeholder="Register Time" />
+  <button onclick="submitEvidence()">Submit Evidence</button>
+  <pre id="blockchainOutput"></pre>
+</div>
 
-    <!-- Auto Case ID & Time -->
-    <input type="text" id="caseId" class="readonly" readonly />
-    <input type="text" id="registerTime" class="readonly" readonly />
+<script>
+  const validUsers = {
+    admin: "admin123",
+    officer: "securepass"
+  };
 
-    <!-- User Inputs -->
-    <input type="text" id="submitterName" placeholder="Submitter Name" />
-    <input type="text" id="caseTitle" placeholder="Case Title" />
-    <input type="text" id="officerName" placeholder="Officer Name" />
-    <input type="text" id="accusedName" placeholder="Accused Name" />
-    <input type="text" id="location" placeholder="Case Location" />
-    <textarea id="description" placeholder="Case Description"></textarea>
+  function handleLogin() {
+    const user = document.getElementById("username").value.trim();
+    const pass = document.getElementById("password").value;
+    const messageEl = document.getElementById("loginMessage");
 
-    <!-- Optional Evidence ID -->
-    <input type="text" id="evidenceId" placeholder="Evidence ID (leave empty to auto-generate)" />
+    if (validUsers[user] && validUsers[user] === pass) {
+      messageEl.style.color = "#00b894";
+      messageEl.textContent = "Login successful!";
+      document.getElementById("loginContainer").style.display = "none";
+      document.getElementById("blockchainUI").style.display = "block";
+    } else {
+      messageEl.style.color = "#ff6b6b";
+      messageEl.textContent = "Invalid username or password.";
+    }
+  }
 
-    <button onclick="submitEvidence()">Submit Evidence</button>
-    <pre id="blockchainOutput"></pre>
-  </div>
-
-  <script>
-    const validUsers = {
-      admin: "admin123",
-      officer: "securepass"
+  function submitEvidence() {
+    const outputEl = document.getElementById("blockchainOutput");
+    const data = {
+      uniqueId: document.getElementById("uniqueId").value.trim(),
+      caseName: document.getElementById("caseName").value.trim(),
+      accusedName: document.getElementById("accusedName").value.trim(),
+      evidenceId: document.getElementById("evidenceId").value.trim(),
+      location: document.getElementById("location").value.trim(),
+      registerTime: document.getElementById("registerTime").value
     };
 
-    function handleLogin() {
-      const user = document.getElementById("username").value.trim();
-      const pass = document.getElementById("password").value;
-      const messageEl = document.getElementById("loginMessage");
-
-      if (validUsers[user] && validUsers[user] === pass) {
-        messageEl.style.color = "#00b894";
-        messageEl.textContent = "Login successful!";
-        document.getElementById("loginContainer").style.display = "none";
-        document.getElementById("blockchainUI").style.display = "block";
-
-        // Auto-fill IDs and Time
-        document.getElementById("caseId").value = generateCaseId();
-        document.getElementById("registerTime").value = new Date().toLocaleString();
-      } else {
-        messageEl.style.color = "#ff6b6b";
-        messageEl.textContent = "Invalid username or password.";
-      }
+    if (!data.uniqueId || !data.caseName || !data.evidenceId) {
+      outputEl.textContent = "Please fill in all required fields.";
+      return;
     }
 
-    function generateCaseId() {
-      return "CASE-" + Math.floor(100000 + Math.random() * 900000);
-    }
+    outputEl.textContent = `Submitting to blockchain...\n`;
 
-    function generateTrackingId() {
-      return "EV-" + Math.floor(100000 + Math.random() * 900000);
-    }
-
-    function submitEvidence() {
-      const caseId = document.getElementById("caseId").value;
-      const registerTime = document.getElementById("registerTime").value;
-      const submitter = document.getElementById("submitterName").value.trim();
-      const title = document.getElementById("caseTitle").value.trim();
-      const officer = document.getElementById("officerName").value.trim();
-      const accused = document.getElementById("accusedName").value.trim();
-      const location = document.getElementById("location").value.trim();
-      const description = document.getElementById("description").value.trim();
-      let evidenceId = document.getElementById("evidenceId").value.trim();
-      const outputEl = document.getElementById("blockchainOutput");
-
-      if (!submitter || !title || !officer || !accused || !location || !description) {
-        outputEl.textContent = "❌ Please complete all required fields.";
-        return;
-      }
-
-      if (!evidenceId) {
-        evidenceId = generateTrackingId();
-      }
-
-      outputEl.textContent =
-        `🔐 Submitting evidence to blockchain...\n\n` +
-        `📁 Case ID: ${caseId}\n` +
-        `📅 Registered At: ${registerTime}\n` +
-        `👤 Submitter: ${submitter}\n` +
-        `📌 Case Title: ${title}\n` +
-        `👮 Officer: ${officer}\n` +
-        `👤 Accused: ${accused}\n` +
-        `📍 Location: ${location}\n` +
-        `📝 Description: ${description}\n` +
-        `🔍 Tracking ID: ${evidenceId}\n\nSending...`;
-
-      setTimeout(() => {
-        outputEl.textContent += `\n✅ Evidence submitted successfully at ${new Date().toLocaleTimeString()}`;
-      }, 2000);
-    }
-  </script>
+    setTimeout(() => {
+      outputEl.textContent += `
+✅ Submitted Successfully!
+🆔 Case ID: ${data.uniqueId}
+📁 Case Name: ${data.caseName}
+👤 Accused: ${data.accusedName}
+📄 Evidence ID: ${data.evidenceId}
+📍 Location: ${data.location}
+🕒 Registered: ${new Date(data.registerTime).toLocaleString()}
+      `;
+    }, 1200);
+  }
+</script>
 
 </body>
 </html>
+
 
 
 
