@@ -62,6 +62,7 @@
   <input type="text" id="accusedName" placeholder="Accused Name" />
   <input type="text" id="evidenceId" placeholder="Evidence ID" />
   <input type="text" id="location" placeholder="Location" />
+  <input type="text" id="officerName" placeholder="Registering Officer Name" />
   <input type="datetime-local" id="registerTime" />
   <button onclick="submitEvidence()">Submit Evidence</button>
 </div>
@@ -75,23 +76,19 @@
 </div>
 
 <script>
-  // Allowed login credentials
   const validUsers = {
     officer1: "password123",
     admin: "admin123"
   };
 
-  // Local temporary data store
   const database = [];
 
-  // Force login on page load
   window.onload = function () {
     document.getElementById("loginContainer").style.display = "block";
     document.getElementById("submitContainer").style.display = "none";
     document.getElementById("trackContainer").style.display = "none";
   };
 
-  // Login function
   function login() {
     const user = document.getElementById("userId").value.trim();
     const pass = document.getElementById("password").value;
@@ -109,7 +106,6 @@
     }
   }
 
-  // Evidence Submission
   function submitEvidence() {
     const caseData = {
       uniqueId: document.getElementById("uniqueId").value.trim(),
@@ -117,6 +113,7 @@
       accusedName: document.getElementById("accusedName").value.trim(),
       evidenceId: document.getElementById("evidenceId").value.trim(),
       location: document.getElementById("location").value.trim(),
+      officerName: document.getElementById("officerName").value.trim(),
       registerTime: document.getElementById("registerTime").value
     };
 
@@ -130,12 +127,10 @@
     clearInputs();
   }
 
-  // Clear input fields after submission
   function clearInputs() {
     document.querySelectorAll("#submitContainer input").forEach(input => input.value = "");
   }
 
-  // Evidence Search
   function searchEvidence() {
     const query = document.getElementById("searchInput").value.trim().toLowerCase();
     const result = database.find(
@@ -152,6 +147,7 @@
 👤 Accused: ${result.accusedName}
 📄 Evidence ID: ${result.evidenceId}
 📍 Location: ${result.location}
+👮 Officer: ${result.officerName}
 🕒 Time: ${new Date(result.registerTime).toLocaleString()}`;
     } else {
       resultBox.textContent = "❌ No record found for that input.";
@@ -161,6 +157,7 @@
 
 </body>
 </html>
+
 
 
 
