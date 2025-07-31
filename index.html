@@ -45,7 +45,17 @@
 
 <h1>Evidence Tracking System</h1>
 
-<div class="container">
+<!-- Login Form -->
+<div class="container" id="loginContainer">
+  <h3>Login</h3>
+  <input type="text" id="userId" placeholder="User ID" />
+  <input type="password" id="password" placeholder="Password" />
+  <button onclick="login()">Login</button>
+  <p id="loginMsg" style="color: #ff6b6b;"></p>
+</div>
+
+<!-- Evidence Submission -->
+<div class="container" id="submitContainer" style="display:none;">
   <h3>Submit Case Evidence</h3>
   <input type="text" id="uniqueId" placeholder="Unique Case ID" />
   <input type="text" id="caseName" placeholder="Case Name" />
@@ -56,7 +66,8 @@
   <button onclick="submitEvidence()">Submit Evidence</button>
 </div>
 
-<div class="container">
+<!-- Search Evidence -->
+<div class="container" id="trackContainer" style="display:none;">
   <h3>Track Evidence</h3>
   <input type="text" id="searchInput" placeholder="Enter Evidence ID or Accused Name" />
   <button onclick="searchEvidence()">Search</button>
@@ -64,7 +75,28 @@
 </div>
 
 <script>
+  const validUsers = {
+    officer1: "password123",
+    admin: "admin123"
+  };
+
   const database = [];
+
+  function login() {
+    const user = document.getElementById("userId").value.trim();
+    const pass = document.getElementById("password").value;
+    const msg = document.getElementById("loginMsg");
+
+    if (validUsers[user] && validUsers[user] === pass) {
+      msg.style.color = "#00b894";
+      msg.textContent = "Login successful!";
+      document.getElementById("loginContainer").style.display = "none";
+      document.getElementById("submitContainer").style.display = "block";
+      document.getElementById("trackContainer").style.display = "block";
+    } else {
+      msg.textContent = "Invalid User ID or Password.";
+    }
+  }
 
   function submitEvidence() {
     const caseData = {
@@ -87,7 +119,7 @@
   }
 
   function clearInputs() {
-    document.querySelectorAll("input").forEach(input => input.value = "");
+    document.querySelectorAll("#submitContainer input").forEach(input => input.value = "");
   }
 
   function searchEvidence() {
@@ -115,6 +147,7 @@
 
 </body>
 </html>
+
 
 
 
