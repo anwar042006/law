@@ -56,7 +56,7 @@
 
 <!-- Evidence Submission -->
 <div class="container" id="submitContainer" style="display:none;">
-  <h3>Submit Case Evidence</h3>
+  <h3>Submit / Edit Case Evidence</h3>
   <input type="text" id="uniqueId" placeholder="Unique Case ID" />
   <input type="text" id="caseName" placeholder="Case Name" />
   <input type="text" id="accusedName" placeholder="Accused Name" />
@@ -77,10 +77,11 @@
 
 <script>
   const validUsers = {
-    officer1: "password123",
-    admin: "admin123"
+    police1: { password: "police123", role: "police" },
+    court1: { password: "court123", role: "court" }
   };
 
+  let currentUser = null;
   const database = [];
 
   window.onload = function () {
@@ -94,12 +95,15 @@
     const pass = document.getElementById("password").value;
     const msg = document.getElementById("loginMsg");
 
-    if (validUsers[user] && validUsers[user] === pass) {
+    if (validUsers[user] && validUsers[user].password === pass) {
+      currentUser = validUsers[user];
       msg.style.color = "#00b894";
       msg.textContent = "Login successful!";
       document.getElementById("loginContainer").style.display = "none";
-      document.getElementById("submitContainer").style.display = "block";
       document.getElementById("trackContainer").style.display = "block";
+      if (currentUser.role === "police") {
+        document.getElementById("submitContainer").style.display = "block";
+      }
     } else {
       msg.style.color = "#ff6b6b";
       msg.textContent = "❌ Invalid User ID or Password.";
@@ -122,9 +126,19 @@
       return;
     }
 
-    database.push(caseData);
-    alert("✅ Evidence submitted successfully!");
+    // Check if editing existing
+    const existingIndex = database.findIndex(e => e.evidenceId === caseData.evidenceId);
+    if (existingIndex >= 0) {
+      database[existingIndex] = caseData;
+      alert("✏️ Evidence updated successfully!");
+    } else {
+      database.push(caseData);
+      alert("✅ Evidence submitted successfully!");
+    }
+
     clearInputs();
+    document.querySelector("#submitContainer button").textContent = "Submit Evidence";
+    document.querySelector("#submitContainer button").onclick = submitEvidence;
   }
 
   function clearInputs() {
@@ -140,23 +154,64 @@
     );
 
     const resultBox = document.getElementById("searchResult");
+
     if (result) {
-      resultBox.textContent =
+      resultBox.innerHTML =
 `🆔 Unique ID: ${result.uniqueId}
 📁 Case Name: ${result.caseName}
 👤 Accused: ${result.accusedName}
 📄 Evidence ID: ${result.evidenceId}
 📍 Location: ${result.location}
 👮 Registering Officer: ${result.officerName}
-🕒 Time: ${new Date(result.registerTime).toLocaleString()}`;
+🕒 Time: ${new Date(result.registerTime).toLocaleString()}
+${currentUser.role === "police" || currentUser.role === "court" ? '<br/><button onclick="editEvidence(\'' + result.evidenceId + '\')">✏️ Edit/Adjust</button>' : ''}`;
     } else {
       resultBox.textContent = "❌ No record found for that input.";
     }
+  }
+
+  function editEvidence(evidenceId) {
+    const record = database.find(e => e.evidenceId === evidenceId);
+    if (!record) return alert("Record not found.");
+
+    document.getElementById("uniqueId").value = record.uniqueId;
+    document.getElementById("caseName").value = record.caseName;
+    document.getElementById("accusedName").value = record.accusedName;
+    document.getElementById("evidenceId").value = record.evidenceId;
+    document.getElementById("location").value = record.location;
+    document.getElementById("officerName").value = record.officerName;
+    document.getElementById("registerTime").value = record.registerTime;
+
+    if (currentUser.role === "court") {
+      document.getElementById("submitContainer").style.display = "block";
+    }
+
+    const btn = document.querySelector("#submitContainer button");
+    btn.textContent = "Update Evidence";
+    btn.onclick = function () {
+      record.uniqueId = document.getElementById("uniqueId").value.trim();
+      record.caseName = document.getElementById("caseName").value.trim();
+      record.accusedName = document.getElementById("accusedName").value.trim();
+      record.evidenceId = document.getElementById("evidenceId").value.trim();
+      record.location = document.getElementById("location").value.trim();
+      record.officerName = document.getElementById("officerName").value.trim();
+      record.registerTime = document.getElementById("registerTime").value;
+
+      alert("✅ Evidence updated successfully!");
+      clearInputs();
+      if (currentUser.role === "court") {
+        document.getElementById("submitContainer").style.display = "none";
+      }
+
+      btn.textContent = "Submit Evidence";
+      btn.onclick = submitEvidence;
+    };
   }
 </script>
 
 </body>
 </html>
+
 
 
 
