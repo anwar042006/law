@@ -5,39 +5,67 @@
   <title>Evidence Tracking System</title>
   <style>
     body {
-      background: #121212; color: #f0f0f0;
+      background: #121212;
+      color: #f0f0f0;
       font-family: 'Segoe UI', Tahoma, sans-serif;
-      display: flex; flex-direction: column; align-items: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
       padding: 2rem;
     }
-    h1 { color: #00b894; margin-bottom: 2rem; }
-    .container {
-      background: #1e1e1e; padding: 2rem; border-radius: 12px;
-      box-shadow: 0 0 20px #00b894aa; max-width: 600px; width: 100%;
+
+    h1 {
+      color: #00b894;
       margin-bottom: 2rem;
     }
+
+    .container {
+      background: #1e1e1e;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 0 20px #00b894aa;
+      max-width: 600px;
+      width: 100%;
+      margin-bottom: 2rem;
+    }
+
     input, button {
-      width: 100%; padding: 0.75rem; margin-bottom: 1rem;
-      border-radius: 8px; border: none;
+      width: 100%;
+      padding: 0.75rem;
+      margin-bottom: 1rem;
+      border-radius: 8px;
+      border: none;
       font-size: 1rem;
     }
+
     input {
-      background: #272727; color: #f0f0f0;
+      background: #272727;
+      color: #f0f0f0;
     }
+
     input:focus {
-      outline: none; background: #00b89433;
+      outline: none;
+      background: #00b89433;
       box-shadow: 0 0 6px #00b894cc;
     }
+
     button {
-      background: #00b894; color: #121212;
-      font-weight: bold; cursor: pointer;
+      background: #00b894;
+      color: #121212;
+      font-weight: bold;
+      cursor: pointer;
     }
+
     button:hover {
       background: #019e76;
     }
+
     pre {
-      background: #272727; padding: 1rem; border-radius: 10px;
-      white-space: pre-wrap; box-shadow: inset 0 0 10px #00b89466;
+      background: #272727;
+      padding: 1rem;
+      border-radius: 10px;
+      white-space: pre-wrap;
+      box-shadow: inset 0 0 10px #00b89466;
     }
   </style>
 </head>
@@ -82,6 +110,13 @@
 
   const database = [];
 
+  // Force login interface on every page load
+  window.onload = () => {
+    document.getElementById("loginContainer").style.display = "block";
+    document.getElementById("submitContainer").style.display = "none";
+    document.getElementById("trackContainer").style.display = "none";
+  };
+
   function login() {
     const user = document.getElementById("userId").value.trim();
     const pass = document.getElementById("password").value;
@@ -94,6 +129,7 @@
       document.getElementById("submitContainer").style.display = "block";
       document.getElementById("trackContainer").style.display = "block";
     } else {
+      msg.style.color = "#ff6b6b";
       msg.textContent = "Invalid User ID or Password.";
     }
   }
@@ -125,20 +161,20 @@
   function searchEvidence() {
     const query = document.getElementById("searchInput").value.trim().toLowerCase();
     const result = database.find(
-      entry => entry.evidenceId.toLowerCase() === query ||
-               entry.accusedName.toLowerCase() === query
+      entry =>
+        entry.evidenceId.toLowerCase() === query ||
+        entry.accusedName.toLowerCase() === query
     );
 
     const resultBox = document.getElementById("searchResult");
     if (result) {
-      resultBox.textContent = `
-🆔 Unique ID: ${result.uniqueId}
+      resultBox.textContent =
+`🆔 Unique ID: ${result.uniqueId}
 📁 Case Name: ${result.caseName}
 👤 Accused: ${result.accusedName}
 📄 Evidence ID: ${result.evidenceId}
 📍 Location: ${result.location}
-🕒 Time: ${new Date(result.registerTime).toLocaleString()}
-      `;
+🕒 Time: ${new Date(result.registerTime).toLocaleString()}`;
     } else {
       resultBox.textContent = "❌ No record found for that input.";
     }
@@ -147,6 +183,7 @@
 
 </body>
 </html>
+
 
 
 
