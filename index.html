@@ -6,89 +6,68 @@
   <style>
     body {
       background: #121212; color: #f0f0f0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-family: 'Segoe UI', Tahoma, sans-serif;
       display: flex; flex-direction: column; align-items: center;
       padding: 2rem;
     }
     h1 { color: #00b894; margin-bottom: 2rem; }
     .container {
       background: #1e1e1e; padding: 2rem; border-radius: 12px;
-      box-shadow: 0 0 20px #00b894aa; max-width: 500px; width: 100%;
+      box-shadow: 0 0 20px #00b894aa; max-width: 600px; width: 100%;
       margin-bottom: 2rem;
     }
+    input, button {
+      width: 100%; padding: 0.75rem; margin-bottom: 1rem;
+      border-radius: 8px; border: none;
+      font-size: 1rem;
+    }
     input {
-      width: 100%; padding: 0.7rem 1rem; margin-bottom: 1rem;
-      border-radius: 8px; border: none; background: #272727;
-      color: #f0f0f0; font-size: 1rem;
+      background: #272727; color: #f0f0f0;
     }
     input:focus {
-      outline: none; background: #00b89433; box-shadow: 0 0 6px #00b894cc;
+      outline: none; background: #00b89433;
+      box-shadow: 0 0 6px #00b894cc;
     }
     button {
-      width: 100%; padding: 0.75rem; border-radius: 8px; border:none;
-      background: #00b894; color: #121212; font-weight: bold;
-      font-size: 1.1rem; cursor: pointer; box-shadow: 0 4px 12px #00b894bb;
+      background: #00b894; color: #121212;
+      font-weight: bold; cursor: pointer;
     }
     button:hover {
-      background: #019e76; color: #e0ffe7;
+      background: #019e76;
     }
     pre {
-      background: #272727; border-radius: 10px; padding: 1rem;
-      white-space: pre-wrap; word-wrap: break-word; margin-top: 1rem;
-      box-shadow: inset 0 0 10px #00b89466;
+      background: #272727; padding: 1rem; border-radius: 10px;
+      white-space: pre-wrap; box-shadow: inset 0 0 10px #00b89466;
     }
-    #blockchainUI { display: none; }
   </style>
 </head>
 <body>
 
 <h1>Evidence Tracking System</h1>
 
-<div class="container" id="loginContainer">
-  <h3>Login</h3>
-  <input type="text" id="username" placeholder="Username" />
-  <input type="password" id="password" placeholder="Password" />
-  <button onclick="handleLogin()">Login</button>
-  <p id="loginMessage"></p>
-</div>
-
-<div class="container" id="blockchainUI">
-  <h3>Blockchain Evidence Tracking</h3>
+<div class="container">
+  <h3>Submit Case Evidence</h3>
   <input type="text" id="uniqueId" placeholder="Unique Case ID" />
   <input type="text" id="caseName" placeholder="Case Name" />
   <input type="text" id="accusedName" placeholder="Accused Name" />
   <input type="text" id="evidenceId" placeholder="Evidence ID" />
   <input type="text" id="location" placeholder="Location" />
-  <input type="datetime-local" id="registerTime" placeholder="Register Time" />
+  <input type="datetime-local" id="registerTime" />
   <button onclick="submitEvidence()">Submit Evidence</button>
-  <pre id="blockchainOutput"></pre>
+</div>
+
+<div class="container">
+  <h3>Track Evidence</h3>
+  <input type="text" id="searchInput" placeholder="Enter Evidence ID or Accused Name" />
+  <button onclick="searchEvidence()">Search</button>
+  <pre id="searchResult">No search performed yet.</pre>
 </div>
 
 <script>
-  const validUsers = {
-    admin: "admin123",
-    officer: "securepass"
-  };
-
-  function handleLogin() {
-    const user = document.getElementById("username").value.trim();
-    const pass = document.getElementById("password").value;
-    const messageEl = document.getElementById("loginMessage");
-
-    if (validUsers[user] && validUsers[user] === pass) {
-      messageEl.style.color = "#00b894";
-      messageEl.textContent = "Login successful!";
-      document.getElementById("loginContainer").style.display = "none";
-      document.getElementById("blockchainUI").style.display = "block";
-    } else {
-      messageEl.style.color = "#ff6b6b";
-      messageEl.textContent = "Invalid username or password.";
-    }
-  }
+  const database = [];
 
   function submitEvidence() {
-    const outputEl = document.getElementById("blockchainOutput");
-    const data = {
+    const caseData = {
       uniqueId: document.getElementById("uniqueId").value.trim(),
       caseName: document.getElementById("caseName").value.trim(),
       accusedName: document.getElementById("accusedName").value.trim(),
@@ -97,29 +76,46 @@
       registerTime: document.getElementById("registerTime").value
     };
 
-    if (!data.uniqueId || !data.caseName || !data.evidenceId) {
-      outputEl.textContent = "Please fill in all required fields.";
+    if (!caseData.uniqueId || !caseData.caseName || !caseData.evidenceId) {
+      alert("Please fill in at least Case ID, Case Name, and Evidence ID.");
       return;
     }
 
-    outputEl.textContent = `Submitting to blockchain...\n`;
+    database.push(caseData);
+    alert("✅ Evidence submitted successfully!");
+    clearInputs();
+  }
 
-    setTimeout(() => {
-      outputEl.textContent += `
-✅ Submitted Successfully!
-🆔 Case ID: ${data.uniqueId}
-📁 Case Name: ${data.caseName}
-👤 Accused: ${data.accusedName}
-📄 Evidence ID: ${data.evidenceId}
-📍 Location: ${data.location}
-🕒 Registered: ${new Date(data.registerTime).toLocaleString()}
+  function clearInputs() {
+    document.querySelectorAll("input").forEach(input => input.value = "");
+  }
+
+  function searchEvidence() {
+    const query = document.getElementById("searchInput").value.trim().toLowerCase();
+    const result = database.find(
+      entry => entry.evidenceId.toLowerCase() === query ||
+               entry.accusedName.toLowerCase() === query
+    );
+
+    const resultBox = document.getElementById("searchResult");
+    if (result) {
+      resultBox.textContent = `
+🆔 Unique ID: ${result.uniqueId}
+📁 Case Name: ${result.caseName}
+👤 Accused: ${result.accusedName}
+📄 Evidence ID: ${result.evidenceId}
+📍 Location: ${result.location}
+🕒 Time: ${new Date(result.registerTime).toLocaleString()}
       `;
-    }, 1200);
+    } else {
+      resultBox.textContent = "❌ No record found for that input.";
+    }
   }
 </script>
 
 </body>
 </html>
+
 
 
 
