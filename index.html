@@ -75,8 +75,11 @@
     let account;
     let contract;
 
-    const contractAddress = "YOUR_CONTRACT_ADDRESS_HERE"; // Replace this
-    const abi = [ // minimal ABI for interaction
+    // 🔁 REPLACE this with your real deployed contract address
+    const contractAddress = "0xYourDeployedContractAddressHere";
+
+    // ✅ ABI copied from EvidenceTracking.sol
+    const abi = [
       {
         "inputs": [],
         "stateMutability": "nonpayable",
@@ -147,26 +150,33 @@
         contract = new web3.eth.Contract(abi, contractAddress);
         document.getElementById("account").innerText = "Connected: " + account;
       } else {
-        alert("Please install MetaMask!");
+        alert("Please install MetaMask");
       }
     }
 
     async function submitEvidence() {
       const args = [
-        caseId.value, caseName.value, accusedName.value,
-        evidenceId.value, location.value, officerName.value, registerTime.value
+        caseId.value,
+        caseName.value,
+        accusedName.value,
+        evidenceId.value,
+        location.value,
+        officerName.value,
+        registerTime.value
       ];
       await contract.methods.submitEvidence(...args).send({ from: account });
       alert("Evidence submitted.");
     }
 
     async function addJudgment() {
-      await contract.methods.addJudgment(judgeEvidenceId.value, judgment.value).send({ from: account });
+      await contract.methods.addJudgment(judgeEvidenceId.value, judgment.value)
+        .send({ from: account });
       alert("Judgment added.");
     }
 
     async function closeCase() {
-      await contract.methods.closeCase(closeEvidenceId.value, closingDate.value).send({ from: account });
+      await contract.methods.closeCase(closeEvidenceId.value, closingDate.value)
+        .send({ from: account });
       alert("Case closed.");
     }
 
@@ -175,7 +185,7 @@
       evidenceResult.innerText = `
 Case ID: ${e[0]}
 Case Name: ${e[1]}
-Accused Name: ${e[2]}
+Accused: ${e[2]}
 Evidence ID: ${e[3]}
 Location: ${e[4]}
 Officer: ${e[5]}
