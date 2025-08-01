@@ -16,15 +16,15 @@
       box-shadow: 0 0 20px #00b894aa; max-width: 600px; width: 100%;
       margin-bottom: 2rem;
     }
-    input, select, button {
+    input, select, button, textarea {
       width: 100%; padding: 0.75rem; margin-bottom: 1rem;
       border-radius: 8px; border: none;
       font-size: 1rem;
     }
-    input, select {
+    input, select, textarea {
       background: #272727; color: #f0f0f0;
     }
-    input:focus, select:focus {
+    input:focus, select:focus, textarea:focus {
       outline: none; background: #00b89433;
       box-shadow: 0 0 6px #00b894cc;
     }
@@ -39,6 +39,7 @@
       background: #272727; padding: 1rem; border-radius: 10px;
       white-space: pre-wrap; box-shadow: inset 0 0 10px #00b89466;
     }
+    .error { color: #ff6b6b; }
   </style>
 </head>
 <body>
@@ -51,7 +52,7 @@
   <input type="text" id="userId" placeholder="User ID" />
   <input type="password" id="password" placeholder="Password" />
   <button onclick="login()">Login</button>
-  <p id="loginMsg" style="color: #ff6b6b;"></p>
+  <p id="loginMsg" class="error"></p>
 </div>
 
 <!-- Evidence Submission (Police) -->
@@ -81,19 +82,19 @@
   <select id="caseSelect">
     <option value="">-- Select Evidence ID --</option>
   </select>
-  <textarea id="judgmentText" rows="4" placeholder="Enter judgment here..." style="width:100%; padding:0.75rem; background:#272727; color:#f0f0f0; border-radius:8px;"></textarea>
+  <textarea id="judgmentText" rows="4" placeholder="Enter judgment here..."></textarea>
   <button onclick="submitJudgment()">Submit Judgment</button>
 </div>
 
 <script>
   const validUsers = {
-    officer1: "password123",
-    court: "court123"
+    "officer1": "password123",
+    "court": "court123"
   };
 
   const userRoles = {
-    officer1: "police",
-    court: "court"
+    "officer1": "police",
+    "court": "court"
   };
 
   const database = [];
@@ -102,13 +103,13 @@
     const user = document.getElementById("userId").value.trim();
     const pass = document.getElementById("password").value;
     const msg = document.getElementById("loginMsg");
-    const role = userRoles[user];
 
     if (validUsers[user] && validUsers[user] === pass) {
       msg.style.color = "#00b894";
       msg.textContent = "✅ Login successful!";
       document.getElementById("loginContainer").style.display = "none";
 
+      const role = userRoles[user];
       if (role === "police") {
         document.getElementById("submitContainer").style.display = "block";
         document.getElementById("trackContainer").style.display = "block";
@@ -118,6 +119,7 @@
         refreshCaseSelect();
       }
     } else {
+      msg.style.color = "#ff6b6b";
       msg.textContent = "❌ Invalid User ID or Password.";
     }
   }
@@ -206,6 +208,7 @@
 
 </body>
 </html>
+
 
 
 
