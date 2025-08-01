@@ -31,11 +31,20 @@
       border: none;
       font-size: 1rem;
     }
-    input, select, textarea {
+    input, textarea {
       background: #272727;
       color: #f0f0f0;
     }
-    input:focus, select:focus, textarea:focus {
+    select {
+      background: #1b1b1b;
+      color: #00b894;
+      border: 1px solid #00b894;
+    }
+    select option {
+      background: #1b1b1b;
+      color: #f0f0f0;
+    }
+    input:focus, textarea:focus, select:focus {
       outline: none;
       background: #00b89433;
       box-shadow: 0 0 6px #00b894cc;
@@ -62,7 +71,7 @@
 
 <h1>Evidence Tracking System</h1>
 
-<!-- Login Form -->
+<!-- Login -->
 <div class="container" id="loginContainer">
   <h3>Login</h3>
   <input type="text" id="userId" placeholder="User ID" />
@@ -71,7 +80,7 @@
   <p id="loginMsg" style="color: #ff6b6b;"></p>
 </div>
 
-<!-- Evidence Submission (Police) -->
+<!-- Police Submission -->
 <div class="container" id="submitContainer" style="display:none;">
   <h3>Submit Case Evidence (Police)</h3>
   <input type="text" id="uniqueId" placeholder="Unique Case ID" />
@@ -84,7 +93,7 @@
   <button onclick="submitEvidence()">Submit Evidence</button>
 </div>
 
-<!-- Search Evidence -->
+<!-- Track -->
 <div class="container" id="trackContainer" style="display:none;">
   <h3>Track Evidence</h3>
   <input type="text" id="searchInput" placeholder="Enter Evidence ID or Accused Name" />
@@ -92,14 +101,15 @@
   <pre id="searchResult">No search performed yet.</pre>
 </div>
 
-<!-- Judgment Panel (Court) -->
+<!-- Court Judgment -->
 <div class="container" id="courtContainer" style="display:none;">
   <h3>Court Judgment Panel</h3>
+  <input type="text" id="filterCourtInput" placeholder="Search Evidence ID or Accused Name" oninput="refreshCaseSelect()" />
   <select id="caseSelect">
     <option value="">-- Select Evidence ID --</option>
   </select>
   <textarea id="judgmentText" rows="4" placeholder="Enter judgment here..."></textarea>
-  <input type="date" id="closingDate" placeholder="Case Closing Date" />
+  <input type="date" id="closingDate" />
   <button onclick="submitJudgment()">Submit Judgment</button>
 </div>
 
@@ -108,7 +118,6 @@
     "officer1": "password123",
     "court1": "court123"
   };
-
   const userRoles = {
     "officer1": "police",
     "court1": "court"
@@ -147,8 +156,7 @@
   }
 
   function submitEvidence() {
-    const registerTimeInput = document.getElementById("registerTime").value;
-
+    const registerTime = document.getElementById("registerTime").value;
     const caseData = {
       uniqueId: document.getElementById("uniqueId").value.trim(),
       caseName: document.getElementById("caseName").value.trim(),
@@ -156,48 +164,40 @@
       evidenceId: document.getElementById("evidenceId").value.trim(),
       location: document.getElementById("location").value.trim(),
       officerName: document.getElementById("officerName").value.trim(),
-      registerTime: registerTimeInput,
+      registerTime,
       judgment: "",
       closingDate: ""
     };
 
-    if (!caseData.uniqueId || !caseData.caseName || !caseData.evidenceId || !registerTimeInput) {
-      alert("❗ Please fill in all required fields, including registration time.");
+    if (!caseData.uniqueId || !caseData.caseName || !caseData.evidenceId || !registerTime) {
+      alert("Please fill in all required fields.");
       return;
     }
 
     const db = loadDatabase();
-    const duplicate = db.find(entry => entry.evidenceId === caseData.evidenceId);
-    if (duplicate) {
-      alert("⚠️ Evidence ID already exists. Use a unique one.");
+    if (db.find(e => e.evidenceId === caseData.evidenceId)) {
+      alert("⚠ Evidence ID already exists.");
       return;
     }
 
     db.push(caseData);
     saveDatabase(db);
-    alert("✅ Evidence submitted successfully!");
-    clearInputs();
+    alert("✅ Evidence submitted.");
+    document.querySelectorAll("#submitContainer input").forEach(el => el.value = "");
     refreshCaseSelect();
-  }
-
-  function clearInputs() {
-    document.querySelectorAll("#submitContainer input").forEach(input => input.value = "");
-    document.getElementById("registerTime").value = "";
   }
 
   function searchEvidence() {
     const query = document.getElementById("searchInput").value.trim().toLowerCase();
     const db = loadDatabase();
     const result = db.find(
-      entry =>
-        entry.evidenceId.toLowerCase() === query ||
-        entry.accusedName.toLowerCase() === query
+      e => e.evidenceId.toLowerCase() === query || e.accusedName.toLowerCase() === query
     );
 
-    const resultBox = document.getElementById("searchResult");
+    const box = document.getElementById("searchResult");
     if (result) {
-      resultBox.textContent =
-`🆔 Unique ID: ${result.uniqueId}
+      box.textContent = `
+🆔 Unique ID: ${result.uniqueId}
 📁 Case Name: ${result.caseName}
 👤 Accused: ${result.accusedName}
 📄 Evidence ID: ${result.evidenceId}
@@ -207,19 +207,26 @@
 ⚖️ Judgment: ${result.judgment || "Pending"}
 📅 Closing Date: ${result.closingDate || "Pending"}`;
     } else {
-      resultBox.textContent = "❌ No record found.";
+      box.textContent = "❌ No record found.";
     }
   }
 
   function refreshCaseSelect() {
     const db = loadDatabase();
     const select = document.getElementById("caseSelect");
+    const filter = document.getElementById("filterCourtInput").value.trim().toLowerCase();
     select.innerHTML = '<option value="">-- Select Evidence ID --</option>';
-    db.forEach(entry => {
-      const opt = document.createElement("option");
-      opt.value = entry.evidenceId;
-      opt.textContent = `${entry.evidenceId} (${entry.accusedName})`;
-      select.appendChild(opt);
+
+    db.forEach(e => {
+      if (
+        e.evidenceId.toLowerCase().includes(filter) ||
+        e.accusedName.toLowerCase().includes(filter)
+      ) {
+        const opt = document.createElement("option");
+        opt.value = e.evidenceId;
+        opt.textContent = `${e.evidenceId} (${e.accusedName})`;
+        select.appendChild(opt);
+      }
     });
   }
 
@@ -229,12 +236,12 @@
     const closingDate = document.getElementById("closingDate").value;
 
     if (!evidenceId || !judgment || !closingDate) {
-      alert("Please fill in all judgment fields.");
+      alert("Please complete all fields.");
       return;
     }
 
     const db = loadDatabase();
-    const entry = db.find(item => item.evidenceId === evidenceId);
+    const entry = db.find(e => e.evidenceId === evidenceId);
     if (entry) {
       entry.judgment = judgment;
       entry.closingDate = closingDate;
@@ -250,11 +257,4 @@
 
 </body>
 </html>
-
-
-
-
-
-
-
 
