@@ -50,7 +50,7 @@
   <h3>Login</h3>
   <input type="text" id="userId" placeholder="User ID" />
   <input type="password" id="password" placeholder="Password" />
-  <button onclick="login()">Login</button>
+  <button id="loginBtn">Login</button>
   <p id="loginMsg" style="color: #ff6b6b;"></p>
 </div>
 
@@ -64,14 +64,14 @@
   <input type="text" id="location" placeholder="Location" />
   <input type="text" id="officerName" placeholder="Registering Officer Name" />
   <input type="datetime-local" id="registerTime" />
-  <button onclick="submitEvidence()">Submit Evidence</button>
+  <button id="submitEvidenceBtn">Submit Evidence</button>
 </div>
 
 <!-- Search Evidence -->
 <div class="container" id="trackContainer" style="display:none;">
   <h3>Track Evidence</h3>
   <input type="text" id="searchInput" placeholder="Enter Evidence ID or Accused Name" />
-  <button onclick="searchEvidence()">Search</button>
+  <button id="searchBtn">Search</button>
   <pre id="searchResult">No search performed yet.</pre>
 </div>
 
@@ -82,7 +82,7 @@
     <option value="">-- Select Evidence ID --</option>
   </select>
   <textarea id="judgmentText" rows="4" placeholder="Enter judgment here..."></textarea>
-  <button onclick="submitJudgment()">Submit Judgment</button>
+  <button id="submitJudgmentBtn">Submit Judgment</button>
 </div>
 
 <script>
@@ -122,8 +122,6 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  window.login = login;
-
   function submitEvidence() {
     const caseData = {
       uniqueId: document.getElementById("uniqueId").value.trim(),
@@ -146,8 +144,6 @@ document.addEventListener("DOMContentLoaded", function () {
     clearInputs();
     refreshCaseSelect();
   }
-
-  window.submitEvidence = submitEvidence;
 
   function clearInputs() {
     document.querySelectorAll("#submitContainer input").forEach(input => input.value = "");
@@ -177,8 +173,6 @@ document.addEventListener("DOMContentLoaded", function () {
       resultBox.textContent = "❌ No record found.";
     }
   }
-
-  window.searchEvidence = searchEvidence;
 
   function refreshCaseSelect() {
     const select = document.getElementById("caseSelect");
@@ -210,12 +204,17 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  window.submitJudgment = submitJudgment;
+  // Attach functions to buttons
+  document.getElementById("loginBtn").addEventListener("click", login);
+  document.getElementById("submitEvidenceBtn").addEventListener("click", submitEvidence);
+  document.getElementById("searchBtn").addEventListener("click", searchEvidence);
+  document.getElementById("submitJudgmentBtn").addEventListener("click", submitJudgment);
 });
 </script>
 
 </body>
 </html>
+
 
 
 
