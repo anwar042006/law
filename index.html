@@ -1,168 +1,166 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="utf-8" />
-  <title>Evidence Tracking System</title>
+  <title>Evidence Tracking Login</title>
   <script src="https://cdn.jsdelivr.net/npm/web3@1.8.2/dist/web3.min.js"></script>
   <style>
     body {
-      background-color: #121212;
-      color: white;
-      font-family: Arial, sans-serif;
-      padding: 20px;
+      background: linear-gradient(to right, #1e3c72, #2a5298);
+      color: #fff;
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+      text-align: center;
     }
-    input, button {
-      margin: 5px 0;
-      padding: 6px;
-      width: 100%;
+    .container {
+      max-width: 600px;
+      margin: 50px auto;
+      background: #fff;
+      color: #333;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px #000;
+    }
+    input, select, button {
+      width: 90%;
+      padding: 10px;
+      margin: 10px 0;
+      font-size: 16px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    button {
+      background-color: #1e88e5;
+      color: white;
+      border: none;
+    }
+    button:hover {
+      background-color: #1565c0;
     }
     .section {
-      border: 1px solid #333;
-      padding: 15px;
-      margin-top: 15px;
-      border-radius: 8px;
-      background-color: #1e1e1e;
+      display: none;
+      margin-top: 20px;
     }
-    h2 {
-      color: #00ffd5;
+    pre {
+      text-align: left;
+      background: #f5f5f5;
+      padding: 10px;
+      border-radius: 5px;
     }
   </style>
 </head>
 <body>
-  <h1>Evidence Tracking System</h1>
+  <div class="container">
+    <h2>Evidence Tracking System</h2>
 
-  <div class="section">
-    <h2>Connect Wallet</h2>
-    <button onclick="connect()">Connect MetaMask</button>
+    <select id="role" onchange="showLogin()">
+      <option value="">Select Role</option>
+      <option value="police">Police</option>
+      <option value="court">Court</option>
+      <option value="public">Public</option>
+    </select>
+
+    <div id="loginForm" style="display: none;">
+      <input type="text" id="username" placeholder="Username" />
+      <input type="password" id="password" placeholder="Password" />
+      <button onclick="login()">Login</button>
+    </div>
+
+    <button id="publicBtn" style="display: none;" onclick="login()">Continue as Public</button>
+
     <p id="account"></p>
-  </div>
 
-  <div class="section">
-    <h2>Submit Evidence</h2>
-    <input id="caseId" placeholder="Case ID" />
-    <input id="caseName" placeholder="Case Name" />
-    <input id="accusedName" placeholder="Accused Name" />
-    <input id="evidenceId" placeholder="Evidence ID" />
-    <input id="location" placeholder="Location" />
-    <input id="officerName" placeholder="Officer Name" />
-    <input id="registerTime" placeholder="Register Time" />
-    <button onclick="submitEvidence()">Submit</button>
-  </div>
+    <!-- Police Section -->
+    <div id="policeSection" class="section">
+      <h3>Police Dashboard</h3>
+      <input id="caseId" placeholder="Case ID" />
+      <input id="caseName" placeholder="Case Name" />
+      <input id="accusedName" placeholder="Accused Name" />
+      <input id="evidenceId" placeholder="Evidence ID" />
+      <input id="location" placeholder="Location" />
+      <input id="officerName" placeholder="Officer Name" />
+      <input id="registerTime" placeholder="Register Time" />
+      <button onclick="submitEvidence()">Submit Evidence</button>
+    </div>
 
-  <div class="section">
-    <h2>Add Judgment</h2>
-    <input id="judgeEvidenceId" placeholder="Evidence ID" />
-    <input id="judgment" placeholder="Judgment" />
-    <button onclick="addJudgment()">Add</button>
-  </div>
+    <!-- Court Section -->
+    <div id="courtSection" class="section">
+      <h3>Court Dashboard</h3>
+      <input id="judgeEvidenceId" placeholder="Evidence ID" />
+      <input id="judgment" placeholder="Judgment" />
+      <button onclick="addJudgment()">Add Judgment</button>
 
-  <div class="section">
-    <h2>Close Case</h2>
-    <input id="closeEvidenceId" placeholder="Evidence ID" />
-    <input id="closingDate" placeholder="Closing Date" />
-    <button onclick="closeCase()">Close</button>
-  </div>
+      <input id="closeEvidenceId" placeholder="Evidence ID" />
+      <input id="closingDate" placeholder="Closing Date" />
+      <button onclick="closeCase()">Close Case</button>
+    </div>
 
-  <div class="section">
-    <h2>Get Evidence</h2>
-    <input id="searchEvidenceId" placeholder="Evidence ID" />
-    <button onclick="getEvidence()">Search</button>
-    <pre id="evidenceResult"></pre>
+    <!-- Public Section -->
+    <div id="publicSection" class="section">
+      <h3>Public Viewer</h3>
+      <input id="searchEvidenceId" placeholder="Evidence ID" />
+      <button onclick="getEvidence()">View Evidence</button>
+      <pre id="evidenceResult"></pre>
+    </div>
   </div>
 
   <script>
-    let web3;
-    let account;
-    let contract;
+    let web3, contract, account;
+    const contractAddress = "YOUR_CONTRACT_ADDRESS";
+    const abi = [/* Paste your contract ABI here */];
 
-    // 🔁 REPLACE this with your real deployed contract address
-    const contractAddress = "0xYourDeployedContractAddressHere";
+    const users = {
+      police: { username: "police1", password: "police123" },
+      court: { username: "court1", password: "court123" }
+    };
 
-    // ✅ ABI copied from EvidenceTracking.sol
-    const abi = [
-      {
-        "inputs": [],
-        "stateMutability": "nonpayable",
-        "type": "constructor"
-      },
-      {
-        "inputs": [
-          { "internalType": "string", "name": "_uniqueCaseId", "type": "string" },
-          { "internalType": "string", "name": "_caseName", "type": "string" },
-          { "internalType": "string", "name": "_accusedName", "type": "string" },
-          { "internalType": "string", "name": "_evidenceId", "type": "string" },
-          { "internalType": "string", "name": "_location", "type": "string" },
-          { "internalType": "string", "name": "_officerName", "type": "string" },
-          { "internalType": "string", "name": "_registerTime", "type": "string" }
-        ],
-        "name": "submitEvidence",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-      },
-      {
-        "inputs": [
-          { "internalType": "string", "name": "_evidenceId", "type": "string" },
-          { "internalType": "string", "name": "_judgment", "type": "string" }
-        ],
-        "name": "addJudgment",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-      },
-      {
-        "inputs": [
-          { "internalType": "string", "name": "_evidenceId", "type": "string" },
-          { "internalType": "string", "name": "_closingDate", "type": "string" }
-        ],
-        "name": "closeCase",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-      },
-      {
-        "inputs": [
-          { "internalType": "string", "name": "_evidenceId", "type": "string" }
-        ],
-        "name": "getEvidence",
-        "outputs": [
-          { "internalType": "string", "name": "", "type": "string" },
-          { "internalType": "string", "name": "", "type": "string" },
-          { "internalType": "string", "name": "", "type": "string" },
-          { "internalType": "string", "name": "", "type": "string" },
-          { "internalType": "string", "name": "", "type": "string" },
-          { "internalType": "string", "name": "", "type": "string" },
-          { "internalType": "string", "name": "", "type": "string" },
-          { "internalType": "string", "name": "", "type": "string" },
-          { "internalType": "string", "name": "", "type": "string" }
-        ],
-        "stateMutability": "view",
-        "type": "function"
+    function showLogin() {
+      const role = document.getElementById("role").value;
+      document.getElementById("loginForm").style.display = "none";
+      document.getElementById("publicBtn").style.display = "none";
+      if (role === "public") {
+        document.getElementById("publicBtn").style.display = "block";
+      } else if (role === "police" || role === "court") {
+        document.getElementById("loginForm").style.display = "block";
       }
-    ];
+    }
 
-    async function connect() {
+    async function login() {
+      const role = document.getElementById("role").value;
+      const username = document.getElementById("username").value;
+      const password = document.getElementById("password").value;
+
+      if (role !== "public") {
+        if (users[role].username !== username || users[role].password !== password) {
+          alert("Invalid username or password!");
+          return;
+        }
+      }
+
       if (window.ethereum) {
         web3 = new Web3(window.ethereum);
-        await window.ethereum.request({ method: "eth_requestAccounts" });
+        await ethereum.request({ method: "eth_requestAccounts" });
         const accounts = await web3.eth.getAccounts();
         account = accounts[0];
         contract = new web3.eth.Contract(abi, contractAddress);
-        document.getElementById("account").innerText = "Connected: " + account;
+        document.getElementById("account").innerText = `Connected: ${account}`;
+        showDashboard(role);
       } else {
-        alert("Please install MetaMask");
+        alert("Please install MetaMask.");
       }
+    }
+
+    function showDashboard(role) {
+      document.querySelectorAll('.section').forEach(div => div.style.display = 'none');
+      if (role === "police") document.getElementById("policeSection").style.display = "block";
+      if (role === "court") document.getElementById("courtSection").style.display = "block";
+      if (role === "public") document.getElementById("publicSection").style.display = "block";
     }
 
     async function submitEvidence() {
       const args = [
-        caseId.value,
-        caseName.value,
-        accusedName.value,
-        evidenceId.value,
-        location.value,
-        officerName.value,
-        registerTime.value
+        caseId.value, caseName.value, accusedName.value,
+        evidenceId.value, location.value, officerName.value, registerTime.value
       ];
       await contract.methods.submitEvidence(...args).send({ from: account });
       alert("Evidence submitted.");
@@ -197,4 +195,3 @@ Closing Date: ${e[8]}
   </script>
 </body>
 </html>
-
