@@ -1,255 +1,194 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <title>Blockchain Evidence Tracking</title>
+  <meta charset="utf-8" />
+  <title>Evidence Tracking System</title>
+  <script src="https://cdn.jsdelivr.net/npm/web3@1.8.2/dist/web3.min.js"></script>
   <style>
     body {
       background-color: #121212;
-      color: #f0f0f0;
+      color: white;
       font-family: Arial, sans-serif;
-      text-align: center;
       padding: 20px;
     }
-    .container {
-      background-color: #1e1e1e;
-      padding: 20px;
-      margin: 10px auto;
-      border-radius: 12px;
-      width: 90%;
-      max-width: 600px;
-      box-shadow: 0 0 10px #00b89488;
-    }
-    input, button, select, textarea {
+    input, button {
+      margin: 5px 0;
+      padding: 6px;
       width: 100%;
-      padding: 10px;
-      margin-top: 10px;
-      border-radius: 6px;
-      border: none;
-      font-size: 1em;
     }
-    input, textarea {
-      background-color: #2c2c2c;
-      color: #fff;
-    }
-    button {
-      background-color: #00b894;
-      color: #121212;
-      font-weight: bold;
-      cursor: pointer;
-    }
-    button:hover {
-      background-color: #019e76;
+    .section {
+      border: 1px solid #333;
+      padding: 15px;
+      margin-top: 15px;
+      border-radius: 8px;
+      background-color: #1e1e1e;
     }
     h2 {
-      color: #00b894;
-    }
-    pre {
-      text-align: left;
-      background: #272727;
-      padding: 1em;
-      border-radius: 10px;
-      white-space: pre-wrap;
-      box-shadow: inset 0 0 10px #00b89466;
+      color: #00ffd5;
     }
   </style>
 </head>
 <body>
+  <h1>Evidence Tracking System</h1>
 
-<h2>Evidence Tracking System</h2>
+  <div class="section">
+    <h2>Connect Wallet</h2>
+    <button onclick="connect()">Connect MetaMask</button>
+    <p id="account"></p>
+  </div>
 
-<div class="container" id="roleSelect">
-  <h3>Select Role</h3>
-  <button onclick="selectRole('police')">Police</button>
-  <button onclick="selectRole('court')">Court</button>
-  <button onclick="selectRole('public')">Public</button>
-</div>
+  <div class="section">
+    <h2>Submit Evidence (Police)</h2>
+    <input placeholder="Case ID" id="caseId" />
+    <input placeholder="Case Name" id="caseName" />
+    <input placeholder="Accused Name" id="accusedName" />
+    <input placeholder="Evidence ID" id="evidenceId" />
+    <input placeholder="Location" id="location" />
+    <input placeholder="Officer Name" id="officerName" />
+    <input placeholder="Register Time" id="registerTime" />
+    <button onclick="submitEvidence()">Submit</button>
+  </div>
 
-<div class="container" id="loginBox" style="display:none;">
-  <h3>Login</h3>
-  <input type="text" id="loginId" placeholder="User ID" />
-  <input type="password" id="loginPass" placeholder="Password" />
-  <button onclick="doLogin()">Login</button>
-  <p id="loginError" style="color:red;"></p>
-</div>
+  <div class="section">
+    <h2>Add Judgment (Court)</h2>
+    <input placeholder="Evidence ID" id="judgeEvidenceId" />
+    <input placeholder="Judgment" id="judgment" />
+    <button onclick="addJudgment()">Add Judgment</button>
+  </div>
 
-<!-- Police Interface -->
-<div class="container" id="policeBox" style="display:none;">
-  <h3>Submit Evidence (Police)</h3>
-  <input id="autoUniqueId" placeholder="Unique Case ID" readonly />
-  <input id="autoEvidenceId" placeholder="Evidence ID" readonly />
-  <input id="caseName" placeholder="Case Name" />
-  <input id="accusedName" placeholder="Accused Name" />
-  <input id="location" placeholder="Location" />
-  <input id="officerName" placeholder="Officer Name" />
-  <input type="datetime-local" id="registerTime" />
-  <button onclick="submitEvidence()">Submit Evidence</button>
-</div>
+  <div class="section">
+    <h2>Close Case (Court)</h2>
+    <input placeholder="Evidence ID" id="closeEvidenceId" />
+    <input placeholder="Closing Date" id="closingDate" />
+    <button onclick="closeCase()">Close Case</button>
+  </div>
 
-<!-- Court Interface -->
-<div class="container" id="courtBox" style="display:none;">
-  <h3>Add Judgment (Court)</h3>
-  <input id="filterInput" placeholder="Search by Evidence ID or Name" oninput="populateSelect()" />
-  <select id="caseSelect">
-    <option value="">-- Select Evidence ID --</option>
-  </select>
-  <textarea id="judgmentText" placeholder="Enter Judgment..."></textarea>
-  <input type="date" id="closingDate" />
-  <button onclick="submitJudgment()">Submit Judgment</button>
-</div>
+  <div class="section">
+    <h2>Get Evidence</h2>
+    <input placeholder="Evidence ID" id="searchEvidenceId" />
+    <button onclick="getEvidence()">Search</button>
+    <pre id="evidenceResult"></pre>
+  </div>
 
-<!-- Public & Shared: Tracking -->
-<div class="container" id="trackBox" style="display:none;">
-  <h3>Track Evidence</h3>
-  <input id="searchKey" placeholder="Evidence ID or Accused Name" />
-  <button onclick="searchEvidence()">Search</button>
-  <pre id="resultBox">Results will appear here...</pre>
-</div>
-
-<script>
-  const users = {
-    officer1: { password: "1234", role: "police" },
-    court1: { password: "abcd", role: "court" }
-  };
-
-  let selectedRole = "";
-
-  function selectRole(role) {
-    selectedRole = role;
-    document.getElementById("roleSelect").style.display = "none";
-
-    if (role === "public") {
-      document.getElementById("trackBox").style.display = "block";
-    } else {
-      document.getElementById("loginBox").style.display = "block";
-    }
-  }
-
-  function doLogin() {
-    const id = document.getElementById("loginId").value;
-    const pass = document.getElementById("loginPass").value;
-    const user = users[id];
-
-    if (user && user.password === pass && user.role === selectedRole) {
-      document.getElementById("loginBox").style.display = "none";
-      document.getElementById("trackBox").style.display = "block";
-
-      if (user.role === "police") {
-        document.getElementById("policeBox").style.display = "block";
-        generateIds();
-      } else if (user.role === "court") {
-        document.getElementById("courtBox").style.display = "block";
-        populateSelect();
+  <script>
+    let web3;
+    let account;
+    const contractAddress = "PASTE_YOUR_DEPLOYED_CONTRACT_ADDRESS_HERE";
+    const abi = [ // shortened for brevity; paste full ABI here
+      {
+        "inputs": [],
+        "stateMutability": "nonpayable",
+        "type": "constructor"
+      },
+      {
+        "inputs": [
+          { "internalType": "string", "name": "_evidenceId", "type": "string" }
+        ],
+        "name": "getEvidence",
+        "outputs": [
+          { "internalType": "string", "name": "", "type": "string" },
+          { "internalType": "string", "name": "", "type": "string" },
+          { "internalType": "string", "name": "", "type": "string" },
+          { "internalType": "string", "name": "", "type": "string" },
+          { "internalType": "string", "name": "", "type": "string" },
+          { "internalType": "string", "name": "", "type": "string" },
+          { "internalType": "string", "name": "", "type": "string" },
+          { "internalType": "string", "name": "", "type": "string" },
+          { "internalType": "string", "name": "", "type": "string" }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          { "internalType": "string", "name": "_evidenceId", "type": "string" },
+          { "internalType": "string", "name": "_judgment", "type": "string" }
+        ],
+        "name": "addJudgment",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          { "internalType": "string", "name": "_evidenceId", "type": "string" },
+          { "internalType": "string", "name": "_closingDate", "type": "string" }
+        ],
+        "name": "closeCase",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          { "internalType": "string", "name": "_uniqueCaseId", "type": "string" },
+          { "internalType": "string", "name": "_caseName", "type": "string" },
+          { "internalType": "string", "name": "_accusedName", "type": "string" },
+          { "internalType": "string", "name": "_evidenceId", "type": "string" },
+          { "internalType": "string", "name": "_location", "type": "string" },
+          { "internalType": "string", "name": "_officerName", "type": "string" },
+          { "internalType": "string", "name": "_registerTime", "type": "string" }
+        ],
+        "name": "submitEvidence",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
       }
-    } else {
-      document.getElementById("loginError").textContent = "Invalid login.";
-    }
-  }
+    ];
 
-  function generateIds() {
-    const db = JSON.parse(localStorage.getItem("evidenceDB") || "[]");
-    const index = db.length + 1;
-    document.getElementById("autoUniqueId").value = "CASE" + String(index).padStart(3, '0');
-    document.getElementById("autoEvidenceId").value = "EVID" + String(index).padStart(3, '0');
-  }
+    let contract;
 
-  function submitEvidence() {
-    const db = JSON.parse(localStorage.getItem("evidenceDB") || "[]");
-
-    const data = {
-      uniqueId: document.getElementById("autoUniqueId").value,
-      evidenceId: document.getElementById("autoEvidenceId").value,
-      caseName: document.getElementById("caseName").value,
-      accusedName: document.getElementById("accusedName").value,
-      location: document.getElementById("location").value,
-      officerName: document.getElementById("officerName").value,
-      registerTime: document.getElementById("registerTime").value,
-      judgment: "",
-      closingDate: ""
-    };
-
-    if (!data.caseName || !data.accusedName || !data.location || !data.officerName || !data.registerTime) {
-      alert("Please fill all required fields.");
-      return;
+    async function connect() {
+      if (window.ethereum) {
+        web3 = new Web3(window.ethereum);
+        await ethereum.request({ method: 'eth_requestAccounts' });
+        const accounts = await web3.eth.getAccounts();
+        account = accounts[0];
+        document.getElementById("account").innerText = "Connected: " + account;
+        contract = new web3.eth.Contract(abi, contractAddress);
+      } else {
+        alert("Install MetaMask");
+      }
     }
 
-    db.push(data);
-    localStorage.setItem("evidenceDB", JSON.stringify(db));
-    alert("Evidence Submitted.");
+    async function submitEvidence() {
+      const args = [
+        caseId.value, caseName.value, accusedName.value,
+        evidenceId.value, location.value, officerName.value, registerTime.value
+      ];
+      await contract.methods.submitEvidence(...args).send({ from: account });
+      alert("Evidence submitted!");
+    }
 
-    populateSelect();
-    document.querySelectorAll("#policeBox input, #policeBox textarea").forEach(el => el.value = "");
-    generateIds();
-  }
+    async function addJudgment() {
+      await contract.methods.addJudgment(judgeEvidenceId.value, judgment.value)
+        .send({ from: account });
+      alert("Judgment added.");
+    }
 
-  function searchEvidence() {
-    const key = document.getElementById("searchKey").value.trim().toLowerCase();
-    const db = JSON.parse(localStorage.getItem("evidenceDB") || "[]");
+    async function closeCase() {
+      await contract.methods.closeCase(closeEvidenceId.value, closingDate.value)
+        .send({ from: account });
+      alert("Case closed.");
+    }
 
-    const result = db.find(
-      e => e.evidenceId.toLowerCase() === key || e.accusedName.toLowerCase() === key
-    );
-
-    const box = document.getElementById("resultBox");
-    if (result) {
-      box.textContent = `
-🆔 Case ID: ${result.uniqueId}
-📁 Case Name: ${result.caseName}
-👤 Accused: ${result.accusedName}
-📄 Evidence ID: ${result.evidenceId}
-📍 Location: ${result.location}
-👮 Officer: ${result.officerName}
-🕒 Registered On: ${new Date(result.registerTime).toLocaleString()}
-⚖ Judgment: ${result.judgment || "Pending"}
-📅 Closing Date: ${result.closingDate || "Pending"}
+    async function getEvidence() {
+      const data = await contract.methods.getEvidence(searchEvidenceId.value).call();
+      document.getElementById("evidenceResult").innerText = `
+Case ID: ${data[0]}
+Case Name: ${data[1]}
+Accused: ${data[2]}
+Evidence ID: ${data[3]}
+Location: ${data[4]}
+Officer: ${data[5]}
+Registered: ${data[6]}
+Judgment: ${data[7]}
+Closed: ${data[8]}
 `;
-    } else {
-      box.textContent = "No record found.";
     }
-  }
-
-  function populateSelect() {
-    const db = JSON.parse(localStorage.getItem("evidenceDB") || "[]");
-    const filter = document.getElementById("filterInput").value.trim().toLowerCase();
-    const select = document.getElementById("caseSelect");
-    select.innerHTML = '<option value="">-- Select Evidence ID --</option>';
-
-    db.forEach(e => {
-      if (
-        e.evidenceId.toLowerCase().includes(filter) ||
-        e.accusedName.toLowerCase().includes(filter)
-      ) {
-        const option = document.createElement("option");
-        option.value = e.evidenceId;
-        option.text = ${e.evidenceId} (${e.accusedName});
-        select.appendChild(option);
-      }
-    });
-  }
-
-  function submitJudgment() {
-    const id = document.getElementById("caseSelect").value;
-    const judgment = document.getElementById("judgmentText").value;
-    const date = document.getElementById("closingDate").value;
-
-    if (!id || !judgment || !date) {
-      alert("Fill all fields.");
-      return;
-    }
-
-    const db = JSON.parse(localStorage.getItem("evidenceDB") || "[]");
-    const entry = db.find(e => e.evidenceId === id);
-
-    if (entry) {
-      entry.judgment = judgment;
-      entry.closingDate = date;
-      localStorage.setItem("evidenceDB", JSON.stringify(db));
-      alert("Judgment submitted.");
-      document.getElementById("judgmentText").value = "";
-      document.getElementById("closingDate").value = "";
-    }
-  }
-</script>
-
+  </script>
 </body>
 </html>
+
+   
+
