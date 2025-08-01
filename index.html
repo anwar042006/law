@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Evidence Tracking System</title>
   <style>
     body {
@@ -16,15 +16,15 @@
       box-shadow: 0 0 20px #00b894aa; max-width: 600px; width: 100%;
       margin-bottom: 2rem;
     }
-    input, button {
+    input, select, button, textarea {
       width: 100%; padding: 0.75rem; margin-bottom: 1rem;
       border-radius: 8px; border: none;
       font-size: 1rem;
     }
-    input {
+    input, select, textarea {
       background: #272727; color: #f0f0f0;
     }
-    input:focus {
+    input:focus, select:focus, textarea:focus {
       outline: none; background: #00b89433;
       box-shadow: 0 0 6px #00b894cc;
     }
@@ -54,9 +54,9 @@
   <p id="loginMsg" style="color: #ff6b6b;"></p>
 </div>
 
-<!-- Evidence Submission -->
+<!-- Evidence Submission (Police) -->
 <div class="container" id="submitContainer" style="display:none;">
-  <h3>Submit Case Evidence</h3>
+  <h3>Submit Case Evidence (Police)</h3>
   <input type="text" id="uniqueId" placeholder="Unique Case ID" />
   <input type="text" id="caseName" placeholder="Case Name" />
   <input type="text" id="accusedName" placeholder="Accused Name" />
@@ -75,20 +75,31 @@
   <pre id="searchResult">No search performed yet.</pre>
 </div>
 
+<!-- Judgment Panel (Court) -->
+<div class="container" id="courtContainer" style="display:none;">
+  <h3>Court Judgment Panel</h3>
+  <select id="caseSelect">
+    <option value="">-- Select Evidence ID --</option>
+  </select>
+  <textarea id="judgmentText" rows="4" placeholder="Enter judgment here..."></textarea>
+  <button onclick="submitJudgment()">Submit Judgment</button>
+</div>
+
 <script>
+  // Define users and roles
   const validUsers = {
-    officer1: "password123",
-    admin: "admin123"
+    "officer1": "password123",
+    "court": "court123"
+  };
+
+  const userRoles = {
+    "officer1": "police",
+    "court": "court"
   };
 
   const database = [];
 
-  window.onload = function () {
-    document.getElementById("loginContainer").style.display = "block";
-    document.getElementById("submitContainer").style.display = "none";
-    document.getElementById("trackContainer").style.display = "none";
-  };
-
+  // Handle login
   function login() {
     const user = document.getElementById("userId").value.trim();
     const pass = document.getElementById("password").value;
@@ -96,16 +107,23 @@
 
     if (validUsers[user] && validUsers[user] === pass) {
       msg.style.color = "#00b894";
-      msg.textContent = "Login successful!";
+      msg.textContent = "✅ Login successful!";
       document.getElementById("loginContainer").style.display = "none";
-      document.getElementById("submitContainer").style.display = "block";
-      document.getElementById("trackContainer").style.display = "block";
+
+      if (userRoles[user] === "police") {
+        document.getElementById("submitContainer").style.display = "block";
+        document.getElementById("trackContainer").style.display = "block";
+      } else if (userRoles[user] === "court") {
+        document.getElementById("courtContainer").style.display = "block";
+        document.getElementById("trackContainer").style.display = "block";
+        refreshCaseSelect();
+      }
     } else {
-      msg.style.color = "#ff6b6b";
       msg.textContent = "❌ Invalid User ID or Password.";
     }
   }
 
+  // Submit evidence (Police)
   function submitEvidence() {
     const caseData = {
       uniqueId: document.getElementById("uniqueId").value.trim(),
@@ -114,7 +132,8 @@
       evidenceId: document.getElementById("evidenceId").value.trim(),
       location: document.getElementById("location").value.trim(),
       officerName: document.getElementById("officerName").value.trim(),
-      registerTime: document.getElementById("registerTime").value
+      registerTime: document.getElementById("registerTime").value,
+      judgment: ""
     };
 
     if (!caseData.uniqueId || !caseData.caseName || !caseData.evidenceId) {
@@ -125,12 +144,15 @@
     database.push(caseData);
     alert("✅ Evidence submitted successfully!");
     clearInputs();
+    refreshCaseSelect();
   }
 
   function clearInputs() {
     document.querySelectorAll("#submitContainer input").forEach(input => input.value = "");
+    document.getElementById("registerTime").value = "";
   }
 
+  // Search evidence
   function searchEvidence() {
     const query = document.getElementById("searchInput").value.trim().toLowerCase();
     const result = database.find(
@@ -142,15 +164,48 @@
     const resultBox = document.getElementById("searchResult");
     if (result) {
       resultBox.textContent =
-🆔 Unique ID: ${result.uniqueId}
+`🆔 Unique ID: ${result.uniqueId}
 📁 Case Name: ${result.caseName}
 👤 Accused: ${result.accusedName}
 📄 Evidence ID: ${result.evidenceId}
 📍 Location: ${result.location}
-👮 Registering Officer: ${result.officerName}
-🕒 Time: ${new Date(result.registerTime).toLocaleString()};
+👮 Officer: ${result.officerName}
+🕒 Registered On: ${new Date(result.registerTime).toLocaleString()}
+⚖️ Judgment: ${result.judgment || "Pending"}`;
     } else {
-      resultBox.textContent = "❌ No record found for that input.";
+      resultBox.textContent = "❌ No record found.";
+    }
+  }
+
+  // Populate dropdown for court
+  function refreshCaseSelect() {
+    const select = document.getElementById("caseSelect");
+    select.innerHTML = '<option value="">-- Select Evidence ID --</option>';
+    database.forEach(entry => {
+      const opt = document.createElement("option");
+      opt.value = entry.evidenceId;
+      opt.textContent = `${entry.evidenceId} (${entry.accusedName})`;
+      select.appendChild(opt);
+    });
+  }
+
+  // Submit court judgment
+  function submitJudgment() {
+    const evidenceId = document.getElementById("caseSelect").value;
+    const judgment = document.getElementById("judgmentText").value.trim();
+    const entry = database.find(item => item.evidenceId === evidenceId);
+
+    if (!evidenceId || !judgment) {
+      alert("Please select a case and enter a judgment.");
+      return;
+    }
+
+    if (entry) {
+      entry.judgment = judgment;
+      alert("✅ Judgment submitted successfully.");
+      document.getElementById("judgmentText").value = "";
+    } else {
+      alert("❌ Evidence not found.");
     }
   }
 </script>
