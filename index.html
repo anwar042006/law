@@ -38,34 +38,34 @@
   </div>
 
   <div class="section">
-    <h2>Submit Evidence (Police)</h2>
-    <input placeholder="Case ID" id="caseId" />
-    <input placeholder="Case Name" id="caseName" />
-    <input placeholder="Accused Name" id="accusedName" />
-    <input placeholder="Evidence ID" id="evidenceId" />
-    <input placeholder="Location" id="location" />
-    <input placeholder="Officer Name" id="officerName" />
-    <input placeholder="Register Time" id="registerTime" />
+    <h2>Submit Evidence</h2>
+    <input id="caseId" placeholder="Case ID" />
+    <input id="caseName" placeholder="Case Name" />
+    <input id="accusedName" placeholder="Accused Name" />
+    <input id="evidenceId" placeholder="Evidence ID" />
+    <input id="location" placeholder="Location" />
+    <input id="officerName" placeholder="Officer Name" />
+    <input id="registerTime" placeholder="Register Time" />
     <button onclick="submitEvidence()">Submit</button>
   </div>
 
   <div class="section">
-    <h2>Add Judgment (Court)</h2>
-    <input placeholder="Evidence ID" id="judgeEvidenceId" />
-    <input placeholder="Judgment" id="judgment" />
-    <button onclick="addJudgment()">Add Judgment</button>
+    <h2>Add Judgment</h2>
+    <input id="judgeEvidenceId" placeholder="Evidence ID" />
+    <input id="judgment" placeholder="Judgment" />
+    <button onclick="addJudgment()">Add</button>
   </div>
 
   <div class="section">
-    <h2>Close Case (Court)</h2>
-    <input placeholder="Evidence ID" id="closeEvidenceId" />
-    <input placeholder="Closing Date" id="closingDate" />
-    <button onclick="closeCase()">Close Case</button>
+    <h2>Close Case</h2>
+    <input id="closeEvidenceId" placeholder="Evidence ID" />
+    <input id="closingDate" placeholder="Closing Date" />
+    <button onclick="closeCase()">Close</button>
   </div>
 
   <div class="section">
     <h2>Get Evidence</h2>
-    <input placeholder="Evidence ID" id="searchEvidenceId" />
+    <input id="searchEvidenceId" placeholder="Evidence ID" />
     <button onclick="getEvidence()">Search</button>
     <pre id="evidenceResult"></pre>
   </div>
@@ -73,8 +73,10 @@
   <script>
     let web3;
     let account;
-    const contractAddress = "PASTE_YOUR_DEPLOYED_CONTRACT_ADDRESS_HERE";
-    const abi = [ // shortened for brevity; paste full ABI here
+    let contract;
+
+    const contractAddress = "YOUR_CONTRACT_ADDRESS_HERE"; // Replace this
+    const abi = [ // minimal ABI for interaction
       {
         "inputs": [],
         "stateMutability": "nonpayable",
@@ -82,21 +84,17 @@
       },
       {
         "inputs": [
-          { "internalType": "string", "name": "_evidenceId", "type": "string" }
+          { "internalType": "string", "name": "_uniqueCaseId", "type": "string" },
+          { "internalType": "string", "name": "_caseName", "type": "string" },
+          { "internalType": "string", "name": "_accusedName", "type": "string" },
+          { "internalType": "string", "name": "_evidenceId", "type": "string" },
+          { "internalType": "string", "name": "_location", "type": "string" },
+          { "internalType": "string", "name": "_officerName", "type": "string" },
+          { "internalType": "string", "name": "_registerTime", "type": "string" }
         ],
-        "name": "getEvidence",
-        "outputs": [
-          { "internalType": "string", "name": "", "type": "string" },
-          { "internalType": "string", "name": "", "type": "string" },
-          { "internalType": "string", "name": "", "type": "string" },
-          { "internalType": "string", "name": "", "type": "string" },
-          { "internalType": "string", "name": "", "type": "string" },
-          { "internalType": "string", "name": "", "type": "string" },
-          { "internalType": "string", "name": "", "type": "string" },
-          { "internalType": "string", "name": "", "type": "string" },
-          { "internalType": "string", "name": "", "type": "string" }
-        ],
-        "stateMutability": "view",
+        "name": "submitEvidence",
+        "outputs": [],
+        "stateMutability": "nonpayable",
         "type": "function"
       },
       {
@@ -121,33 +119,35 @@
       },
       {
         "inputs": [
-          { "internalType": "string", "name": "_uniqueCaseId", "type": "string" },
-          { "internalType": "string", "name": "_caseName", "type": "string" },
-          { "internalType": "string", "name": "_accusedName", "type": "string" },
-          { "internalType": "string", "name": "_evidenceId", "type": "string" },
-          { "internalType": "string", "name": "_location", "type": "string" },
-          { "internalType": "string", "name": "_officerName", "type": "string" },
-          { "internalType": "string", "name": "_registerTime", "type": "string" }
+          { "internalType": "string", "name": "_evidenceId", "type": "string" }
         ],
-        "name": "submitEvidence",
-        "outputs": [],
-        "stateMutability": "nonpayable",
+        "name": "getEvidence",
+        "outputs": [
+          { "internalType": "string", "name": "", "type": "string" },
+          { "internalType": "string", "name": "", "type": "string" },
+          { "internalType": "string", "name": "", "type": "string" },
+          { "internalType": "string", "name": "", "type": "string" },
+          { "internalType": "string", "name": "", "type": "string" },
+          { "internalType": "string", "name": "", "type": "string" },
+          { "internalType": "string", "name": "", "type": "string" },
+          { "internalType": "string", "name": "", "type": "string" },
+          { "internalType": "string", "name": "", "type": "string" }
+        ],
+        "stateMutability": "view",
         "type": "function"
       }
     ];
 
-    let contract;
-
     async function connect() {
       if (window.ethereum) {
         web3 = new Web3(window.ethereum);
-        await ethereum.request({ method: 'eth_requestAccounts' });
+        await window.ethereum.request({ method: "eth_requestAccounts" });
         const accounts = await web3.eth.getAccounts();
         account = accounts[0];
-        document.getElementById("account").innerText = "Connected: " + account;
         contract = new web3.eth.Contract(abi, contractAddress);
+        document.getElementById("account").innerText = "Connected: " + account;
       } else {
-        alert("Install MetaMask");
+        alert("Please install MetaMask!");
       }
     }
 
@@ -157,38 +157,34 @@
         evidenceId.value, location.value, officerName.value, registerTime.value
       ];
       await contract.methods.submitEvidence(...args).send({ from: account });
-      alert("Evidence submitted!");
+      alert("Evidence submitted.");
     }
 
     async function addJudgment() {
-      await contract.methods.addJudgment(judgeEvidenceId.value, judgment.value)
-        .send({ from: account });
+      await contract.methods.addJudgment(judgeEvidenceId.value, judgment.value).send({ from: account });
       alert("Judgment added.");
     }
 
     async function closeCase() {
-      await contract.methods.closeCase(closeEvidenceId.value, closingDate.value)
-        .send({ from: account });
+      await contract.methods.closeCase(closeEvidenceId.value, closingDate.value).send({ from: account });
       alert("Case closed.");
     }
 
     async function getEvidence() {
-      const data = await contract.methods.getEvidence(searchEvidenceId.value).call();
-      document.getElementById("evidenceResult").innerText = `
-Case ID: ${data[0]}
-Case Name: ${data[1]}
-Accused: ${data[2]}
-Evidence ID: ${data[3]}
-Location: ${data[4]}
-Officer: ${data[5]}
-Registered: ${data[6]}
-Judgment: ${data[7]}
-Closed: ${data[8]}
-`;
+      const e = await contract.methods.getEvidence(searchEvidenceId.value).call();
+      evidenceResult.innerText = `
+Case ID: ${e[0]}
+Case Name: ${e[1]}
+Accused Name: ${e[2]}
+Evidence ID: ${e[3]}
+Location: ${e[4]}
+Officer: ${e[5]}
+Register Time: ${e[6]}
+Judgment: ${e[7]}
+Closing Date: ${e[8]}
+      `;
     }
   </script>
 </body>
 </html>
-
-   
 
