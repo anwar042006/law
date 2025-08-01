@@ -1,43 +1,60 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Evidence Tracking System</title>
   <style>
     body {
-      background: #121212; color: #f0f0f0;
+      background: #121212;
+      color: #f0f0f0;
       font-family: 'Segoe UI', Tahoma, sans-serif;
-      display: flex; flex-direction: column; align-items: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
       padding: 2rem;
     }
     h1 { color: #00b894; margin-bottom: 2rem; }
     .container {
-      background: #1e1e1e; padding: 2rem; border-radius: 12px;
-      box-shadow: 0 0 20px #00b894aa; max-width: 600px; width: 100%;
+      background: #1e1e1e;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 0 20px #00b894aa;
+      max-width: 600px;
+      width: 100%;
       margin-bottom: 2rem;
     }
     input, select, button, textarea {
-      width: 100%; padding: 0.75rem; margin-bottom: 1rem;
-      border-radius: 8px; border: none;
+      width: 100%;
+      padding: 0.75rem;
+      margin-bottom: 1rem;
+      border-radius: 8px;
+      border: none;
       font-size: 1rem;
     }
     input, select, textarea {
-      background: #272727; color: #f0f0f0;
+      background: #272727;
+      color: #f0f0f0;
     }
     input:focus, select:focus, textarea:focus {
-      outline: none; background: #00b89433;
+      outline: none;
+      background: #00b89433;
       box-shadow: 0 0 6px #00b894cc;
     }
     button {
-      background: #00b894; color: #121212;
-      font-weight: bold; cursor: pointer;
+      background: #00b894;
+      color: #121212;
+      font-weight: bold;
+      cursor: pointer;
     }
     button:hover {
       background: #019e76;
     }
     pre {
-      background: #272727; padding: 1rem; border-radius: 10px;
-      white-space: pre-wrap; box-shadow: inset 0 0 10px #00b89466;
+      background: #272727;
+      padding: 1rem;
+      border-radius: 10px;
+      white-space: pre-wrap;
+      box-shadow: inset 0 0 10px #00b89466;
     }
   </style>
 </head>
@@ -50,7 +67,7 @@
   <h3>Login</h3>
   <input type="text" id="userId" placeholder="User ID" />
   <input type="password" id="password" placeholder="Password" />
-  <button id="loginBtn">Login</button>
+  <button onclick="login()">Login</button>
   <p id="loginMsg" style="color: #ff6b6b;"></p>
 </div>
 
@@ -64,14 +81,14 @@
   <input type="text" id="location" placeholder="Location" />
   <input type="text" id="officerName" placeholder="Registering Officer Name" />
   <input type="datetime-local" id="registerTime" />
-  <button id="submitEvidenceBtn">Submit Evidence</button>
+  <button onclick="submitEvidence()">Submit Evidence</button>
 </div>
 
 <!-- Search Evidence -->
 <div class="container" id="trackContainer" style="display:none;">
   <h3>Track Evidence</h3>
   <input type="text" id="searchInput" placeholder="Enter Evidence ID or Accused Name" />
-  <button id="searchBtn">Search</button>
+  <button onclick="searchEvidence()">Search</button>
   <pre id="searchResult">No search performed yet.</pre>
 </div>
 
@@ -82,19 +99,19 @@
     <option value="">-- Select Evidence ID --</option>
   </select>
   <textarea id="judgmentText" rows="4" placeholder="Enter judgment here..."></textarea>
-  <button id="submitJudgmentBtn">Submit Judgment</button>
+  <input type="date" id="closingDate" placeholder="Case Closing Date" />
+  <button onclick="submitJudgment()">Submit Judgment</button>
 </div>
 
 <script>
-document.addEventListener("DOMContentLoaded", function () {
   const validUsers = {
     "officer1": "password123",
-    "court": "court123"
+    "court1": "court123"
   };
 
   const userRoles = {
     "officer1": "police",
-    "court": "court"
+    "court1": "court"
   };
 
   const database = [];
@@ -118,6 +135,7 @@ document.addEventListener("DOMContentLoaded", function () {
         refreshCaseSelect();
       }
     } else {
+      msg.style.color = "#ff6b6b";
       msg.textContent = "❌ Invalid User ID or Password.";
     }
   }
@@ -131,7 +149,8 @@ document.addEventListener("DOMContentLoaded", function () {
       location: document.getElementById("location").value.trim(),
       officerName: document.getElementById("officerName").value.trim(),
       registerTime: document.getElementById("registerTime").value,
-      judgment: ""
+      judgment: "",
+      closingDate: ""
     };
 
     if (!caseData.uniqueId || !caseData.caseName || !caseData.evidenceId) {
@@ -168,7 +187,8 @@ document.addEventListener("DOMContentLoaded", function () {
 📍 Location: ${result.location}
 👮 Officer: ${result.officerName}
 🕒 Registered On: ${new Date(result.registerTime).toLocaleString()}
-⚖️ Judgment: ${result.judgment || "Pending"}`;
+⚖️ Judgment: ${result.judgment || "Pending"}
+📅 Closing Date: ${result.closingDate || "Pending"}`;
     } else {
       resultBox.textContent = "❌ No record found.";
     }
@@ -188,32 +208,30 @@ document.addEventListener("DOMContentLoaded", function () {
   function submitJudgment() {
     const evidenceId = document.getElementById("caseSelect").value;
     const judgment = document.getElementById("judgmentText").value.trim();
-    const entry = database.find(item => item.evidenceId === evidenceId);
+    const closingDate = document.getElementById("closingDate").value;
 
-    if (!evidenceId || !judgment) {
-      alert("Please select a case and enter a judgment.");
+    if (!evidenceId || !judgment || !closingDate) {
+      alert("Please select evidence, enter judgment, and closing date.");
       return;
     }
 
+    const entry = database.find(item => item.evidenceId === evidenceId);
+
     if (entry) {
       entry.judgment = judgment;
-      alert("✅ Judgment submitted successfully.");
+      entry.closingDate = closingDate;
+      alert("✅ Judgment and closing date submitted successfully.");
       document.getElementById("judgmentText").value = "";
+      document.getElementById("closingDate").value = "";
     } else {
       alert("❌ Evidence not found.");
     }
   }
-
-  // Attach functions to buttons
-  document.getElementById("loginBtn").addEventListener("click", login);
-  document.getElementById("submitEvidenceBtn").addEventListener("click", submitEvidence);
-  document.getElementById("searchBtn").addEventListener("click", searchEvidence);
-  document.getElementById("submitJudgmentBtn").addEventListener("click", submitJudgment);
-});
 </script>
 
 </body>
 </html>
+
 
 
 
