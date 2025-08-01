@@ -5,59 +5,39 @@
   <title>Evidence Tracking System</title>
   <style>
     body {
-      background: #121212;
-      color: #f0f0f0;
+      background: #121212; color: #f0f0f0;
       font-family: 'Segoe UI', Tahoma, sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+      display: flex; flex-direction: column; align-items: center;
       padding: 2rem;
     }
-    h1 {
-      color: #00b894;
-      margin-bottom: 2rem;
-    }
+    h1 { color: #00b894; margin-bottom: 2rem; }
     .container {
-      background: #1e1e1e;
-      padding: 2rem;
-      border-radius: 12px;
-      box-shadow: 0 0 20px #00b894aa;
-      max-width: 600px;
-      width: 100%;
+      background: #1e1e1e; padding: 2rem; border-radius: 12px;
+      box-shadow: 0 0 20px #00b894aa; max-width: 600px; width: 100%;
       margin-bottom: 2rem;
     }
-    input, textarea, button {
-      width: 100%;
-      padding: 0.75rem;
-      margin-bottom: 1rem;
-      border-radius: 8px;
-      border: none;
+    input, select, button {
+      width: 100%; padding: 0.75rem; margin-bottom: 1rem;
+      border-radius: 8px; border: none;
       font-size: 1rem;
     }
-    input, textarea {
-      background: #272727;
-      color: #f0f0f0;
+    input, select {
+      background: #272727; color: #f0f0f0;
     }
-    input:focus, textarea:focus {
-      outline: none;
-      background: #00b89433;
+    input:focus, select:focus {
+      outline: none; background: #00b89433;
       box-shadow: 0 0 6px #00b894cc;
     }
     button {
-      background: #00b894;
-      color: #121212;
-      font-weight: bold;
-      cursor: pointer;
+      background: #00b894; color: #121212;
+      font-weight: bold; cursor: pointer;
     }
     button:hover {
       background: #019e76;
     }
     pre {
-      background: #272727;
-      padding: 1rem;
-      border-radius: 10px;
-      white-space: pre-wrap;
-      box-shadow: inset 0 0 10px #00b89466;
+      background: #272727; padding: 1rem; border-radius: 10px;
+      white-space: pre-wrap; box-shadow: inset 0 0 10px #00b89466;
     }
   </style>
 </head>
@@ -74,9 +54,9 @@
   <p id="loginMsg" style="color: #ff6b6b;"></p>
 </div>
 
-<!-- Police Section -->
+<!-- Evidence Submission (Police) -->
 <div class="container" id="submitContainer" style="display:none;">
-  <h3>Submit / Update Case Evidence (Police)</h3>
+  <h3>Submit Case Evidence (Police)</h3>
   <input type="text" id="uniqueId" placeholder="Unique Case ID" />
   <input type="text" id="caseName" placeholder="Case Name" />
   <input type="text" id="accusedName" placeholder="Accused Name" />
@@ -84,10 +64,10 @@
   <input type="text" id="location" placeholder="Location" />
   <input type="text" id="officerName" placeholder="Registering Officer Name" />
   <input type="datetime-local" id="registerTime" />
-  <button onclick="submitEvidence()">Submit / Update Evidence</button>
+  <button onclick="submitEvidence()">Submit Evidence</button>
 </div>
 
-<!-- Shared Track Section -->
+<!-- Search Evidence -->
 <div class="container" id="trackContainer" style="display:none;">
   <h3>Track Evidence</h3>
   <input type="text" id="searchInput" placeholder="Enter Evidence ID or Accused Name" />
@@ -95,43 +75,49 @@
   <pre id="searchResult">No search performed yet.</pre>
 </div>
 
-<!-- Court Adjustment Section -->
-<div class="container" id="courtAdjustContainer" style="display:none;">
-  <h3>Court Adjustment / Close Case</h3>
-  <input type="text" id="courtEvidenceId" placeholder="Enter Evidence ID" />
-  <textarea id="courtAdjustment" placeholder="Enter Judgment / Adjustment Notes"></textarea>
-  <input type="date" id="closingDate" />
-  <button onclick="adjustCase()">Submit Adjustment</button>
+<!-- Judgment Panel (Court) -->
+<div class="container" id="courtContainer" style="display:none;">
+  <h3>Court Judgment Panel</h3>
+  <select id="caseSelect">
+    <option value="">-- Select Evidence ID --</option>
+  </select>
+  <textarea id="judgmentText" rows="4" placeholder="Enter judgment here..." style="width:100%; padding:0.75rem; background:#272727; color:#f0f0f0; border-radius:8px;"></textarea>
+  <button onclick="submitJudgment()">Submit Judgment</button>
 </div>
 
 <script>
   const validUsers = {
-    police1: { password: "police123", role: "police" },
-    court1: { password: "court123", role: "court" }
+    officer1: "password123",
+    court: "court123"
+  };
+
+  const userRoles = {
+    officer1: "police",
+    court: "court"
   };
 
   const database = [];
-  let currentRole = null;
 
   function login() {
     const user = document.getElementById("userId").value.trim();
     const pass = document.getElementById("password").value;
     const msg = document.getElementById("loginMsg");
+    const role = userRoles[user];
 
-    if (validUsers[user] && validUsers[user].password === pass) {
-      currentRole = validUsers[user].role;
+    if (validUsers[user] && validUsers[user] === pass) {
       msg.style.color = "#00b894";
-      msg.textContent = `Login successful as ${currentRole.toUpperCase()}!`;
+      msg.textContent = "✅ Login successful!";
       document.getElementById("loginContainer").style.display = "none";
-      document.getElementById("trackContainer").style.display = "block";
 
-      if (currentRole === "police") {
+      if (role === "police") {
         document.getElementById("submitContainer").style.display = "block";
-      } else if (currentRole === "court") {
-        document.getElementById("courtAdjustContainer").style.display = "block";
+        document.getElementById("trackContainer").style.display = "block";
+      } else if (role === "court") {
+        document.getElementById("courtContainer").style.display = "block";
+        document.getElementById("trackContainer").style.display = "block";
+        refreshCaseSelect();
       }
     } else {
-      msg.style.color = "#ff6b6b";
       msg.textContent = "❌ Invalid User ID or Password.";
     }
   }
@@ -144,29 +130,22 @@
       evidenceId: document.getElementById("evidenceId").value.trim(),
       location: document.getElementById("location").value.trim(),
       officerName: document.getElementById("officerName").value.trim(),
-      registerTime: document.getElementById("registerTime").value
+      registerTime: document.getElementById("registerTime").value,
+      judgment: ""
     };
 
     if (!caseData.uniqueId || !caseData.caseName || !caseData.evidenceId) {
-      alert("❗ Please fill in at least Case ID, Case Name, and Evidence ID.");
+      alert("Please fill in at least Case ID, Case Name, and Evidence ID.");
       return;
     }
 
-    const existingIndex = database.findIndex(
-      e => e.evidenceId.toLowerCase() === caseData.evidenceId.toLowerCase()
-    );
+    database.push(caseData);
+    alert("✅ Evidence submitted successfully!");
+    clearInputs();
+    refreshCaseSelect();
+  }
 
-    if (existingIndex !== -1) {
-      // Preserve existing court data if any
-      caseData.adjustment = database[existingIndex].adjustment || '';
-      caseData.closingDate = database[existingIndex].closingDate || '';
-      database[existingIndex] = caseData;
-      alert("✅ Evidence updated successfully!");
-    } else {
-      database.push(caseData);
-      alert("✅ Evidence submitted successfully!");
-    }
-
+  function clearInputs() {
     document.querySelectorAll("#submitContainer input").forEach(input => input.value = "");
   }
 
@@ -186,46 +165,49 @@
 👤 Accused: ${result.accusedName}
 📄 Evidence ID: ${result.evidenceId}
 📍 Location: ${result.location}
-👮 Registering Officer: ${result.officerName}
-🕒 Registered: ${new Date(result.registerTime).toLocaleString()}
-⚖️ Adjustment: ${result.adjustment || 'Pending'}
-📅 Case Closed On: ${result.closingDate || 'Not closed yet'}`;
+👮 Officer: ${result.officerName}
+🕒 Registered On: ${new Date(result.registerTime).toLocaleString()}
+⚖️ Judgment: ${result.judgment || "Pending"}`;
     } else {
-      resultBox.textContent = "❌ No record found for that input.";
+      resultBox.textContent = "❌ No record found.";
     }
   }
 
-  function adjustCase() {
-    const evidenceId = document.getElementById("courtEvidenceId").value.trim().toLowerCase();
-    const adjustmentText = document.getElementById("courtAdjustment").value.trim();
-    const closingDate = document.getElementById("closingDate").value;
+  function refreshCaseSelect() {
+    const select = document.getElementById("caseSelect");
+    select.innerHTML = '<option value="">-- Select Evidence ID --</option>';
+    database.forEach(entry => {
+      const opt = document.createElement("option");
+      opt.value = entry.evidenceId;
+      opt.textContent = `${entry.evidenceId} (${entry.accusedName})`;
+      select.appendChild(opt);
+    });
+  }
 
-    const record = database.find(
-      e => e.evidenceId.toLowerCase() === evidenceId
-    );
+  function submitJudgment() {
+    const evidenceId = document.getElementById("caseSelect").value;
+    const judgment = document.getElementById("judgmentText").value.trim();
+    const entry = database.find(item => item.evidenceId === evidenceId);
 
-    if (!record) {
-      alert("❌ No matching evidence found.");
+    if (!evidenceId || !judgment) {
+      alert("Please select a case and enter a judgment.");
       return;
     }
 
-    if (!adjustmentText || !closingDate) {
-      alert("❗ Please enter adjustment and closing date.");
-      return;
+    if (entry) {
+      entry.judgment = judgment;
+      alert("✅ Judgment submitted successfully.");
+      document.getElementById("judgmentText").value = "";
+    } else {
+      alert("❌ Evidence not found.");
     }
-
-    record.adjustment = adjustmentText;
-    record.closingDate = closingDate;
-
-    alert("✅ Case adjustment and closing date recorded.");
-    document.getElementById("courtEvidenceId").value = "";
-    document.getElementById("courtAdjustment").value = "";
-    document.getElementById("closingDate").value = "";
   }
 </script>
 
 </body>
 </html>
+
+
 
 
 
