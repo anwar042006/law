@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Evidence Tracking System</title>
   <style>
     body {
@@ -86,7 +86,7 @@
 </div>
 
 <script>
-  // Define users and roles
+document.addEventListener("DOMContentLoaded", function () {
   const validUsers = {
     "officer1": "password123",
     "court": "court123"
@@ -99,7 +99,6 @@
 
   const database = [];
 
-  // Handle login
   function login() {
     const user = document.getElementById("userId").value.trim();
     const pass = document.getElementById("password").value;
@@ -123,7 +122,8 @@
     }
   }
 
-  // Submit evidence (Police)
+  window.login = login;
+
   function submitEvidence() {
     const caseData = {
       uniqueId: document.getElementById("uniqueId").value.trim(),
@@ -147,12 +147,13 @@
     refreshCaseSelect();
   }
 
+  window.submitEvidence = submitEvidence;
+
   function clearInputs() {
     document.querySelectorAll("#submitContainer input").forEach(input => input.value = "");
     document.getElementById("registerTime").value = "";
   }
 
-  // Search evidence
   function searchEvidence() {
     const query = document.getElementById("searchInput").value.trim().toLowerCase();
     const result = database.find(
@@ -177,7 +178,8 @@
     }
   }
 
-  // Populate dropdown for court
+  window.searchEvidence = searchEvidence;
+
   function refreshCaseSelect() {
     const select = document.getElementById("caseSelect");
     select.innerHTML = '<option value="">-- Select Evidence ID --</option>';
@@ -189,7 +191,6 @@
     });
   }
 
-  // Submit court judgment
   function submitJudgment() {
     const evidenceId = document.getElementById("caseSelect").value;
     const judgment = document.getElementById("judgmentText").value.trim();
@@ -208,6 +209,9 @@
       alert("❌ Evidence not found.");
     }
   }
+
+  window.submitJudgment = submitJudgment;
+});
 </script>
 
 </body>
