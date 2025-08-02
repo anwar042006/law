@@ -1,197 +1,235 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Evidence Tracking Login</title>
-  <script src="https://cdn.jsdelivr.net/npm/web3@1.8.2/dist/web3.min.js"></script>
+  <meta charset="UTF-8">
+  <title>Evidence Tracking System</title>
   <style>
     body {
-      background: linear-gradient(to right, #1e3c72, #2a5298);
-      color: #fff;
-      font-family: 'Segoe UI', sans-serif;
-      margin: 0;
-      padding: 0;
-      text-align: center;
+      background: #121212;
+      color: #f0f0f0;
+      font-family: 'Segoe UI', Tahoma, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem;
     }
+    h1 { color: #00b894; margin-bottom: 2rem; }
     .container {
+      background: #1e1e1e;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 0 20px #00b894aa;
       max-width: 600px;
-      margin: 50px auto;
-      background: #fff;
-      color: #333;
-      padding: 30px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px #000;
+      width: 100%;
+      margin-bottom: 2rem;
     }
-    input, select, button {
-      width: 90%;
-      padding: 10px;
-      margin: 10px 0;
-      font-size: 16px;
-      border-radius: 5px;
-      border: 1px solid #ccc;
+    input, select, button, textarea {
+      width: 100%;
+      padding: 0.75rem;
+      margin-bottom: 1rem;
+      border-radius: 8px;
+      border: none;
+      font-size: 1rem;
+    }
+    input, textarea {
+      background: #272727;
+      color: #f0f0f0;
+    }
+    select {
+      background: #1b1b1b;
+      color: #00b894;
+      border: 1px solid #00b894;
     }
     button {
-      background-color: #1e88e5;
-      color: white;
-      border: none;
+      background: #00b894;
+      color: #121212;
+      font-weight: bold;
+      cursor: pointer;
     }
     button:hover {
-      background-color: #1565c0;
-    }
-    .section {
-      display: none;
-      margin-top: 20px;
+      background: #019e76;
     }
     pre {
-      text-align: left;
-      background: #f5f5f5;
-      padding: 10px;
-      border-radius: 5px;
+      background: #272727;
+      padding: 1rem;
+      border-radius: 10px;
+      white-space: pre-wrap;
+      box-shadow: inset 0 0 10px #00b89466;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h2>Evidence Tracking System</h2>
 
-    <select id="role" onchange="showLogin()">
-      <option value="">Select Role</option>
-      <option value="police">Police</option>
-      <option value="court">Court</option>
-      <option value="public">Public</option>
-    </select>
+<h1>Evidence Tracking System</h1>
 
-    <div id="loginForm" style="display: none;">
-      <input type="text" id="username" placeholder="Username" />
-      <input type="password" id="password" placeholder="Password" />
-      <button onclick="login()">Login</button>
-    </div>
+<!-- Role Selection -->
+<div class="container" id="roleContainer">
+  <h3>Select Your Role</h3>
+  <select id="roleSelect" onchange="roleLogin()">
+    <option value="">-- Select Role --</option>
+    <option value="police">Police</option>
+    <option value="court">Court</option>
+    <option value="public">Public</option>
+  </select>
+</div>
 
-    <button id="publicBtn" style="display: none;" onclick="login()">Continue as Public</button>
+<!-- Police: Submit Evidence -->
+<div class="container" id="submitContainer" style="display:none;">
+  <h3>Submit Case Evidence (Police)</h3>
+  <input type="text" id="uniqueId" placeholder="Unique Case ID" />
+  <input type="text" id="caseName" placeholder="Case Name" />
+  <input type="text" id="accusedName" placeholder="Accused Name" />
+  <input type="text" id="evidenceId" placeholder="Evidence ID" />
+  <input type="text" id="location" placeholder="Location" />
+  <input type="text" id="officerName" placeholder="Registering Officer Name" />
+  <input type="datetime-local" id="registerTime" />
+  <button onclick="submitEvidence()">Submit Evidence</button>
+</div>
 
-    <p id="account"></p>
+<!-- Court: Submit Judgment -->
+<div class="container" id="courtContainer" style="display:none;">
+  <h3>Court Judgment Panel</h3>
+  <input type="text" id="filterCourtInput" placeholder="Search Evidence ID or Accused Name" oninput="refreshCaseSelect()" />
+  <select id="caseSelect">
+    <option value="">-- Select Evidence ID --</option>
+  </select>
+  <textarea id="judgmentText" rows="4" placeholder="Enter judgment here..."></textarea>
+  <input type="date" id="closingDate" />
+  <button onclick="submitJudgment()">Submit Judgment</button>
+</div>
 
-    <!-- Police Section -->
-    <div id="policeSection" class="section">
-      <h3>Police Dashboard</h3>
-      <input id="caseId" placeholder="Case ID" />
-      <input id="caseName" placeholder="Case Name" />
-      <input id="accusedName" placeholder="Accused Name" />
-      <input id="evidenceId" placeholder="Evidence ID" />
-      <input id="location" placeholder="Location" />
-      <input id="officerName" placeholder="Officer Name" />
-      <input id="registerTime" placeholder="Register Time" />
-      <button onclick="submitEvidence()">Submit Evidence</button>
-    </div>
+<!-- All: Track Evidence -->
+<div class="container" id="trackContainer" style="display:none;">
+  <h3>Track Evidence</h3>
+  <input type="text" id="searchInput" placeholder="Enter Evidence ID or Accused Name" />
+  <button onclick="searchEvidence()">Search</button>
+  <pre id="searchResult">No search performed yet.</pre>
+</div>
 
-    <!-- Court Section -->
-    <div id="courtSection" class="section">
-      <h3>Court Dashboard</h3>
-      <input id="judgeEvidenceId" placeholder="Evidence ID" />
-      <input id="judgment" placeholder="Judgment" />
-      <button onclick="addJudgment()">Add Judgment</button>
+<script>
+  function roleLogin() {
+    const role = document.getElementById("roleSelect").value;
+    document.getElementById("roleContainer").style.display = "none";
 
-      <input id="closeEvidenceId" placeholder="Evidence ID" />
-      <input id="closingDate" placeholder="Closing Date" />
-      <button onclick="closeCase()">Close Case</button>
-    </div>
+    if (role === "police") {
+      document.getElementById("submitContainer").style.display = "block";
+      document.getElementById("trackContainer").style.display = "block";
+    } else if (role === "court") {
+      document.getElementById("courtContainer").style.display = "block";
+      document.getElementById("trackContainer").style.display = "block";
+      refreshCaseSelect();
+    } else if (role === "public") {
+      document.getElementById("trackContainer").style.display = "block";
+    }
+  }
 
-    <!-- Public Section -->
-    <div id="publicSection" class="section">
-      <h3>Public Viewer</h3>
-      <input id="searchEvidenceId" placeholder="Evidence ID" />
-      <button onclick="getEvidence()">View Evidence</button>
-      <pre id="evidenceResult"></pre>
-    </div>
-  </div>
+  function loadDatabase() {
+    return JSON.parse(localStorage.getItem("evidenceDB")) || [];
+  }
 
-  <script>
-    let web3, contract, account;
-    const contractAddress = "YOUR_CONTRACT_ADDRESS";
-    const abi = [/* Paste your contract ABI here */];
+  function saveDatabase(db) {
+    localStorage.setItem("evidenceDB", JSON.stringify(db));
+  }
 
-    const users = {
-      police: { username: "police1", password: "police123" },
-      court: { username: "court1", password: "court123" }
+  function submitEvidence() {
+    const registerTime = document.getElementById("registerTime").value;
+    const caseData = {
+      uniqueId: document.getElementById("uniqueId").value.trim(),
+      caseName: document.getElementById("caseName").value.trim(),
+      accusedName: document.getElementById("accusedName").value.trim(),
+      evidenceId: document.getElementById("evidenceId").value.trim(),
+      location: document.getElementById("location").value.trim(),
+      officerName: document.getElementById("officerName").value.trim(),
+      registerTime,
+      judgment: "",
+      closingDate: ""
     };
 
-    function showLogin() {
-      const role = document.getElementById("role").value;
-      document.getElementById("loginForm").style.display = "none";
-      document.getElementById("publicBtn").style.display = "none";
-      if (role === "public") {
-        document.getElementById("publicBtn").style.display = "block";
-      } else if (role === "police" || role === "court") {
-        document.getElementById("loginForm").style.display = "block";
+    if (!caseData.uniqueId || !caseData.caseName || !caseData.evidenceId || !registerTime) {
+      alert("Please fill in all required fields.");
+      return;
+    }
+
+    const db = loadDatabase();
+    if (db.find(e => e.evidenceId === caseData.evidenceId)) {
+      alert("⚠ Evidence ID already exists.");
+      return;
+    }
+
+    db.push(caseData);
+    saveDatabase(db);
+    alert("✅ Evidence submitted.");
+    document.querySelectorAll("#submitContainer input").forEach(el => el.value = "");
+    refreshCaseSelect();
+  }
+
+  function searchEvidence() {
+    const query = document.getElementById("searchInput").value.trim().toLowerCase();
+    const db = loadDatabase();
+    const result = db.find(
+      e => e.evidenceId.toLowerCase() === query || e.accusedName.toLowerCase() === query
+    );
+
+    const box = document.getElementById("searchResult");
+    if (result) {
+      box.textContent = `
+🆔 Unique ID: ${result.uniqueId}
+📁 Case Name: ${result.caseName}
+👤 Accused: ${result.accusedName}
+📄 Evidence ID: ${result.evidenceId}
+📍 Location: ${result.location}
+👮 Officer: ${result.officerName}
+🕒 Registered On: ${new Date(result.registerTime).toLocaleString()}
+⚖ Judgment: ${result.judgment || "Pending"}
+📅 Closing Date: ${result.closingDate || "Pending"}`;
+    } else {
+      box.textContent = "❌ No record found.";
+    }
+  }
+
+  function refreshCaseSelect() {
+    const db = loadDatabase();
+    const select = document.getElementById("caseSelect");
+    const filter = document.getElementById("filterCourtInput").value.trim().toLowerCase();
+    select.innerHTML = '<option value="">-- Select Evidence ID --</option>';
+
+    db.forEach(e => {
+      if (
+        e.evidenceId.toLowerCase().includes(filter) ||
+        e.accusedName.toLowerCase().includes(filter)
+      ) {
+        const opt = document.createElement("option");
+        opt.value = e.evidenceId;
+        opt.textContent = ${e.evidenceId} (${e.accusedName});
+        select.appendChild(opt);
       }
+    });
+  }
+
+  function submitJudgment() {
+    const evidenceId = document.getElementById("caseSelect").value;
+    const judgment = document.getElementById("judgmentText").value.trim();
+    const closingDate = document.getElementById("closingDate").value;
+
+    if (!evidenceId || !judgment || !closingDate) {
+      alert("Please complete all fields.");
+      return;
     }
 
-    async function login() {
-      const role = document.getElementById("role").value;
-      const username = document.getElementById("username").value;
-      const password = document.getElementById("password").value;
-
-      if (role !== "public") {
-        if (users[role].username !== username || users[role].password !== password) {
-          alert("Invalid username or password!");
-          return;
-        }
-      }
-
-      if (window.ethereum) {
-        web3 = new Web3(window.ethereum);
-        await ethereum.request({ method: "eth_requestAccounts" });
-        const accounts = await web3.eth.getAccounts();
-        account = accounts[0];
-        contract = new web3.eth.Contract(abi, contractAddress);
-        document.getElementById("account").innerText = `Connected: ${account}`;
-        showDashboard(role);
-      } else {
-        alert("Please install MetaMask.");
-      }
+    const db = loadDatabase();
+    const entry = db.find(e => e.evidenceId === evidenceId);
+    if (entry) {
+      entry.judgment = judgment;
+      entry.closingDate = closingDate;
+      saveDatabase(db);
+      alert("✅ Judgment submitted.");
+      document.getElementById("judgmentText").value = "";
+      document.getElementById("closingDate").value = "";
+    } else {
+      alert("❌ Evidence not found.");
     }
+  }
+</script>
 
-    function showDashboard(role) {
-      document.querySelectorAll('.section').forEach(div => div.style.display = 'none');
-      if (role === "police") document.getElementById("policeSection").style.display = "block";
-      if (role === "court") document.getElementById("courtSection").style.display = "block";
-      if (role === "public") document.getElementById("publicSection").style.display = "block";
-    }
-
-    async function submitEvidence() {
-      const args = [
-        caseId.value, caseName.value, accusedName.value,
-        evidenceId.value, location.value, officerName.value, registerTime.value
-      ];
-      await contract.methods.submitEvidence(...args).send({ from: account });
-      alert("Evidence submitted.");
-    }
-
-    async function addJudgment() {
-      await contract.methods.addJudgment(judgeEvidenceId.value, judgment.value)
-        .send({ from: account });
-      alert("Judgment added.");
-    }
-
-    async function closeCase() {
-      await contract.methods.closeCase(closeEvidenceId.value, closingDate.value)
-        .send({ from: account });
-      alert("Case closed.");
-    }
-
-    async function getEvidence() {
-      const e = await contract.methods.getEvidence(searchEvidenceId.value).call();
-      evidenceResult.innerText = `
-Case ID: ${e[0]}
-Case Name: ${e[1]}
-Accused: ${e[2]}
-Evidence ID: ${e[3]}
-Location: ${e[4]}
-Officer: ${e[5]}
-Register Time: ${e[6]}
-Judgment: ${e[7]}
-Closing Date: ${e[8]}
-      `;
-    }
-  </script>
 </body>
 </html>
