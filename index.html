@@ -1,158 +1,238 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Evidence Tracking System</title>
   <script src="https://cdn.jsdelivr.net/npm/web3@1.8.2/dist/web3.min.js"></script>
   <style>
+    * {
+      box-sizing: border-box;
+    }
     body {
-      font-family: Arial, sans-serif;
-      background-color: #1e1e2f;
-      color: white;
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #1e1e2f;
+      color: #f4f4f4;
       padding: 20px;
     }
-    .container { max-width: 800px; margin: auto; }
-    .section { display: none; margin-top: 20px; background: #2e2e3e; padding: 20px; border-radius: 8px; }
-    input, select, textarea {
-      width: 100%; padding: 10px; margin: 10px 0; border-radius: 5px;
-      border: none; font-size: 16px;
+    .container {
+      max-width: 700px;
+      margin: auto;
+      background: #2c2c3e;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.6);
+    }
+    h1, h2 {
+      text-align: center;
+      color: #61dafb;
+    }
+    label {
+      display: block;
+      margin: 15px 0 5px;
+      color: #ccc;
+    }
+    input, select, textarea, button {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+      font-size: 1rem;
     }
     button {
-      padding: 10px 20px; background: #4caf50; color: white; border: none; border-radius: 5px; cursor: pointer;
+      margin-top: 20px;
+      background-color: #61dafb;
+      color: #000;
+      font-weight: bold;
+      cursor: pointer;
     }
-    button:hover { background: #45a049; }
+    button:hover {
+      background-color: #21a1f1;
+    }
+    .hidden {
+      display: none;
+    }
+    .id-display {
+      font-weight: bold;
+      margin-top: 10px;
+      color: #0ff;
+    }
   </style>
 </head>
 <body>
-<div class="container">
-  <h2>Evidence Tracking System</h2>
+  <div class="container">
+    <h1>Evidence Tracking System</h1>
 
-  <!-- Login -->
-  <div id="loginSection">
-    <label>Select Role:</label>
+    <!-- Role Selection Login -->
+    <label for="role">Select Role:</label>
     <select id="role">
-      <option value="public">Public</option>
+      <option value="">-- Select Role --</option>
       <option value="police">Police</option>
       <option value="court">Court</option>
+      <option value="public">Public</option>
     </select>
 
-    <div id="credentials" style="display:none;">
-      <input type="text" id="username" placeholder="Username">
-      <input type="password" id="password" placeholder="Password">
+    <div id="loginFields" class="hidden">
+      <label for="username">Username:</label>
+      <input type="text" id="username" placeholder="Enter Username">
+      <label for="password">Password:</label>
+      <input type="password" id="password" placeholder="Enter Password">
     </div>
 
     <button onclick="login()">Login</button>
+
+    <!-- Police Portal -->
+    <div id="policePortal" class="hidden">
+      <h2>Register New Case</h2>
+      <label for="aadhaar">Aadhaar ID</label>
+      <input type="text" id="aadhaar" />
+
+      <label for="accused">Accused Name</label>
+      <input type="text" id="accused" />
+
+      <label for="crime">Crime Case Details</label>
+      <textarea id="crime"></textarea>
+
+      <label for="location">Crime Location</label>
+      <input type="text" id="location" />
+
+      <label for="officer">Officer Name</label>
+      <input type="text" id="officer" />
+
+      <label for="crimedate">Crime Date & Time</label>
+      <input type="datetime-local" id="crimedate" />
+
+      <label for="regdate">Registration Date & Time</label>
+      <input type="datetime-local" id="regdate" />
+
+      <div class="id-display" id="caseIds"></div>
+
+      <button onclick="registerCase()">Register Case</button>
+
+      <h3>Track Case</h3>
+      <label for="trackPolice">Enter Evidence ID or Accused Name</label>
+      <input type="text" id="trackPolice" />
+      <button onclick="trackCase('police')">Track</button>
+
+      <div id="policeOutput"></div>
+    </div>
+
+    <!-- Court Portal -->
+    <div id="courtPortal" class="hidden">
+      <h2>Court Judgment</h2>
+      <label for="selectEvidence">Select Evidence</label>
+      <select id="selectEvidence"></select>
+
+      <label for="judgment">Judgment Text</label>
+      <textarea id="judgment"></textarea>
+
+      <label for="closingDate">Closing Date</label>
+      <input type="date" id="closingDate" />
+
+      <button onclick="submitJudgment()">Submit Judgment</button>
+
+      <h3>Track Case</h3>
+      <label for="trackCourt">Enter Evidence ID or Accused Name</label>
+      <input type="text" id="trackCourt" />
+      <button onclick="trackCase('court')">Track</button>
+
+      <div id="courtOutput"></div>
+    </div>
+
+    <!-- Public Portal -->
+    <div id="publicPortal" class="hidden">
+      <h2>Track Case</h2>
+      <label for="trackPublic">Enter Evidence ID or Accused Name</label>
+      <input type="text" id="trackPublic" />
+      <button onclick="trackCase('public')">Track</button>
+      <div id="publicOutput"></div>
+    </div>
   </div>
 
-  <!-- Police Portal -->
-  <div id="policeSection" class="section">
-    <h3>👮 Police Portal</h3>
-    <h4>Register New Case</h4>
-    <input type="text" id="aadhaar" placeholder="Aadhaar ID">
-    <input type="text" id="accused" placeholder="Accused Name">
-    <input type="text" id="crime" placeholder="Crime Details">
-    <input type="text" id="location" placeholder="Crime Location">
-    <input type="text" id="officer" placeholder="Officer Name">
-    <input type="datetime-local" id="crimeTime">
-    <input type="datetime-local" id="registerTime">
-    <button onclick="registerCase()">Register New Case</button>
+  <script>
+    const policeUsers = { 'police': 'police123' };
+    const courtUsers = { 'court': 'court123' };
 
-    <h4>Track Case</h4>
-    <input type="text" id="policeTrackInput" placeholder="Enter Evidence ID or Accused Name">
-    <button onclick="trackCase('police')">Track</button>
-    <pre id="policeTrackResult"></pre>
-  </div>
+    document.getElementById('role').addEventListener('change', function () {
+      const role = this.value;
+      const loginFields = document.getElementById('loginFields');
+      const police = document.getElementById('policePortal');
+      const court = document.getElementById('courtPortal');
+      const pub = document.getElementById('publicPortal');
 
-  <!-- Court Portal -->
-  <div id="courtSection" class="section">
-    <h3>⚖️ Court Portal</h3>
-    <h4>Submit Court Judgment</h4>
-    <input type="text" id="courtSearch" placeholder="Enter Evidence ID or Accused Name">
-    <select id="evidenceDropdown"></select>
-    <textarea id="judgmentText" placeholder="Judgment Text"></textarea>
-    <input type="datetime-local" id="closingDate">
-    <button onclick="submitJudgment()">Submit</button>
+      loginFields.classList.add('hidden');
+      police.classList.add('hidden');
+      court.classList.add('hidden');
+      pub.classList.add('hidden');
 
-    <h4>Track Case</h4>
-    <input type="text" id="courtTrackInput" placeholder="Enter Evidence ID or Accused Name">
-    <button onclick="trackCase('court')">Track</button>
-    <pre id="courtTrackResult"></pre>
-  </div>
+      if (role === 'police' || role === 'court') {
+        loginFields.classList.remove('hidden');
+      } else if (role === 'public') {
+        pub.classList.remove('hidden');
+      }
+    });
 
-  <!-- Public Portal -->
-  <div id="publicSection" class="section">
-    <h3>🧑‍🤝‍🧑 Public Case Tracking</h3>
-    <input type="text" id="publicTrackInput" placeholder="Enter Evidence ID or Accused Name">
-    <button onclick="trackCase('public')">Track</button>
-    <pre id="publicTrackResult"></pre>
-  </div>
-</div>
+    function login() {
+      const role = document.getElementById('role').value;
+      const user = document.getElementById('username').value;
+      const pass = document.getElementById('password').value;
 
-<script>
-const policeCredentials = { username: "police", password: "1234" };
-const courtCredentials = { username: "court", password: "5678" };
-
-document.getElementById("role").addEventListener("change", function () {
-  const val = this.value;
-  document.getElementById("credentials").style.display = (val === 'police' || val === 'court') ? 'block' : 'none';
-});
-
-function login() {
-  const role = document.getElementById("role").value;
-  const username = document.getElementById("username").value;
-  const password = document.getElementById("password").value;
-
-  if (role === 'public') {
-    document.getElementById("publicSection").style.display = 'block';
-  } else if (role === 'police') {
-    if (username === policeCredentials.username && password === policeCredentials.password) {
-      document.getElementById("policeSection").style.display = 'block';
-    } else {
-      alert("Invalid Police credentials");
+      if ((role === 'police' && policeUsers[user] === pass) ||
+          (role === 'court' && courtUsers[user] === pass)) {
+        document.getElementById(role + 'Portal').classList.remove('hidden');
+        document.getElementById('loginFields').classList.add('hidden');
+      } else {
+        alert('Invalid credentials');
+      }
     }
-  } else if (role === 'court') {
-    if (username === courtCredentials.username && password === courtCredentials.password) {
-      document.getElementById("courtSection").style.display = 'block';
-      populateEvidenceDropdown();
-    } else {
-      alert("Invalid Court credentials");
+
+    function registerCase() {
+      const aadhaar = document.getElementById('aadhaar').value;
+      const accused = document.getElementById('accused').value;
+      const crime = document.getElementById('crime').value;
+      const location = document.getElementById('location').value;
+      const officer = document.getElementById('officer').value;
+      const crimeDate = document.getElementById('crimedate').value;
+      const regDate = document.getElementById('regdate').value;
+
+      const uid = 'CID' + Math.floor(1000 + Math.random() * 9000);
+      const eid = 'EID' + Math.floor(100000 + Math.random() * 900000);
+
+      document.getElementById('caseIds').innerText = `
+        Unique Case ID: ${uid}\nEvidence ID: ${eid}`;
+
+      // Integrate with smart contract call here (via Web3)
+      alert(`Case Registered Successfully\nUID: ${uid}\nEID: ${eid}`);
     }
-  }
-  document.getElementById("loginSection").style.display = 'none';
-}
 
-function populateEvidenceDropdown() {
-  const select = document.getElementById("evidenceDropdown");
-  select.innerHTML = '<option>Select Evidence</option>';
-  // Dummy example (replace with dynamic)
-  ["EVID001", "EVID002"].forEach(id => {
-    const opt = document.createElement("option");
-    opt.value = id;
-    opt.innerText = id;
-    select.appendChild(opt);
-  });
-}
+    function trackCase(portal) {
+      const input = document.getElementById(`track${capitalize(portal)}`).value;
+      const output = document.getElementById(`${portal}Output`);
 
-function registerCase() {
-  alert("📋 Registered!\nUnique ID: CID001\nEvidence ID: EVID001");
-  // Logic connects with smart contract
-}
+      // Fetch from smart contract using Web3 (placeholder example)
+      output.innerHTML = `
+        <p>🆔 Unique ID: CID1234</p>
+        <p>📄 Evidence ID: EID654321</p>
+        <p>📁 Case: John Doe</p>
+        <p>📍 Location: Mumbai</p>
+        <p>👮 Officer: Officer Singh</p>
+        <p>🕒 Time: 2025-08-02T13:00</p>
+        <p>⚖ Judgment: Pending</p>
+        <p>📅 Closing: Pending</p>
+      `;
+    }
 
-function submitJudgment() {
-  alert("⚖ Judgment submitted.");
-}
+    function submitJudgment() {
+      const select = document.getElementById('selectEvidence');
+      const judgment = document.getElementById('judgment').value;
+      const closingDate = document.getElementById('closingDate').value;
+      alert(`Judgment submitted for ${select.value}\nText: ${judgment}\nClosing: ${closingDate}`);
+    }
 
-function trackCase(portal) {
-  const inputs = {
-    police: ["policeTrackInput", "policeTrackResult"],
-    court: ["courtTrackInput", "courtTrackResult"],
-    public: ["publicTrackInput", "publicTrackResult"]
-  }[portal];
-  const value = document.getElementById(inputs[0]).value;
-  const output = `🆔 Unique ID: CID001\n📄 Evidence ID: EVID001\n📁 Case: Theft\n📍 Location: Mumbai\n👮 Officer: Officer Singh\n🕒 Time: 2025-08-02T13:00\n⚖ Judgment: ${portal === 'court' ? 'Guilty' : 'Pending'}\n📅 Closing: ${portal === 'court' ? '2025-08-05' : 'Pending'}`;
-  document.getElementById(inputs[1]).innerText = output;
-}
-</script>
+    function capitalize(s) {
+      return s.charAt(0).toUpperCase() + s.slice(1);
+    }
+  </script>
 </body>
 </html>
-
