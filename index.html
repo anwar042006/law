@@ -93,12 +93,14 @@
 
 <!-- Court Portal -->
 <div class="container" id="courtPortal">
-  <h2>Submit Judgment</h2>
-  <input type="text" id="evidenceIdCourt" placeholder="Evidence ID">
-  <textarea id="judgmentText" placeholder="Judgment Text"></textarea>
-  <input type="date" id="closingDate">
-  <button onclick="submitJudgment()">Submit Judgment</button>
-
+  <h2>Court Judgment</h2>
+  <input type="text" id="evidenceSearchInput" placeholder="Enter Evidence ID or Accused Name">
+  <button onclick="searchEvidenceForJudgment()">Select Evidence</button>
+  <div id="judgmentSection" style="display:none;">
+    <textarea id="judgmentText" placeholder="Judgment Text"></textarea>
+    <input type="date" id="closingDate">
+    <button onclick="submitJudgment()">Submit Judgment</button>
+  </div>
   <h3>Track Case</h3>
   <input type="text" id="trackCourtInput" placeholder="Enter Evidence ID or Accused Name">
   <button onclick="track('court')">Track</button>
@@ -118,6 +120,7 @@
   const courtCreds = { username: 'court1', password: '5678' };
   const db = {};
   const aadhaarMap = {};
+  let selectedEvidence = null;
 
   function showLogin() {
     const role = document.getElementById("roleSelect").value;
@@ -173,15 +176,29 @@
     alert(`Case Registered.\nEvidence ID: ${evidenceId}\nCase ID: ${uniqueId}`);
   }
 
+  function searchEvidenceForJudgment() {
+    const input = document.getElementById("evidenceSearchInput").value.toLowerCase();
+    selectedEvidence = null;
+    for (const key in db) {
+      const d = db[key];
+      if (key.toLowerCase() === input || d.accused.toLowerCase() === input) {
+        selectedEvidence = d;
+        break;
+      }
+    }
+    if (selectedEvidence) {
+      document.getElementById("judgmentSection").style.display = "block";
+    } else {
+      alert("Evidence not found.");
+    }
+  }
+
   function submitJudgment() {
-    const eid = document.getElementById("evidenceIdCourt").value;
     const judgment = document.getElementById("judgmentText").value;
     const date = document.getElementById("closingDate").value;
-
-    if (!db[eid]) return alert("Evidence not found");
-
-    db[eid].judgment = judgment;
-    db[eid].closingDate = date;
+    if (!selectedEvidence) return alert("No evidence selected");
+    selectedEvidence.judgment = judgment;
+    selectedEvidence.closingDate = date;
     alert("Judgment submitted.");
   }
 
@@ -189,7 +206,6 @@
     const input = document.getElementById("track" + capitalize(role) + "Input").value.toLowerCase();
     const resultBox = document.getElementById(role + "TrackResult");
     let found = null;
-
     for (const key in db) {
       const d = db[key];
       if (key.toLowerCase() === input || d.accused.toLowerCase() === input) {
@@ -197,7 +213,6 @@
         break;
       }
     }
-
     resultBox.textContent = found ? `
 🆔 Unique ID: ${found.uniqueId}
 📄 Evidence ID: ${found.evidenceId}
@@ -206,8 +221,7 @@
 👮 Officer: ${found.officer}
 🕒 Time: ${found.datetime}
 ⚖ Judgment: ${found.judgment}
-📅 Closing: ${found.closingDate}
-` : "Case not found.";
+📅 Closing: ${found.closingDate}` : "Case not found.";
   }
 
   function capitalize(str) {
