@@ -3,16 +3,24 @@
 <head>
   <meta charset="UTF-8" />
   <title>Evidence Tracking System</title>
+  <script src="https://cdn.jsdelivr.net/npm/web3@1.8.2/dist/web3.min.js"></script>
   <style>
     body { background:#0f172a; color:#f8fafc; font-family:sans-serif; padding:2rem; }
     h1,h2 { text-align:center; color:#22d3ee; }
-    .container { background:#1e293b; padding:1.5rem; border-radius:12px; max-width:600px; margin:1rem auto; box-shadow:0 0 10px #0ea5e9; }
+    .container {
+      background:#1e293b; padding:1.5rem; border-radius:12px; max-width:700px;
+      margin:1rem auto; box-shadow:0 0 10px #0ea5e9;
+    }
     input, textarea, select, button {
       width:100%; padding:10px; margin:10px 0;
       border:none; border-radius:8px; font-size:1rem;
     }
-    button { background:#22d3ee; color:#0f172a; font-weight:bold; cursor:pointer; }
-    pre { background:#0f172a; padding:1rem; border-radius:10px; white-space:pre-wrap; }
+    button {
+      background:#22d3ee; color:#0f172a; font-weight:bold; cursor:pointer;
+    }
+    pre {
+      background:#0f172a; padding:1rem; border-radius:10px; white-space:pre-wrap;
+    }
     #policeLogin, #courtLogin, #policePortal, #courtPortal, #publicPortal { display:none; }
   </style>
 </head>
@@ -48,9 +56,10 @@
     <input id="officer" placeholder="Officer Name" />
     <input id="datetime" type="datetime-local" />
     <button onclick="registerCase()">Register Case</button>
+
     <h3>Track Case</h3>
     <input id="trackPoliceInput" placeholder="Evidence ID or Accused Name" />
-    <button onclick="track('police')">Track</button>
+    <button onclick="trackCase('police')">Track</button>
     <pre id="policeTrackResult"></pre>
   </div>
 
@@ -63,93 +72,105 @@
       <input id="judgmentClosingDate" type="date" />
       <button onclick="submitJudgment()">Submit Judgment</button>
     </div>
+
     <h3>Track Case</h3>
     <input id="trackCourtInput" placeholder="Evidence ID or Accused Name" />
-    <button onclick="track('court')">Track</button>
+    <button onclick="trackCase('court')">Track</button>
     <pre id="courtTrackResult"></pre>
   </div>
 
   <div class="container" id="publicPortal">
     <h2>Public Case Tracking</h2>
     <input id="trackPublicInput" placeholder="Evidence ID or Accused Name" />
-    <button onclick="track('public')">Track</button>
+    <button onclick="trackCase('public')">Track</button>
     <pre id="publicTrackResult"></pre>
   </div>
 
   <script>
     const policeCreds = { username:'police1', password:'1234' };
     const courtCreds = { username:'court1', password:'5678' };
-    const evidenceDB = {};
-    const aadhaarCount = {};
-    let selectedForJudgment = null;
 
     function showLogin(){
-      const r = document.getElementById('roleSelect').value;
+      const role = document.getElementById('roleSelect').value;
       document.getElementById('roleSelectBox').style.display='none';
-      document.getElementById('publicPortal').style.display = r==='public'?'block':'none';
-      document.getElementById('policeLogin').style.display = r==='police'?'block':'none';
-      document.getElementById('courtLogin').style.display = r==='court'?'block':'none';
+      document.getElementById('publicPortal').style.display = role==='public'?'block':'none';
+      document.getElementById('policeLogin').style.display = role==='police'?'block':'none';
+      document.getElementById('courtLogin').style.display = role==='court'?'block':'none';
     }
 
     function login(role){
       const uname = document.getElementById(role+'User').value;
       const pwd = document.getElementById(role+'Pass').value;
-      const ok = role==='police'? (uname===policeCreds.username&&pwd===policeCreds.password):
-                 role==='court'? (uname===courtCreds.username&&pwd===courtCreds.password):false;
-      if(ok){
+      const valid = (role==='police' && uname===policeCreds.username && pwd===policeCreds.password) ||
+                    (role==='court' && uname===courtCreds.username && pwd===courtCreds.password);
+      if(valid){
         document.getElementById(role+'Login').style.display='none';
         document.getElementById(role+'Portal').style.display='block';
       } else alert('Invalid credentials');
     }
 
-    function registerCase(){
-      const aad = document.getElementById('aadhaar').value.trim();
-      const acc = document.getElementById('accused').value.trim();
-      const loc = document.getElementById('location').value.trim();
-      const off = document.getElementById('officer').value.trim();
-      const dt = document.getElementById('datetime').value;
-      if(!aad||!acc||!loc||!off||!dt){ return alert('Fill all fields'); }
-      const cnt = (aadhaarCount[aad]||0)+1; aadhaarCount[aad]=cnt;
-      const uniqueId = `CID${aad}-${cnt}`;
-      const evidenceId = `EID${Date.now()}`;
-      evidenceDB[evidenceId] = { uniqueId,evidenceId,aad,acc,loc,off,dt,judgment:'Pending',closingDate:'Pending' };
-      alert(`Case Registered.\nEvidence ID: ${evidenceId}\nUnique ID: ${uniqueId}`);
+    async function registerCase(){
+      const aadhaar = document.getElementById('aadhaar').value;
+      const accused = document.getElementById('accused').value;
+      const location = document.getElementById('location').value;
+      const officer = document.getElementById('officer').value;
+      const datetime = document.getElementById('datetime').value;
+
+      if(!aadhaar || !accused || !location || !officer || !datetime) return alert('Fill all fields');
+
+      const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+      const from = accounts[0];
+
+      await contract.methods.registerCase(aadhaar, accused, location, officer, datetime).send({ from });
+      alert('Case registered successfully!');
     }
 
-    function selectEvidence(){
-      const q = document.getElementById('evidenceSearch').value.trim().toLowerCase();
-      selectedForJudgment=null;
-      for(const k in evidenceDB){
-        const d = evidenceDB[k];
-        if(k.toLowerCase()===q || d.acc.toLowerCase()===q){
-          selectedForJudgment=d;
-          break;
+    let selectedForJudgment;
+    async function selectEvidence(){
+      const input = document.getElementById('evidenceSearch').value.toLowerCase();
+      const total = await contract.methods.getTotalCases().call();
+      for(let i=0;i<total;i++){
+        const d = await contract.methods.getCaseByIndex(i).call();
+        if(d[1].toLowerCase() === input || d[2].toLowerCase() === input){
+          selectedForJudgment = d[1];
+          document.getElementById('judgmentDiv').style.display='block';
+          return;
         }
       }
-      if(selectedForJudgment){
-        document.getElementById('judgmentDiv').style.display='block';
-      } else alert('Not found');
+      alert('Case not found');
     }
 
-    function submitJudgment(){
-      if(!selectedForJudgment)return alert('Select evidence');
-      selectedForJudgment.judgment=document.getElementById('judgmentText').value;
-      selectedForJudgment.closingDate=document.getElementById('judgmentClosingDate').value;
+    async function submitJudgment(){
+      if(!selectedForJudgment) return alert('Select an evidence');
+      const judgmentText = document.getElementById('judgmentText').value;
+      const closingDate = document.getElementById('judgmentClosingDate').value;
+
+      const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+      const from = accounts[0];
+
+      await contract.methods.submitJudgment(selectedForJudgment, judgmentText, closingDate).send({ from });
       alert('Judgment submitted');
     }
 
-    function track(role){
-      const q = document.getElementById('track'+role.charAt(0).toUpperCase()+role.slice(1)+'Input').value.trim().toLowerCase();
-      const out = document.getElementById(role+'TrackResult');
-      let found=null;
-      for(const k in evidenceDB){
-        const d = evidenceDB[k];
-        if(k.toLowerCase()===q || d.acc.toLowerCase()===q){ found=d; break; }
+    async function trackCase(role){
+      const input = document.getElementById('track'+role.charAt(0).toUpperCase()+role.slice(1)+'Input').value.toLowerCase();
+      const output = document.getElementById(role+'TrackResult');
+
+      const total = await contract.methods.getTotalCases().call();
+      for(let i=0;i<total;i++){
+        const d = await contract.methods.getCaseByIndex(i).call();
+        if(d[1].toLowerCase() === input || d[2].toLowerCase() === input){
+          output.textContent = `🆔 Unique ID: ${d[0]}\n📄 Evidence ID: ${d[1]}\n📁 Case: ${d[2]}\n📍 Location: ${d[3]}\n👮 Officer: ${d[4]}\n🕒 Time: ${new Date(d[5]*1000).toLocaleString()}\n⚖ Judgment: ${d[6]}\n📅 Closing: ${d[7]}`;
+          return;
+        }
       }
-      out.textContent = found?
-        `🆔 Unique ID: ${found.uniqueId}\n📄 Evidence ID: ${found.evidenceId}\n📁 Case: ${found.acc}\n📍 Location: ${found.loc}\n👮 Officer: ${found.off}\n🕒 Time: ${new Date(found.dt).toLocaleString()}\n⚖ Judgment: ${found.judgment}\n📅 Closing: ${found.closingDate}`:
-        'Case not found.';
+      output.textContent = 'Case not found.';
     }
+
+    const contractAddress = 'PASTE_YOUR_DEPLOYED_CONTRACT_ADDRESS_HERE';
+    const contractABI = [/* PASTE_YOUR_ABI_HERE */];
+    const web3 = new Web3(window.ethereum);
+    const contract = new web3.eth.Contract(contractABI, contractAddress);
   </script>
 </body>
 </html>
