@@ -44,6 +44,7 @@
     #errorMessage {
       color: red;
       margin-top: -10px;
+      white-space: pre-line;
     }
 
     #submitContainer, #courtContainer, #trackContainer {
@@ -115,7 +116,13 @@
         if (role === "police") showPoliceUI();
         if (role === "court") showCourtUI();
       } else {
-        document.getElementById("errorMessage").innerText = "❌ Invalid username or password.";
+        let correctInfo = "";
+        if (role === "police") {
+          correctInfo = "\nHint: Username = police\nPassword = 1234";
+        } else if (role === "court") {
+          correctInfo = "\nHint: Username = court\nPassword = 5678";
+        }
+        document.getElementById("errorMessage").innerText = "❌ Invalid username or password." + correctInfo;
       }
     }
 
