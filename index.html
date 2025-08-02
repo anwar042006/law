@@ -94,7 +94,7 @@
   </select>
 </div>
 
-<!-- Login for Police/Court -->
+<!-- Login -->
 <div class="container hidden" id="loginContainer">
   <h3 id="loginTitle">Login</h3>
   <input type="text" id="username" placeholder="Username" />
@@ -146,10 +146,13 @@
 
   function showLoginForm() {
     selectedRole = document.getElementById("roleSelect").value;
-    document.getElementById("loginError").classList.add("hidden");
+
+    // Reset views
+    document.getElementById("loginContainer").classList.add("hidden");
     document.getElementById("submitContainer").classList.add("hidden");
     document.getElementById("courtContainer").classList.add("hidden");
     document.getElementById("trackContainer").classList.add("hidden");
+    document.getElementById("loginError").classList.add("hidden");
 
     if (selectedRole === "public") {
       document.getElementById("roleContainer").classList.add("hidden");
@@ -163,13 +166,10 @@
   function verifyLogin() {
     const uname = document.getElementById("username").value.trim();
     const pwd = document.getElementById("password").value.trim();
-    const valid = users[selectedRole] && users[selectedRole].username === uname && users[selectedRole].password === pwd;
 
-    if (!valid) {
-      document.getElementById("loginError").classList.remove("hidden");
-    } else {
-      document.getElementById("roleContainer").classList.add("hidden");
+    if (users[selectedRole] && users[selectedRole].username === uname && users[selectedRole].password === pwd) {
       document.getElementById("loginContainer").classList.add("hidden");
+      document.getElementById("roleContainer").classList.add("hidden");
       document.getElementById("loginError").classList.add("hidden");
 
       if (selectedRole === "police") {
@@ -180,6 +180,8 @@
         document.getElementById("trackContainer").classList.remove("hidden");
         refreshCaseSelect();
       }
+    } else {
+      document.getElementById("loginError").classList.remove("hidden");
     }
   }
 
@@ -290,7 +292,7 @@
     }
   }
 </script>
+
 </body>
 </html>
-
 
