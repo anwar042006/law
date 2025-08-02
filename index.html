@@ -13,10 +13,7 @@
       align-items: center;
       padding: 2rem;
     }
-    h1 {
-      color: #00b894;
-      margin-bottom: 2rem;
-    }
+    h1 { color: #00b894; margin-bottom: 2rem; }
     .container {
       background: #1e1e1e;
       padding: 2rem;
@@ -59,34 +56,30 @@
       white-space: pre-wrap;
       box-shadow: inset 0 0 10px #00b89466;
     }
-    .hidden { display: none; }
   </style>
 </head>
 <body>
 
 <h1>Evidence Tracking System</h1>
 
-<!-- Login Form -->
-<div class="container" id="loginContainer">
-  <h3>Login</h3>
-  <select id="role">
+<!-- Role Selection -->
+<div class="container" id="roleContainer">
+  <h3>Select Your Role</h3>
+  <select id="roleSelect" onchange="roleLogin()">
     <option value="">-- Select Role --</option>
     <option value="police">Police</option>
     <option value="court">Court</option>
     <option value="public">Public</option>
   </select>
-  <input type="text" id="username" placeholder="Username (Not needed for Public)" />
-  <input type="password" id="password" placeholder="Password (Not needed for Public)" />
-  <button onclick="verifyLogin()">Login</button>
 </div>
 
 <!-- Police: Submit Evidence -->
-<div class="container hidden" id="submitContainer">
+<div class="container" id="submitContainer" style="display:none;">
   <h3>Submit Case Evidence (Police)</h3>
-  <input type="text" id="uniqueId" placeholder="Unique Case ID" readonly />
+  <input type="text" id="uniqueId" placeholder="Unique Case ID" />
   <input type="text" id="caseName" placeholder="Case Name" />
   <input type="text" id="accusedName" placeholder="Accused Name" />
-  <input type="text" id="evidenceId" placeholder="Evidence ID" readonly />
+  <input type="text" id="evidenceId" placeholder="Evidence ID" />
   <input type="text" id="location" placeholder="Location" />
   <input type="text" id="officerName" placeholder="Registering Officer Name" />
   <input type="datetime-local" id="registerTime" />
@@ -94,7 +87,7 @@
 </div>
 
 <!-- Court: Submit Judgment -->
-<div class="container hidden" id="courtContainer">
+<div class="container" id="courtContainer" style="display:none;">
   <h3>Court Judgment Panel</h3>
   <input type="text" id="filterCourtInput" placeholder="Search Evidence ID or Accused Name" oninput="refreshCaseSelect()" />
   <select id="caseSelect">
@@ -106,7 +99,7 @@
 </div>
 
 <!-- All: Track Evidence -->
-<div class="container hidden" id="trackContainer">
+<div class="container" id="trackContainer" style="display:none;">
   <h3>Track Evidence</h3>
   <input type="text" id="searchInput" placeholder="Enter Evidence ID or Accused Name" />
   <button onclick="searchEvidence()">Search</button>
@@ -114,54 +107,20 @@
 </div>
 
 <script>
-  function verifyLogin() {
-    const role = document.getElementById("role").value;
-    const user = document.getElementById("username").value;
-    const pass = document.getElementById("password").value;
-
-    const police = { username: "police", password: "1234" };
-    const court = { username: "court", password: "5678" };
+  function roleLogin() {
+    const role = document.getElementById("roleSelect").value;
+    document.getElementById("roleContainer").style.display = "none";
 
     if (role === "police") {
-      if (user === police.username && pass === police.password) {
-        showPolice();
-      } else {
-        alert("❌ Invalid Police credentials.");
-      }
+      document.getElementById("submitContainer").style.display = "block";
+      document.getElementById("trackContainer").style.display = "block";
     } else if (role === "court") {
-      if (user === court.username && pass === court.password) {
-        showCourt();
-      } else {
-        alert("❌ Invalid Court credentials.");
-      }
+      document.getElementById("courtContainer").style.display = "block";
+      document.getElementById("trackContainer").style.display = "block";
+      refreshCaseSelect();
     } else if (role === "public") {
-      showPublic();
-    } else {
-      alert("❗ Please select a valid role.");
+      document.getElementById("trackContainer").style.display = "block";
     }
-  }
-
-  function showPolice() {
-    document.getElementById("loginContainer").classList.add("hidden");
-    document.getElementById("submitContainer").classList.remove("hidden");
-    document.getElementById("trackContainer").classList.remove("hidden");
-    document.getElementById("courtContainer").classList.add("hidden");
-    generateIds();
-  }
-
-  function showCourt() {
-    document.getElementById("loginContainer").classList.add("hidden");
-    document.getElementById("submitContainer").classList.add("hidden");
-    document.getElementById("courtContainer").classList.remove("hidden");
-    document.getElementById("trackContainer").classList.remove("hidden");
-    refreshCaseSelect();
-  }
-
-  function showPublic() {
-    document.getElementById("loginContainer").classList.add("hidden");
-    document.getElementById("submitContainer").classList.add("hidden");
-    document.getElementById("courtContainer").classList.add("hidden");
-    document.getElementById("trackContainer").classList.remove("hidden");
   }
 
   function loadDatabase() {
@@ -172,22 +131,13 @@
     localStorage.setItem("evidenceDB", JSON.stringify(db));
   }
 
-  function generateIds() {
-    const db = loadDatabase();
-    const newId = db.length + 1;
-    document.getElementById("uniqueId").value = "CASE-" + newId.toString().padStart(4, '0');
-    document.getElementById("evidenceId").value = "EVID-" + newId.toString().padStart(4, '0');
-  }
-
   function submitEvidence() {
-    const db = loadDatabase();
     const registerTime = document.getElementById("registerTime").value;
-
     const caseData = {
-      uniqueId: document.getElementById("uniqueId").value,
+      uniqueId: document.getElementById("uniqueId").value.trim(),
       caseName: document.getElementById("caseName").value.trim(),
       accusedName: document.getElementById("accusedName").value.trim(),
-      evidenceId: document.getElementById("evidenceId").value,
+      evidenceId: document.getElementById("evidenceId").value.trim(),
       location: document.getElementById("location").value.trim(),
       officerName: document.getElementById("officerName").value.trim(),
       registerTime,
@@ -195,25 +145,32 @@
       closingDate: ""
     };
 
-    if (!caseData.caseName || !caseData.accusedName || !caseData.location || !registerTime) {
-      alert("Please fill all fields.");
+    if (!caseData.uniqueId || !caseData.caseName || !caseData.evidenceId || !registerTime) {
+      alert("Please fill in all required fields.");
+      return;
+    }
+
+    const db = loadDatabase();
+    if (db.find(e => e.evidenceId === caseData.evidenceId)) {
+      alert("⚠ Evidence ID already exists.");
       return;
     }
 
     db.push(caseData);
     saveDatabase(db);
-    alert("✅ Evidence Submitted.");
+    alert("✅ Evidence submitted.");
     document.querySelectorAll("#submitContainer input").forEach(el => el.value = "");
-    generateIds();
     refreshCaseSelect();
   }
 
   function searchEvidence() {
     const query = document.getElementById("searchInput").value.trim().toLowerCase();
     const db = loadDatabase();
-    const result = db.find(e => e.evidenceId.toLowerCase() === query || e.accusedName.toLowerCase() === query);
-    const box = document.getElementById("searchResult");
+    const result = db.find(
+      e => e.evidenceId.toLowerCase() === query || e.accusedName.toLowerCase() === query
+    );
 
+    const box = document.getElementById("searchResult");
     if (result) {
       box.textContent = `
 🆔 Unique ID: ${result.uniqueId}
@@ -243,7 +200,7 @@
       ) {
         const opt = document.createElement("option");
         opt.value = e.evidenceId;
-        opt.textContent = `${e.evidenceId} (${e.accusedName})`;
+        opt.textContent = ${e.evidenceId} (${e.accusedName});
         select.appendChild(opt);
       }
     });
@@ -275,4 +232,4 @@
 </script>
 
 </body>
-</html> add above features i ask in these code and give single code 
+</html>
