@@ -3,9 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <title>Evidence Tracking System</title>
+  <script src="https://cdn.jsdelivr.net/npm/web3@1.8.2/dist/web3.min.js"></script>
   <style>
     body {
-      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      background: #121212;
       color: #f0f0f0;
       font-family: 'Segoe UI', Tahoma, sans-serif;
       display: flex;
@@ -13,12 +14,12 @@
       align-items: center;
       padding: 2rem;
     }
-    h1 { color: #00cec9; margin-bottom: 1.5rem; }
+    h1 { color: #00b894; margin-bottom: 2rem; }
     .container {
-      background: #1e1e2f;
+      background: #1e1e1e;
       padding: 2rem;
-      border-radius: 16px;
-      box-shadow: 0 0 20px rgba(0, 206, 201, 0.3);
+      border-radius: 12px;
+      box-shadow: 0 0 20px #00b894aa;
       max-width: 600px;
       width: 100%;
       margin-bottom: 2rem;
@@ -32,146 +33,137 @@
       font-size: 1rem;
     }
     input, textarea {
-      background: #2f2f45;
-      color: #fff;
+      background: #272727;
+      color: #f0f0f0;
     }
     select {
-      background: #2b2b3d;
-      color: #00cec9;
-      border: 1px solid #00cec9;
+      background: #1b1b1b;
+      color: #00b894;
+      border: 1px solid #00b894;
     }
     button {
-      background: #00cec9;
+      background: #00b894;
       color: #121212;
       font-weight: bold;
       cursor: pointer;
     }
     button:hover {
-      background: #00b3ad;
-    }
-    .error {
-      color: #ff7675;
-      font-size: 0.9rem;
-      margin-top: -0.5rem;
-      margin-bottom: 1rem;
+      background: #019e76;
     }
     pre {
-      background: #2f2f45;
+      background: #272727;
       padding: 1rem;
       border-radius: 10px;
       white-space: pre-wrap;
       box-shadow: inset 0 0 10px #00b89466;
     }
-    .hidden { display: none; }
+    .hidden {
+      display: none;
+    }
+    .error {
+      color: red;
+      margin-bottom: 1rem;
+    }
   </style>
 </head>
 <body>
+  <h1>Evidence Tracking System</h1>
 
-<h1>Evidence Tracking System</h1>
+  <!-- Role Selection -->
+  <div class="container" id="loginContainer">
+    <h3>Login</h3>
+    <select id="roleSelect">
+      <option value="">-- Select Role --</option>
+      <option value="police">Police</option>
+      <option value="court">Court</option>
+      <option value="public">Public</option>
+    </select>
+    <input type="text" id="username" placeholder="Username" />
+    <input type="password" id="password" placeholder="Password" />
+    <div class="error" id="errorBox"></div>
+    <button onclick="verifyLogin()">Login</button>
+  </div>
 
-<!-- Role Selection -->
-<div class="container" id="roleContainer">
-  <h3>Select Your Role</h3>
-  <select id="roleSelect" onchange="showLoginForm()">
-    <option value="">-- Select Role --</option>
-    <option value="police">Police</option>
-    <option value="court">Court</option>
-    <option value="public">Public</option>
-  </select>
-</div>
+  <!-- Police: Submit Evidence -->
+  <div class="container hidden" id="submitContainer">
+    <h3>Submit Case Evidence (Police)</h3>
+    <input type="text" id="uniqueId" placeholder="Unique Case ID" readonly />
+    <input type="text" id="caseName" placeholder="Case Name" />
+    <input type="text" id="accusedName" placeholder="Accused Name" />
+    <input type="text" id="evidenceId" placeholder="Evidence ID" readonly />
+    <input type="text" id="location" placeholder="Location" />
+    <input type="text" id="officerName" placeholder="Registering Officer Name" />
+    <input type="datetime-local" id="registerTime" />
+    <button onclick="submitEvidence()">Submit Evidence</button>
+  </div>
 
-<!-- Login -->
-<div class="container hidden" id="loginContainer">
-  <h3 id="loginTitle">Login</h3>
-  <input type="text" id="username" placeholder="Username" />
-  <input type="password" id="password" placeholder="Password" />
-  <div class="error hidden" id="loginError">Invalid username or password.</div>
-  <button onclick="verifyLogin()">Login</button>
-</div>
+  <!-- Court: Submit Judgment -->
+  <div class="container hidden" id="courtContainer">
+    <h3>Court Judgment Panel</h3>
+    <input type="text" id="filterCourtInput" placeholder="Search Evidence ID or Accused Name" oninput="refreshCaseSelect()" />
+    <select id="caseSelect">
+      <option value="">-- Select Evidence ID --</option>
+    </select>
+    <textarea id="judgmentText" rows="4" placeholder="Enter judgment here..."></textarea>
+    <input type="date" id="closingDate" />
+    <button onclick="submitJudgment()">Submit Judgment</button>
+  </div>
 
-<!-- Police Form -->
-<div class="container hidden" id="submitContainer">
-  <h3>Submit Case Evidence (Police)</h3>
-  <input type="text" id="uniqueId" placeholder="Unique Case ID" readonly />
-  <input type="text" id="caseName" placeholder="Case Name" />
-  <input type="text" id="accusedName" placeholder="Accused Name" />
-  <input type="text" id="evidenceId" placeholder="Evidence ID" readonly />
-  <input type="text" id="location" placeholder="Location" />
-  <input type="text" id="officerName" placeholder="Registering Officer Name" />
-  <input type="datetime-local" id="registerTime" />
-  <button onclick="submitEvidence()">Submit Evidence</button>
-</div>
-
-<!-- Court Form -->
-<div class="container hidden" id="courtContainer">
-  <h3>Court Judgment Panel</h3>
-  <input type="text" id="filterCourtInput" placeholder="Search Evidence ID or Accused Name" oninput="refreshCaseSelect()" />
-  <select id="caseSelect">
-    <option value="">-- Select Evidence ID --</option>
-  </select>
-  <textarea id="judgmentText" rows="4" placeholder="Enter judgment here..."></textarea>
-  <input type="date" id="closingDate" />
-  <button onclick="submitJudgment()">Submit Judgment</button>
-</div>
-
-<!-- Public Tracker -->
-<div class="container hidden" id="trackContainer">
-  <h3>Track Evidence</h3>
-  <input type="text" id="searchInput" placeholder="Enter Evidence ID or Accused Name" />
-  <button onclick="searchEvidence()">Search</button>
-  <pre id="searchResult">No search performed yet.</pre>
-</div>
+  <!-- All: Track Evidence -->
+  <div class="container hidden" id="trackContainer">
+    <h3>Track Evidence</h3>
+    <input type="text" id="searchInput" placeholder="Enter Evidence ID or Accused Name" />
+    <button onclick="searchEvidence()">Search</button>
+    <pre id="searchResult">No search performed yet.</pre>
+  </div>
 
 <script>
-  const users = {
-    police: { username: "police123", password: "pass123" },
-    court: { username: "court123", password: "courtpass" }
+  const credentials = {
+    police: { username: "police1", password: "pass123" },
+    court: { username: "court1", password: "courtpass" }
   };
 
-  let selectedRole = "";
-
-  function showLoginForm() {
-    selectedRole = document.getElementById("roleSelect").value;
-    document.getElementById("loginError").classList.add("hidden");
-    hideAll();
-
-    if (selectedRole === "public") {
-      document.getElementById("roleContainer").classList.add("hidden");
-      document.getElementById("trackContainer").classList.remove("hidden");
-    } else if (selectedRole === "police" || selectedRole === "court") {
-      document.getElementById("loginTitle").textContent = `Login (${selectedRole})`;
-      document.getElementById("loginContainer").classList.remove("hidden");
-    }
-  }
-
-  function hideAll() {
-    document.getElementById("loginContainer").classList.add("hidden");
-    document.getElementById("submitContainer").classList.add("hidden");
-    document.getElementById("courtContainer").classList.add("hidden");
-    document.getElementById("trackContainer").classList.add("hidden");
-  }
-
   function verifyLogin() {
-    const uname = document.getElementById("username").value.trim();
-    const pwd = document.getElementById("password").value.trim();
-    const valid = users[selectedRole] && users[selectedRole].username === uname && users[selectedRole].password === pwd;
+    const role = document.getElementById("roleSelect").value;
+    const user = document.getElementById("username").value;
+    const pass = document.getElementById("password").value;
+    const errorBox = document.getElementById("errorBox");
 
-    if (!valid) {
-      document.getElementById("loginError").classList.remove("hidden");
-    } else {
-      document.getElementById("roleContainer").classList.add("hidden");
+    errorBox.textContent = "";
+
+    if (!role) {
+      errorBox.textContent = "Please select a role.";
+      return;
+    }
+
+    if (role === "public") {
       document.getElementById("loginContainer").classList.add("hidden");
+      document.getElementById("trackContainer").classList.remove("hidden");
+      return;
+    }
 
-      if (selectedRole === "police") {
+    if (credentials[role] && credentials[role].username === user && credentials[role].password === pass) {
+      document.getElementById("loginContainer").classList.add("hidden");
+      if (role === "police") {
         document.getElementById("submitContainer").classList.remove("hidden");
         document.getElementById("trackContainer").classList.remove("hidden");
         prepareNewCaseForm();
-      } else if (selectedRole === "court") {
+      } else if (role === "court") {
         document.getElementById("courtContainer").classList.remove("hidden");
         document.getElementById("trackContainer").classList.remove("hidden");
         refreshCaseSelect();
       }
+    } else {
+      errorBox.textContent = "❌ Invalid username or password.";
     }
+  }
+
+  function loadDatabase() {
+    return JSON.parse(localStorage.getItem("evidenceDB")) || [];
+  }
+
+  function saveDatabase(db) {
+    localStorage.setItem("evidenceDB", JSON.stringify(db));
   }
 
   function getNextId(prefix, key) {
@@ -183,14 +175,6 @@
   function prepareNewCaseForm() {
     document.getElementById("uniqueId").value = getNextId("CASE", "caseIdCounter");
     document.getElementById("evidenceId").value = getNextId("EVID", "evidenceIdCounter");
-  }
-
-  function loadDatabase() {
-    return JSON.parse(localStorage.getItem("evidenceDB")) || [];
-  }
-
-  function saveDatabase(db) {
-    localStorage.setItem("evidenceDB", JSON.stringify(db));
   }
 
   function submitEvidence() {
@@ -207,7 +191,7 @@
       closingDate: ""
     };
 
-    if (!caseData.caseName || !caseData.accusedName || !registerTime) {
+    if (!caseData.caseName || !caseData.accusedName || !caseData.location || !caseData.officerName || !registerTime) {
       alert("Please fill in all required fields.");
       return;
     }
@@ -221,35 +205,15 @@
     db.push(caseData);
     saveDatabase(db);
     alert("✅ Evidence submitted.");
-    document.querySelectorAll("#submitContainer input").forEach(el => {
-      if (!el.hasAttribute("readonly")) el.value = "";
-    });
+
+    document.getElementById("caseName").value = "";
+    document.getElementById("accusedName").value = "";
+    document.getElementById("location").value = "";
+    document.getElementById("officerName").value = "";
+    document.getElementById("registerTime").value = "";
+
     prepareNewCaseForm();
     refreshCaseSelect();
-  }
-
-  function searchEvidence() {
-    const query = document.getElementById("searchInput").value.trim().toLowerCase();
-    const db = loadDatabase();
-    const result = db.find(
-      e => e.evidenceId.toLowerCase() === query || e.accusedName.toLowerCase() === query
-    );
-
-    const box = document.getElementById("searchResult");
-    if (result) {
-      box.textContent = `
-🆔 Unique ID: ${result.uniqueId}
-📁 Case Name: ${result.caseName}
-👤 Accused: ${result.accusedName}
-📄 Evidence ID: ${result.evidenceId}
-📍 Location: ${result.location}
-👮 Officer: ${result.officerName}
-🕒 Registered On: ${new Date(result.registerTime).toLocaleString()}
-⚖ Judgment: ${result.judgment || "Pending"}
-📅 Closing Date: ${result.closingDate || "Pending"}`;
-    } else {
-      box.textContent = "❌ No record found.";
-    }
   }
 
   function refreshCaseSelect() {
@@ -294,8 +258,31 @@
       alert("❌ Evidence not found.");
     }
   }
-</script>
 
+  function searchEvidence() {
+    const query = document.getElementById("searchInput").value.trim().toLowerCase();
+    const db = loadDatabase();
+    const result = db.find(
+      e => e.evidenceId.toLowerCase() === query || e.accusedName.toLowerCase() === query
+    );
+
+    const box = document.getElementById("searchResult");
+    if (result) {
+      box.textContent = `
+🆔 Unique ID: ${result.uniqueId}
+📁 Case Name: ${result.caseName}
+👤 Accused: ${result.accusedName}
+📄 Evidence ID: ${result.evidenceId}
+📍 Location: ${result.location}
+👮 Officer: ${result.officerName}
+🕒 Registered On: ${new Date(result.registerTime).toLocaleString()}
+⚖ Judgment: ${result.judgment || "Pending"}
+📅 Closing Date: ${result.closingDate || "Pending"}`;
+    } else {
+      box.textContent = "❌ No record found.";
+    }
+  }
+</script>
 </body>
 </html>
 
