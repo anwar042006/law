@@ -13,12 +13,7 @@
       align-items: center;
       padding: 2rem;
     }
-
-    h1 {
-      color: #00cec9;
-      margin-bottom: 1.5rem;
-    }
-
+    h1 { color: #00cec9; margin-bottom: 1.5rem; }
     .container {
       background: #1e1e2f;
       padding: 2rem;
@@ -28,7 +23,6 @@
       width: 100%;
       margin-bottom: 2rem;
     }
-
     input, select, button, textarea {
       width: 100%;
       padding: 0.75rem;
@@ -37,37 +31,30 @@
       border: none;
       font-size: 1rem;
     }
-
     input, textarea {
       background: #2f2f45;
       color: #fff;
     }
-
     select {
       background: #2b2b3d;
       color: #00cec9;
       border: 1px solid #00cec9;
     }
-
     button {
       background: #00cec9;
       color: #121212;
       font-weight: bold;
       cursor: pointer;
-      transition: background 0.3s;
     }
-
     button:hover {
       background: #00b3ad;
     }
-
     .error {
       color: #ff7675;
       font-size: 0.9rem;
       margin-top: -0.5rem;
       margin-bottom: 1rem;
     }
-
     pre {
       background: #2f2f45;
       padding: 1rem;
@@ -75,7 +62,6 @@
       white-space: pre-wrap;
       box-shadow: inset 0 0 10px #00b89466;
     }
-
     .hidden { display: none; }
   </style>
 </head>
@@ -106,10 +92,10 @@
 <!-- Police Form -->
 <div class="container hidden" id="submitContainer">
   <h3>Submit Case Evidence (Police)</h3>
-  <input type="text" id="uniqueId" placeholder="Unique Case ID" />
+  <input type="text" id="uniqueId" placeholder="Unique Case ID" readonly />
   <input type="text" id="caseName" placeholder="Case Name" />
   <input type="text" id="accusedName" placeholder="Accused Name" />
-  <input type="text" id="evidenceId" placeholder="Evidence ID" />
+  <input type="text" id="evidenceId" placeholder="Evidence ID" readonly />
   <input type="text" id="location" placeholder="Location" />
   <input type="text" id="officerName" placeholder="Registering Officer Name" />
   <input type="datetime-local" id="registerTime" />
@@ -146,13 +132,8 @@
 
   function showLoginForm() {
     selectedRole = document.getElementById("roleSelect").value;
-
-    // Reset views
-    document.getElementById("loginContainer").classList.add("hidden");
-    document.getElementById("submitContainer").classList.add("hidden");
-    document.getElementById("courtContainer").classList.add("hidden");
-    document.getElementById("trackContainer").classList.add("hidden");
     document.getElementById("loginError").classList.add("hidden");
+    hideAll();
 
     if (selectedRole === "public") {
       document.getElementById("roleContainer").classList.add("hidden");
@@ -163,26 +144,45 @@
     }
   }
 
+  function hideAll() {
+    document.getElementById("loginContainer").classList.add("hidden");
+    document.getElementById("submitContainer").classList.add("hidden");
+    document.getElementById("courtContainer").classList.add("hidden");
+    document.getElementById("trackContainer").classList.add("hidden");
+  }
+
   function verifyLogin() {
     const uname = document.getElementById("username").value.trim();
     const pwd = document.getElementById("password").value.trim();
+    const valid = users[selectedRole] && users[selectedRole].username === uname && users[selectedRole].password === pwd;
 
-    if (users[selectedRole] && users[selectedRole].username === uname && users[selectedRole].password === pwd) {
-      document.getElementById("loginContainer").classList.add("hidden");
+    if (!valid) {
+      document.getElementById("loginError").classList.remove("hidden");
+    } else {
       document.getElementById("roleContainer").classList.add("hidden");
-      document.getElementById("loginError").classList.add("hidden");
+      document.getElementById("loginContainer").classList.add("hidden");
 
       if (selectedRole === "police") {
         document.getElementById("submitContainer").classList.remove("hidden");
         document.getElementById("trackContainer").classList.remove("hidden");
+        prepareNewCaseForm();
       } else if (selectedRole === "court") {
         document.getElementById("courtContainer").classList.remove("hidden");
         document.getElementById("trackContainer").classList.remove("hidden");
         refreshCaseSelect();
       }
-    } else {
-      document.getElementById("loginError").classList.remove("hidden");
     }
+  }
+
+  function getNextId(prefix, key) {
+    let current = parseInt(localStorage.getItem(key) || "0", 10) + 1;
+    localStorage.setItem(key, current);
+    return prefix + current.toString().padStart(3, "0");
+  }
+
+  function prepareNewCaseForm() {
+    document.getElementById("uniqueId").value = getNextId("CASE", "caseIdCounter");
+    document.getElementById("evidenceId").value = getNextId("EVID", "evidenceIdCounter");
   }
 
   function loadDatabase() {
@@ -196,10 +196,10 @@
   function submitEvidence() {
     const registerTime = document.getElementById("registerTime").value;
     const caseData = {
-      uniqueId: document.getElementById("uniqueId").value.trim(),
+      uniqueId: document.getElementById("uniqueId").value,
       caseName: document.getElementById("caseName").value.trim(),
       accusedName: document.getElementById("accusedName").value.trim(),
-      evidenceId: document.getElementById("evidenceId").value.trim(),
+      evidenceId: document.getElementById("evidenceId").value,
       location: document.getElementById("location").value.trim(),
       officerName: document.getElementById("officerName").value.trim(),
       registerTime,
@@ -207,7 +207,7 @@
       closingDate: ""
     };
 
-    if (!caseData.uniqueId || !caseData.caseName || !caseData.evidenceId || !registerTime) {
+    if (!caseData.caseName || !caseData.accusedName || !registerTime) {
       alert("Please fill in all required fields.");
       return;
     }
@@ -221,7 +221,10 @@
     db.push(caseData);
     saveDatabase(db);
     alert("✅ Evidence submitted.");
-    document.querySelectorAll("#submitContainer input").forEach(el => el.value = "");
+    document.querySelectorAll("#submitContainer input").forEach(el => {
+      if (!el.hasAttribute("readonly")) el.value = "";
+    });
+    prepareNewCaseForm();
     refreshCaseSelect();
   }
 
