@@ -3,174 +3,233 @@
 <head>
   <meta charset="UTF-8" />
   <title>Evidence Tracking System</title>
-  <script src="https://cdn.jsdelivr.net/npm/web3@1.8.2/dist/web3.min.js"></script>
   <style>
     body {
+      background: #1e1e2f;
+      color: #ffffff;
       font-family: 'Segoe UI', sans-serif;
-      background: #121212;
-      color: white;
-      padding: 20px;
+      padding: 2rem;
     }
-    select, input, button, textarea {
-      padding: 8px;
-      margin: 5px;
-      border-radius: 5px;
+    h1, h2 {
+      text-align: center;
+      color: #00cec9;
     }
-    .section {
+    .container {
+      background: #2d2d44;
+      padding: 1.5rem;
+      border-radius: 15px;
+      box-shadow: 0 0 10px #00cec9aa;
+      max-width: 600px;
+      margin: 2rem auto;
+    }
+    input, textarea, select, button {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 1rem;
+      border-radius: 8px;
+      border: none;
+      font-size: 1rem;
+    }
+    button {
+      background: #00cec9;
+      color: #1e1e2f;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    pre {
+      background: #121225;
+      padding: 1rem;
+      border-radius: 10px;
+      white-space: pre-wrap;
+      color: #dfe6e9;
+    }
+    #policePortal, #courtPortal, #publicPortal, #policeLogin, #courtLogin {
       display: none;
-      margin-top: 20px;
-      border: 1px solid #333;
-      padding: 20px;
-      background: #1f1f1f;
     }
   </style>
 </head>
 <body>
-  <h2>🟦 Login Page</h2>
-  <label for="role">Select Role:</label>
-  <select id="role">
-    <option value="public">Public</option>
+
+<h1>Evidence Tracking System</h1>
+
+<div class="container" id="roleSelector">
+  <select id="roleSelect" onchange="showLogin()">
+    <option value="">Select Role</option>
     <option value="police">Police</option>
     <option value="court">Court</option>
+    <option value="public">Public</option>
   </select>
-  <div id="loginFields">
-    <input type="text" id="username" placeholder="Username">
-    <input type="password" id="password" placeholder="Password">
-  </div>
-  <button onclick="login()">Login</button>
+</div>
 
-  <div id="publicSection" class="section">
-    <h3>🧑‍🤝‍🧑 Public Portal - Track Case</h3>
-    <input type="text" id="publicTrackInput" placeholder="Evidence ID or Accused Name">
-    <button onclick="trackCase('public')">Track</button>
-    <pre id="publicResult"></pre>
-  </div>
+<!-- Police Login -->
+<div class="container" id="policeLogin">
+  <input type="text" id="policeUser" placeholder="Police Username">
+  <input type="password" id="policePass" placeholder="Password">
+  <button onclick="login('police')">Login</button>
+</div>
 
-  <div id="policeSection" class="section">
-    <h3>👮 Police Portal - Register New Case</h3>
-    <input type="text" id="aadhaar" placeholder="Aadhaar ID">
-    <input type="text" id="accused" placeholder="Accused Name">
-    <input type="text" id="caseDetail" placeholder="Case">
-    <input type="text" id="location" placeholder="Location">
-    <input type="text" id="officer" placeholder="Officer Name">
-    <input type="datetime-local" id="regDateTime">
-    <input type="datetime-local" id="crimeDateTime">
-    <button onclick="registerCase()">Register New Case</button>
+<!-- Court Login -->
+<div class="container" id="courtLogin">
+  <input type="text" id="courtUser" placeholder="Court Username">
+  <input type="password" id="courtPass" placeholder="Password">
+  <button onclick="login('court')">Login</button>
+</div>
 
-    <h4>Track Case</h4>
-    <input type="text" id="policeTrackInput" placeholder="Evidence ID or Accused Name">
-    <button onclick="trackCase('police')">Track</button>
-    <pre id="policeResult"></pre>
-  </div>
+<!-- Police Portal -->
+<div class="container" id="policePortal">
+  <h2>Register New Case</h2>
+  <input type="text" id="aadhaar" placeholder="Aadhaar ID">
+  <input type="text" id="accused" placeholder="Accused Name">
+  <input type="text" id="location" placeholder="Crime Location">
+  <input type="text" id="officer" placeholder="Officer Name">
+  <input type="datetime-local" id="datetime">
+  <button onclick="registerCase()">Register Case</button>
 
-  <div id="courtSection" class="section">
-    <h3>⚖️ Court Portal - Submit Judgment</h3>
-    <select id="evidenceSelect"></select><br>
-    <textarea id="judgmentText" placeholder="Judgment Text"></textarea><br>
+  <h3>Track Case</h3>
+  <input type="text" id="trackPoliceInput" placeholder="Enter Evidence ID or Accused Name">
+  <button onclick="track('police')">Track</button>
+  <pre id="policeTrackResult"></pre>
+</div>
+
+<!-- Court Portal -->
+<div class="container" id="courtPortal">
+  <h2>Court Judgment</h2>
+  <input type="text" id="evidenceSearchInput" placeholder="Enter Evidence ID or Accused Name">
+  <button onclick="searchEvidenceForJudgment()">Select Evidence</button>
+  <div id="judgmentSection" style="display:none;">
+    <textarea id="judgmentText" placeholder="Judgment Text"></textarea>
     <input type="date" id="closingDate">
     <button onclick="submitJudgment()">Submit Judgment</button>
-
-    <h4>Track Case</h4>
-    <input type="text" id="courtTrackInput" placeholder="Evidence ID or Accused Name">
-    <button onclick="trackCase('court')">Track</button>
-    <pre id="courtResult"></pre>
   </div>
+  <h3>Track Case</h3>
+  <input type="text" id="trackCourtInput" placeholder="Enter Evidence ID or Accused Name">
+  <button onclick="track('court')">Track</button>
+  <pre id="courtTrackResult"></pre>
+</div>
 
-  <script>
-    let web3;
-    let contract;
-    const address = "YOUR_CONTRACT_ADDRESS";
-    const abi = [...] // Paste ABI here
+<!-- Public Portal -->
+<div class="container" id="publicPortal">
+  <h2>Public Case Tracking</h2>
+  <input type="text" id="trackPublicInput" placeholder="Enter Evidence ID or Accused Name">
+  <button onclick="track('public')">Track</button>
+  <pre id="publicTrackResult"></pre>
+</div>
 
-    async function init() {
-      if (window.ethereum) {
-        web3 = new Web3(window.ethereum);
-        await ethereum.enable();
-        contract = new web3.eth.Contract(abi, address);
-        populateEvidenceDropdown();
-      } else alert("Install MetaMask");
+<script>
+  const policeCreds = { username: 'police1', password: '1234' };
+  const courtCreds = { username: 'court1', password: '5678' };
+  const db = {};
+  const aadhaarMap = {};
+  let selectedEvidence = null;
+
+  function showLogin() {
+    const role = document.getElementById("roleSelect").value;
+    document.getElementById("policeLogin").style.display = role === "police" ? "block" : "none";
+    document.getElementById("courtLogin").style.display = role === "court" ? "block" : "none";
+    document.getElementById("publicPortal").style.display = role === "public" ? "block" : "none";
+    document.getElementById("roleSelector").style.display = "none";
+  }
+
+  function login(role) {
+    const uname = document.getElementById(role + "User").value;
+    const pwd = document.getElementById(role + "Pass").value;
+    const creds = role === "police" ? policeCreds : courtCreds;
+    if (uname === creds.username && pwd === creds.password) {
+      document.getElementById(role + "Login").style.display = "none";
+      document.getElementById(role + "Portal").style.display = "block";
+    } else {
+      alert("Invalid credentials");
+    }
+  }
+
+  function registerCase() {
+    const aadhaar = document.getElementById("aadhaar").value;
+    const accused = document.getElementById("accused").value;
+    const location = document.getElementById("location").value;
+    const officer = document.getElementById("officer").value;
+    const datetime = document.getElementById("datetime").value;
+
+    if (!aadhaar || !accused || !location || !officer || !datetime) {
+      alert("Please fill all fields");
+      return;
     }
 
-    function login() {
-      const role = document.getElementById('role').value;
-      const username = document.getElementById('username').value;
-      const password = document.getElementById('password').value;
-      document.getElementById('publicSection').style.display = 'none';
-      document.getElementById('policeSection').style.display = 'none';
-      document.getElementById('courtSection').style.display = 'none';
+    let caseCount = aadhaarMap[aadhaar] || 0;
+    caseCount++;
+    aadhaarMap[aadhaar] = caseCount;
 
-      if (role === 'public') {
-        document.getElementById('loginFields').style.display = 'none';
-        document.getElementById('publicSection').style.display = 'block';
-      } else if (role === 'police' && username === 'police' && password === '1234') {
-        document.getElementById('policeSection').style.display = 'block';
-      } else if (role === 'court' && username === 'court' && password === '4321') {
-        document.getElementById('courtSection').style.display = 'block';
-        populateEvidenceDropdown();
-      } else {
-        alert('Invalid credentials');
+    const uniqueId = `CID${aadhaar}-${caseCount}`;
+    const evidenceId = `EID${Date.now()}`;
+
+    db[evidenceId] = {
+      uniqueId,
+      evidenceId,
+      aadhaar,
+      accused,
+      location,
+      officer,
+      datetime,
+      judgment: "Pending",
+      closingDate: "Pending"
+    };
+
+    alert(`Case Registered.\nEvidence ID: ${evidenceId}\nCase ID: ${uniqueId}`);
+  }
+
+  function searchEvidenceForJudgment() {
+    const input = document.getElementById("evidenceSearchInput").value.toLowerCase();
+    selectedEvidence = null;
+    for (const key in db) {
+      const d = db[key];
+      if (key.toLowerCase() === input || d.accused.toLowerCase() === input) {
+        selectedEvidence = d;
+        break;
       }
     }
-
-    async function registerCase() {
-      const accounts = await web3.eth.getAccounts();
-      const aadhaar = document.getElementById('aadhaar').value;
-      const accused = document.getElementById('accused').value;
-      const caseDetail = document.getElementById('caseDetail').value;
-      const location = document.getElementById('location').value;
-      const officer = document.getElementById('officer').value;
-      const regDateTime = document.getElementById('regDateTime').value;
-      const crimeDateTime = document.getElementById('crimeDateTime').value;
-      const uniqueId = 'CID' + Math.floor(Math.random() * 100000);
-      const evidenceId = 'EID' + Math.floor(Math.random() * 1000000);
-
-      await contract.methods.registerEvidence(
-        aadhaar, accused, caseDetail, location, officer, regDateTime, crimeDateTime, uniqueId, evidenceId
-      ).send({ from: accounts[0] });
-
-      alert(`Registered!\nUnique ID: ${uniqueId}\nEvidence ID: ${evidenceId}`);
-      populateEvidenceDropdown();
+    if (selectedEvidence) {
+      document.getElementById("judgmentSection").style.display = "block";
+    } else {
+      alert("Evidence not found.");
     }
+  }
 
-    async function trackCase(section) {
-      const id = document.getElementById(section + 'TrackInput').value;
-      const result = await contract.methods.getEvidence(id).call();
-      const formatted = `🆔 Unique ID: ${result[0]}
-📄 Evidence ID: ${result[1]}
-👤 Accused Name: ${result[2]}
-📁 Case: ${result[3]}
-📍 Location: ${result[4]}
-👮 Officer: ${result[5]}
-🕒 Reg Time: ${result[6]}
-📅 Crime Time: ${result[7]}
-⚖ Judgment: ${result[8]}
-📅 Closing: ${result[9]}`;
-      document.getElementById(section + 'Result').textContent = formatted;
+  function submitJudgment() {
+    const judgment = document.getElementById("judgmentText").value;
+    const date = document.getElementById("closingDate").value;
+    if (!selectedEvidence) return alert("No evidence selected");
+    selectedEvidence.judgment = judgment;
+    selectedEvidence.closingDate = date;
+    alert("Judgment submitted.");
+  }
+
+  function track(role) {
+    const input = document.getElementById("track" + capitalize(role) + "Input").value.toLowerCase();
+    const resultBox = document.getElementById(role + "TrackResult");
+    let found = null;
+    for (const key in db) {
+      const d = db[key];
+      if (key.toLowerCase() === input || d.accused.toLowerCase() === input) {
+        found = d;
+        break;
+      }
     }
+    resultBox.textContent = found ? `
+🆔 Unique ID: ${found.uniqueId}
+📄 Evidence ID: ${found.evidenceId}
+📁 Case: ${found.accused}
+📍 Location: ${found.location}
+👮 Officer: ${found.officer}
+🕒 Case Time: ${found.datetime}
+🕒 Case Register Time: ${found.datetime}
+⚖ Judgment: ${found.judgment}
+📅 Closing: ${found.closingDate}` : "Case not found.";
+  }
 
-    async function submitJudgment() {
-      const accounts = await web3.eth.getAccounts();
-      const evidenceId = document.getElementById('evidenceSelect').value;
-      const text = document.getElementById('judgmentText').value;
-      const date = document.getElementById('closingDate').value;
+  function capitalize(str) {
+    return str.charAt(0).toUpperCase() + str.slice(1);
+  }
+</script>
 
-      await contract.methods.updateJudgment(evidenceId, text, date).send({ from: accounts[0] });
-      alert('Judgment Submitted');
-    }
-
-    async function populateEvidenceDropdown() {
-      const ids = await contract.methods.getAllEvidenceIds().call();
-      const dropdown = document.getElementById('evidenceSelect');
-      dropdown.innerHTML = '';
-      ids.forEach(id => {
-        const option = document.createElement('option');
-        option.value = id;
-        option.text = id;
-        dropdown.appendChild(option);
-      });
-    }
-
-    window.onload = init;
-  </script>
 </body>
 </html>
+
