@@ -5,23 +5,26 @@
   <title>Evidence Tracking System</title>
   <style>
     body {
-      background: #121212;
-      color: #f0f0f0;
+      background: #1e1e2f;
       font-family: 'Segoe UI', Tahoma, sans-serif;
+      color: #f0f0f0;
       display: flex;
       flex-direction: column;
       align-items: center;
       padding: 2rem;
     }
-    h1 { color: #00b894; }
-    .container {
-      background: #1e1e1e;
+    h1 {
+      color: #00e6e6;
+      margin-bottom: 1rem;
+    }
+    .box {
+      background: #2c2c3e;
       padding: 2rem;
       border-radius: 12px;
-      box-shadow: 0 0 15px #00b894aa;
-      max-width: 600px;
-      width: 100%;
-      margin-bottom: 2rem;
+      box-shadow: 0 0 20px #00e6e688;
+      width: 90%;
+      max-width: 500px;
+      margin-bottom: 1.5rem;
     }
     input, select, button, textarea {
       width: 100%;
@@ -32,174 +35,145 @@
       font-size: 1rem;
     }
     button {
-      background: #00b894;
-      color: #121212;
+      background: #00e6e6;
+      color: #000;
       font-weight: bold;
       cursor: pointer;
     }
     pre {
-      background: #2d2d2d;
+      background: #1a1a2e;
       padding: 1rem;
       border-radius: 10px;
       white-space: pre-wrap;
     }
-    .hidden { display: none; }
   </style>
 </head>
 <body>
 
 <h1>Evidence Tracking System</h1>
 
-<!-- Login Portal -->
-<div class="container" id="loginContainer">
-  <select id="role">
+<div class="box">
+  <select id="role" onchange="onRoleChange()">
     <option value="">-- Select Role --</option>
     <option value="police">Police</option>
     <option value="court">Court</option>
     <option value="public">Public</option>
   </select>
-  <div id="loginFields" class="hidden">
-    <input type="text" id="username" placeholder="Username" />
-    <input type="password" id="password" placeholder="Password" />
-    <button onclick="login()">Login</button>
-    <p id="loginError" style="color:red;"></p>
-  </div>
 </div>
 
-<!-- Police Section -->
-<div class="container hidden" id="policeSection">
+<div class="box" id="loginBox" style="display:none;">
+  <input type="text" id="username" placeholder="Username">
+  <input type="password" id="password" placeholder="Password">
+  <button onclick="login()">Login</button>
+</div>
+
+<div class="box" id="policePanel" style="display:none;">
   <h3>Submit Evidence</h3>
-  <input type="text" id="caseName" placeholder="Case Name" />
-  <input type="text" id="accusedName" placeholder="Accused Name" />
-  <input type="text" id="location" placeholder="Crime Location" />
-  <input type="text" id="officerName" placeholder="Officer Name" />
-  <input type="datetime-local" id="registerTime" />
-  <button onclick="submitEvidence()">Submit Evidence</button>
-
-  <h3>Track Case (Police)</h3>
-  <input type="text" id="policeTrackId" placeholder="Enter Evidence ID" />
-  <button onclick="trackEvidence('policeTrackId', 'policeResult')">Track</button>
-  <pre id="policeResult">No search performed yet.</pre>
+  <input type="text" id="caseName" placeholder="Case Name">
+  <input type="text" id="accused" placeholder="Accused Name">
+  <input type="text" id="location" placeholder="Location">
+  <input type="text" id="officer" placeholder="Officer Name">
+  <input type="datetime-local" id="time">
+  <button onclick="submitEvidence()">Submit</button>
 </div>
 
-<!-- Court Section -->
-<div class="container hidden" id="courtSection">
+<div class="box" id="courtPanel" style="display:none;">
   <h3>Submit Judgment</h3>
-  <input type="text" id="evidenceIdCourt" placeholder="Evidence ID" />
-  <textarea id="judgmentText" rows="4" placeholder="Enter judgment"></textarea>
-  <input type="date" id="closingDate" />
-  <button onclick="submitJudgment()">Submit Judgment</button>
-
-  <h3>Track Case (Court)</h3>
-  <input type="text" id="courtTrackId" placeholder="Enter Evidence ID" />
-  <button onclick="trackEvidence('courtTrackId', 'courtResult')">Track</button>
-  <pre id="courtResult">No search performed yet.</pre>
+  <input type="text" id="evidenceIdJudgment" placeholder="Evidence ID">
+  <textarea id="judgment" rows="3" placeholder="Judgment Text"></textarea>
+  <input type="date" id="closingDate">
+  <button onclick="submitJudgment()">Submit</button>
 </div>
 
-<!-- Public Section -->
-<div class="container hidden" id="publicSection">
-  <h3>Track Case (Public)</h3>
-  <input type="text" id="publicTrackId" placeholder="Enter Evidence ID" />
-  <button onclick="trackEvidence('publicTrackId', 'publicResult')">Track</button>
-  <pre id="publicResult">No search performed yet.</pre>
+<div class="box" id="trackPanel" style="display:none;">
+  <h3>Track Evidence</h3>
+  <input type="text" id="trackQuery" placeholder="Enter Evidence ID or Accused Name">
+  <button onclick="trackEvidence()">Track</button>
+  <pre id="trackResult">Tracking result will appear here...</pre>
 </div>
 
 <script>
-  const credentials = {
-    police: { username: "police", password: "1234" },
-    court: { username: "court", password: "5678" }
-  };
+  let role = "";
+  let evidenceDB = {}; // Simulated storage
 
-  const storage = {}; // local simulated storage
-
-  document.getElementById("role").addEventListener("change", () => {
-    const role = document.getElementById("role").value;
-    const loginFields = document.getElementById("loginFields");
-    document.getElementById("loginError").innerText = "";
-    loginFields.classList.toggle("hidden", role === "" || role === "public");
-
-    if (role === "public") showSection("publicSection");
-  });
-
-  function login() {
-    const role = document.getElementById("role").value;
-    const username = document.getElementById("username").value;
-    const password = document.getElementById("password").value;
-
-    const user = credentials[role];
-    if (user && username === user.username && password === user.password) {
-      showSection(role + "Section");
-      document.getElementById("loginContainer").classList.add("hidden");
-    } else {
-      document.getElementById("loginError").innerText = "❌ Invalid username or password.";
-    }
+  function onRoleChange() {
+    role = document.getElementById("role").value;
+    document.getElementById("loginBox").style.display = (role === "public" || role === "") ? "none" : "block";
+    document.getElementById("policePanel").style.display = "none";
+    document.getElementById("courtPanel").style.display = "none";
+    document.getElementById("trackPanel").style.display = (role === "public") ? "block" : "none";
   }
 
-  function showSection(id) {
-    ["policeSection", "courtSection", "publicSection"].forEach(sec => {
-      document.getElementById(sec).classList.add("hidden");
-    });
-    document.getElementById(id).classList.remove("hidden");
+  function login() {
+    const user = document.getElementById("username").value.trim().toLowerCase();
+    const pass = document.getElementById("password").value;
+
+    if ((role === "police" && user === "police" && pass === "police123") ||
+        (role === "court" && user === "court" && pass === "court123")) {
+      alert("Login successful!");
+      document.getElementById("loginBox").style.display = "none";
+      document.getElementById("trackPanel").style.display = "block";
+      if (role === "police") document.getElementById("policePanel").style.display = "block";
+      if (role === "court") document.getElementById("courtPanel").style.display = "block";
+    } else {
+      alert("Invalid username or password.");
+    }
   }
 
   function submitEvidence() {
     const caseName = document.getElementById("caseName").value;
-    const accusedName = document.getElementById("accusedName").value;
+    const accused = document.getElementById("accused").value;
     const location = document.getElementById("location").value;
-    const officerName = document.getElementById("officerName").value;
-    const registerTime = document.getElementById("registerTime").value;
+    const officer = document.getElementById("officer").value;
+    const time = document.getElementById("time").value;
 
-    const caseId = "CID" + Date.now();
     const evidenceId = "EID" + Date.now();
-
-    storage[evidenceId] = {
-      caseId,
-      caseName,
-      accusedName,
-      evidenceId,
-      location,
-      officerName,
-      registerTime,
-      judgment: "",
-      closingDate: ""
+    evidenceDB[evidenceId] = {
+      caseName, accused, location, officer, time,
+      evidenceId, uniqueId: "CID" + Date.now(),
+      judgment: "", closingDate: ""
     };
 
-    alert("✅ Evidence submitted!\nEvidence ID: " + evidenceId);
+    alert("Evidence submitted!\nID: " + evidenceId);
   }
 
   function submitJudgment() {
-    const evidenceId = document.getElementById("evidenceIdCourt").value;
-    const judgment = document.getElementById("judgmentText").value;
+    const id = document.getElementById("evidenceIdJudgment").value;
+    const judgment = document.getElementById("judgment").value;
     const closingDate = document.getElementById("closingDate").value;
 
-    if (storage[evidenceId]) {
-      storage[evidenceId].judgment = judgment;
-      storage[evidenceId].closingDate = closingDate;
-      alert("✅ Judgment submitted.");
+    if (evidenceDB[id]) {
+      evidenceDB[id].judgment = judgment;
+      evidenceDB[id].closingDate = closingDate;
+      alert("Judgment submitted.");
     } else {
-      alert("❌ Evidence ID not found.");
+      alert("Evidence ID not found.");
     }
   }
 
-  function trackEvidence(inputId, resultId) {
-    const evidenceId = document.getElementById(inputId).value;
-    const data = storage[evidenceId];
-    const box = document.getElementById(resultId);
-    if (data) {
-      box.textContent = `
-🆔 Case ID: ${data.caseId}
-📁 Case Name: ${data.caseName}
-👤 Accused: ${data.accusedName}
-📄 Evidence ID: ${data.evidenceId}
-📍 Location: ${data.location}
-👮 Officer: ${data.officerName}
-🕒 Time: ${data.registerTime}
-⚖ Judgment: ${data.judgment || "Pending"}
-📅 Closing Date: ${data.closingDate || "Pending"}
-      `;
-    } else {
-      box.textContent = "❌ No data found for that Evidence ID.";
+  function trackEvidence() {
+    const query = document.getElementById("trackQuery").value.trim().toLowerCase();
+    let result = "❌ No evidence found.";
+
+    for (let id in evidenceDB) {
+      const ev = evidenceDB[id];
+      if (id.toLowerCase() === query || ev.accused.toLowerCase() === query) {
+        result = `
+🆔 Unique ID: ${ev.uniqueId}
+📁 Case: ${ev.caseName}
+👤 Accused: ${ev.accused}
+📄 Evidence ID: ${ev.evidenceId}
+📍 Location: ${ev.location}
+👮 Officer: ${ev.officer}
+🕒 Time: ${new Date(ev.time).toLocaleString()}
+⚖ Judgment: ${ev.judgment || "Pending"}
+📅 Closing Date: ${ev.closingDate || "Pending"}
+        `;
+        break;
+      }
     }
+
+    document.getElementById("trackResult").textContent = result;
   }
 </script>
 
