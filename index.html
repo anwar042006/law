@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Evidence Tracking System</title>
   <style>
     body {
-      background: #121212;
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
       color: #f0f0f0;
       font-family: 'Segoe UI', Tahoma, sans-serif;
       display: flex;
@@ -13,16 +13,22 @@
       align-items: center;
       padding: 2rem;
     }
-    h1 { color: #00b894; margin-bottom: 2rem; }
+
+    h1 {
+      color: #00cec9;
+      margin-bottom: 1.5rem;
+    }
+
     .container {
-      background: #1e1e1e;
+      background: #1e1e2f;
       padding: 2rem;
-      border-radius: 12px;
-      box-shadow: 0 0 20px #00b894aa;
+      border-radius: 16px;
+      box-shadow: 0 0 20px rgba(0, 206, 201, 0.3);
       max-width: 600px;
       width: 100%;
       margin-bottom: 2rem;
     }
+
     input, select, button, textarea {
       width: 100%;
       padding: 0.75rem;
@@ -31,31 +37,46 @@
       border: none;
       font-size: 1rem;
     }
+
     input, textarea {
-      background: #272727;
-      color: #f0f0f0;
+      background: #2f2f45;
+      color: #fff;
     }
+
     select {
-      background: #1b1b1b;
-      color: #00b894;
-      border: 1px solid #00b894;
+      background: #2b2b3d;
+      color: #00cec9;
+      border: 1px solid #00cec9;
     }
+
     button {
-      background: #00b894;
+      background: #00cec9;
       color: #121212;
       font-weight: bold;
       cursor: pointer;
+      transition: background 0.3s;
     }
+
     button:hover {
-      background: #019e76;
+      background: #00b3ad;
     }
+
+    .error {
+      color: #ff7675;
+      font-size: 0.9rem;
+      margin-top: -0.5rem;
+      margin-bottom: 1rem;
+    }
+
     pre {
-      background: #272727;
+      background: #2f2f45;
       padding: 1rem;
       border-radius: 10px;
       white-space: pre-wrap;
       box-shadow: inset 0 0 10px #00b89466;
     }
+
+    .hidden { display: none; }
   </style>
 </head>
 <body>
@@ -65,7 +86,7 @@
 <!-- Role Selection -->
 <div class="container" id="roleContainer">
   <h3>Select Your Role</h3>
-  <select id="roleSelect" onchange="roleLogin()">
+  <select id="roleSelect" onchange="showLoginForm()">
     <option value="">-- Select Role --</option>
     <option value="police">Police</option>
     <option value="court">Court</option>
@@ -73,8 +94,17 @@
   </select>
 </div>
 
-<!-- Police: Submit Evidence -->
-<div class="container" id="submitContainer" style="display:none;">
+<!-- Login for Police/Court -->
+<div class="container hidden" id="loginContainer">
+  <h3 id="loginTitle">Login</h3>
+  <input type="text" id="username" placeholder="Username" />
+  <input type="password" id="password" placeholder="Password" />
+  <div class="error hidden" id="loginError">Invalid username or password.</div>
+  <button onclick="verifyLogin()">Login</button>
+</div>
+
+<!-- Police Form -->
+<div class="container hidden" id="submitContainer">
   <h3>Submit Case Evidence (Police)</h3>
   <input type="text" id="uniqueId" placeholder="Unique Case ID" />
   <input type="text" id="caseName" placeholder="Case Name" />
@@ -86,8 +116,8 @@
   <button onclick="submitEvidence()">Submit Evidence</button>
 </div>
 
-<!-- Court: Submit Judgment -->
-<div class="container" id="courtContainer" style="display:none;">
+<!-- Court Form -->
+<div class="container hidden" id="courtContainer">
   <h3>Court Judgment Panel</h3>
   <input type="text" id="filterCourtInput" placeholder="Search Evidence ID or Accused Name" oninput="refreshCaseSelect()" />
   <select id="caseSelect">
@@ -98,8 +128,8 @@
   <button onclick="submitJudgment()">Submit Judgment</button>
 </div>
 
-<!-- All: Track Evidence -->
-<div class="container" id="trackContainer" style="display:none;">
+<!-- Public Tracker -->
+<div class="container hidden" id="trackContainer">
   <h3>Track Evidence</h3>
   <input type="text" id="searchInput" placeholder="Enter Evidence ID or Accused Name" />
   <button onclick="searchEvidence()">Search</button>
@@ -107,19 +137,49 @@
 </div>
 
 <script>
-  function roleLogin() {
-    const role = document.getElementById("roleSelect").value;
-    document.getElementById("roleContainer").style.display = "none";
+  const users = {
+    police: { username: "police123", password: "pass123" },
+    court: { username: "court123", password: "courtpass" }
+  };
 
-    if (role === "police") {
-      document.getElementById("submitContainer").style.display = "block";
-      document.getElementById("trackContainer").style.display = "block";
-    } else if (role === "court") {
-      document.getElementById("courtContainer").style.display = "block";
-      document.getElementById("trackContainer").style.display = "block";
-      refreshCaseSelect();
-    } else if (role === "public") {
-      document.getElementById("trackContainer").style.display = "block";
+  let selectedRole = "";
+
+  function showLoginForm() {
+    selectedRole = document.getElementById("roleSelect").value;
+    document.getElementById("loginError").classList.add("hidden");
+    document.getElementById("submitContainer").classList.add("hidden");
+    document.getElementById("courtContainer").classList.add("hidden");
+    document.getElementById("trackContainer").classList.add("hidden");
+
+    if (selectedRole === "public") {
+      document.getElementById("roleContainer").classList.add("hidden");
+      document.getElementById("trackContainer").classList.remove("hidden");
+    } else if (selectedRole === "police" || selectedRole === "court") {
+      document.getElementById("loginTitle").textContent = `Login (${selectedRole})`;
+      document.getElementById("loginContainer").classList.remove("hidden");
+    }
+  }
+
+  function verifyLogin() {
+    const uname = document.getElementById("username").value.trim();
+    const pwd = document.getElementById("password").value.trim();
+    const valid = users[selectedRole] && users[selectedRole].username === uname && users[selectedRole].password === pwd;
+
+    if (!valid) {
+      document.getElementById("loginError").classList.remove("hidden");
+    } else {
+      document.getElementById("roleContainer").classList.add("hidden");
+      document.getElementById("loginContainer").classList.add("hidden");
+      document.getElementById("loginError").classList.add("hidden");
+
+      if (selectedRole === "police") {
+        document.getElementById("submitContainer").classList.remove("hidden");
+        document.getElementById("trackContainer").classList.remove("hidden");
+      } else if (selectedRole === "court") {
+        document.getElementById("courtContainer").classList.remove("hidden");
+        document.getElementById("trackContainer").classList.remove("hidden");
+        refreshCaseSelect();
+      }
     }
   }
 
@@ -200,7 +260,7 @@
       ) {
         const opt = document.createElement("option");
         opt.value = e.evidenceId;
-        opt.textContent = ${e.evidenceId} (${e.accusedName});
+        opt.textContent = `${e.evidenceId} (${e.accusedName})`;
         select.appendChild(opt);
       }
     });
@@ -230,6 +290,7 @@
     }
   }
 </script>
-
 </body>
 </html>
+
+
