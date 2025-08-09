@@ -158,8 +158,409 @@
   - Deploy the Solidity contract from the previous code (Remix/Hardhat).
   - Replace CONTRACT_ADDRESS and CONTRACT_ABI (the JSON ABI array).
 ----------------------------*/
-const CONTRACT_ADDRESS = "PASTE_YOUR_CONTRACT_ADDRESS_HERE";
-const CONTRACT_ABI = [ /* PASTE ABI ARRAY HERE */ ];
+const CONTRACT_ADDRESS = "0x1395BB24762b3ab9Be87C9CD497F6C5B91F1d1Ae";
+const CONTRACT_ABI = [ 
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "aadhaar",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "accusedName",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "caseDescription",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "location",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "officerName",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "crimeDateTime",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "registrationDateTime",
+				"type": "string"
+			}
+		],
+		"name": "registerCase",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "evidenceId",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "judgmentText",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "closingDate",
+				"type": "string"
+			}
+		],
+		"name": "submitJudgment",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"name": "casesByEvidenceId",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "uniqueCaseId",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "evidenceId",
+				"type": "string"
+			},
+			{
+				"internalType": "uint256",
+				"name": "caseCountForAadhaar",
+				"type": "uint256"
+			},
+			{
+				"components": [
+					{
+						"internalType": "string",
+						"name": "aadhaar",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "accusedName",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "caseDescription",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "location",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "officerName",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "crimeDateTime",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "registrationDateTime",
+						"type": "string"
+					}
+				],
+				"internalType": "struct EvidenceTracking.CaseDetails",
+				"name": "details",
+				"type": "tuple"
+			},
+			{
+				"internalType": "string",
+				"name": "judgmentText",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "closingDate",
+				"type": "string"
+			},
+			{
+				"internalType": "bool",
+				"name": "isClosed",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"name": "evidenceIdByAccused",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			},
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "evidenceIdsByAadhaar",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "aadhaar",
+				"type": "string"
+			}
+		],
+		"name": "getEvidenceIdsByAadhaar",
+		"outputs": [
+			{
+				"internalType": "string[]",
+				"name": "",
+				"type": "string[]"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "accusedName",
+				"type": "string"
+			}
+		],
+		"name": "trackCaseByAccusedName",
+		"outputs": [
+			{
+				"components": [
+					{
+						"internalType": "string",
+						"name": "uniqueCaseId",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "evidenceId",
+						"type": "string"
+					},
+					{
+						"internalType": "uint256",
+						"name": "caseCountForAadhaar",
+						"type": "uint256"
+					},
+					{
+						"components": [
+							{
+								"internalType": "string",
+								"name": "aadhaar",
+								"type": "string"
+							},
+							{
+								"internalType": "string",
+								"name": "accusedName",
+								"type": "string"
+							},
+							{
+								"internalType": "string",
+								"name": "caseDescription",
+								"type": "string"
+							},
+							{
+								"internalType": "string",
+								"name": "location",
+								"type": "string"
+							},
+							{
+								"internalType": "string",
+								"name": "officerName",
+								"type": "string"
+							},
+							{
+								"internalType": "string",
+								"name": "crimeDateTime",
+								"type": "string"
+							},
+							{
+								"internalType": "string",
+								"name": "registrationDateTime",
+								"type": "string"
+							}
+						],
+						"internalType": "struct EvidenceTracking.CaseDetails",
+						"name": "details",
+						"type": "tuple"
+					},
+					{
+						"internalType": "string",
+						"name": "judgmentText",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "closingDate",
+						"type": "string"
+					},
+					{
+						"internalType": "bool",
+						"name": "isClosed",
+						"type": "bool"
+					}
+				],
+				"internalType": "struct EvidenceTracking.CaseRecord",
+				"name": "",
+				"type": "tuple"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "evidenceId",
+				"type": "string"
+			}
+		],
+		"name": "trackCaseByEvidenceId",
+		"outputs": [
+			{
+				"components": [
+					{
+						"internalType": "string",
+						"name": "uniqueCaseId",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "evidenceId",
+						"type": "string"
+					},
+					{
+						"internalType": "uint256",
+						"name": "caseCountForAadhaar",
+						"type": "uint256"
+					},
+					{
+						"components": [
+							{
+								"internalType": "string",
+								"name": "aadhaar",
+								"type": "string"
+							},
+							{
+								"internalType": "string",
+								"name": "accusedName",
+								"type": "string"
+							},
+							{
+								"internalType": "string",
+								"name": "caseDescription",
+								"type": "string"
+							},
+							{
+								"internalType": "string",
+								"name": "location",
+								"type": "string"
+							},
+							{
+								"internalType": "string",
+								"name": "officerName",
+								"type": "string"
+							},
+							{
+								"internalType": "string",
+								"name": "crimeDateTime",
+								"type": "string"
+							},
+							{
+								"internalType": "string",
+								"name": "registrationDateTime",
+								"type": "string"
+							}
+						],
+						"internalType": "struct EvidenceTracking.CaseDetails",
+						"name": "details",
+						"type": "tuple"
+					},
+					{
+						"internalType": "string",
+						"name": "judgmentText",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "closingDate",
+						"type": "string"
+					},
+					{
+						"internalType": "bool",
+						"name": "isClosed",
+						"type": "bool"
+					}
+				],
+				"internalType": "struct EvidenceTracking.CaseRecord",
+				"name": "",
+				"type": "tuple"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	}
+];
 /* -------------------------------------------------- */
 
 let web3, contract, accounts;
