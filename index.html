@@ -1,155 +1,499 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Evidence Tracking System</title>
-  <script src="https://cdn.jsdelivr.net/npm/web3@1.8.2/dist/web3.min.js"></script>
-  <style>
-    body {
-      background: #f4f4f9;
-      font-family: 'Segoe UI', sans-serif;
-      color: #333;
-      margin: 0;
-      padding: 0;
-    }
-    .container {
-      max-width: 900px;
-      margin: 30px auto;
-      background: #fff;
-      padding: 20px 30px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-      border-radius: 8px;
-    }
-    h2 {
-      color: #444;
-      margin-bottom: 20px;
-    }
-    label {
-      display: block;
-      margin-top: 15px;
-      font-weight: 500;
-    }
-    input, textarea, select {
-      width: 100%;
-      padding: 8px;
-      border-radius: 4px;
-      border: 1px solid #ccc;
-      margin-top: 5px;
-    }
-    button {
-      background: #0066cc;
-      color: white;
-      padding: 10px 15px;
-      margin-top: 20px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    button:hover {
-      background: #004999;
-    }
-    .section {
-      margin-top: 40px;
-      border-top: 1px solid #ccc;
-      padding-top: 20px;
-    }
-  </style>
+<meta charset="utf-8" />
+<title>Evidence Tracking (Web3)</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<script src="https://cdn.jsdelivr.net/npm/web3@1.8.2/dist/web3.min.js"></script>
+<style>
+  :root {
+    --bg: #0f1724;
+    --card: #111827;
+    --accent: #06b6d4;
+    --muted: #9ca3af;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:linear-gradient(180deg,var(--bg) 0%, #071028 100%);font-family:Inter,Segoe UI,system-ui,Arial;color:#e6eef6;padding:24px;display:flex;align-items:flex-start;justify-content:center;min-height:100vh}
+  .app { width: 100%; max-width: 980px; }
+  header {display:flex;align-items:center;gap:16px;margin-bottom:18px}
+  h1{margin:0;font-size:20px;color:var(--accent)}
+  .grid { display:grid; grid-template-columns: 1fr 1fr; gap:18px; }
+  .card { background:var(--card); padding:18px; border-radius:12px; box-shadow: 0 6px 30px rgba(2,6,23,0.6); }
+  label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+  input,select,textarea,button { width:100%; padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.03); background:transparent;color:inherit; font-size:14px }
+  textarea{min-height:90px; resize:vertical}
+  button{background:var(--accent); color:#021; border:none; font-weight:700; cursor:pointer}
+  .muted{color:var(--muted); font-size:13px}
+  .small{font-size:13px;padding:8px}
+  .full { grid-column: 1 / -1; }
+  .row { display:flex; gap:10px; align-items:center }
+  .row > * { flex:1 }
+  pre.output { background:#0a0f15; padding:12px; border-radius:8px; color:#dbeafe; white-space:pre-wrap; max-height:360px; overflow:auto; }
+  .topbar { display:flex; gap:12px; align-items:center; justify-content:space-between; margin-bottom:12px }
+  .inline { display:flex; gap:8px; align-items:center }
+  .note { color:var(--muted); font-size:13px; margin-top:6px }
+</style>
 </head>
 <body>
-  <div class="container">
-    <h2>Evidence Tracking System</h2>
+<div class="app">
+  <header>
+    <h1>Evidence Tracking — Web3</h1>
+    <div class="muted">Connects to your injected wallet (MetaMask). Replace CONTRACT_ADDRESS & ABI in the file after deployment.</div>
+  </header>
 
-    <div id="loginSection">
-      <label>Role:</label>
-      <select id="role">
-        <option value="public">Public</option>
+  <div class="topbar card">
+    <div class="inline">
+      <label style="margin-right:8px">Role</label>
+      <select id="roleSelect">
+        <option value="">Select role</option>
         <option value="police">Police</option>
         <option value="court">Court</option>
+        <option value="public">Public</option>
       </select>
-      <div id="authFields">
-        <label>Username:</label>
-        <input type="text" id="username">
-        <label>Password:</label>
-        <input type="password" id="password">
-      </div>
-      <button onclick="login()">Login</button>
     </div>
 
-    <div id="policePortal" class="section" style="display:none">
-      <h3>Register New Case</h3>
-      <label>Aadhaar ID</label>
-      <input type="text" id="aadhaarId">
-      <label>Accused Name</label>
-      <input type="text" id="accusedName">
-      <label>Case Description</label>
-      <textarea id="caseDetail"></textarea>
-      <label>Crime Location</label>
-      <input type="text" id="location">
-      <label>Crime Date/Time</label>
-      <input type="datetime-local" id="crimeDate">
-      <label>Officer Name</label>
-      <input type="text" id="officerName">
-      <button onclick="registerCase()">Submit Case</button>
-    </div>
-
-    <div id="courtPortal" class="section" style="display:none">
-      <h3>Submit or Review Judgment</h3>
-      <label>Enter Evidence ID or Accused Name</label>
-      <input type="text" id="evidenceOrName">
-      <label>Judgment Text</label>
-      <textarea id="judgmentText"></textarea>
-      <label>Closing Date</label>
-      <input type="date" id="closingDate">
-      <button onclick="submitOrUpdateJudgment()">Submit / Update</button>
-    </div>
-
-    <div id="publicPortal" class="section" style="display:none">
-      <h3>Track Case</h3>
-      <label>Search by Evidence ID or Accused Name</label>
-      <input type="text" id="searchKey">
-      <button onclick="trackCase()">Track</button>
-      <div id="trackingResult"></div>
+    <div class="inline">
+      <label style="margin-right:8px">Logged wallet</label>
+      <div id="accountText" class="muted">not connected</div>
+      <button id="connectWalletBtn" class="small">Connect wallet</button>
     </div>
   </div>
 
-  <script>
-    const policeUser = { username: 'police', password: 'police123' };
-    const courtUser = { username: 'court', password: 'court123' };
+  <div class="grid">
+    <!-- POLICE CARD -->
+    <div id="policeCard" class="card" style="display:none">
+      <h3>Police — Register Case</h3>
 
-    function login() {
-      const role = document.getElementById('role').value;
-      const username = document.getElementById('username').value;
-      const password = document.getElementById('password').value;
+      <label>Aadhaar ID</label><input id="policeAadhaar" placeholder="Aadhaar ID" />
+      <label>Accused Name</label><input id="policeAccused" placeholder="Accused full name" />
+      <label>Case Detail</label><textarea id="policeCaseDetail" placeholder="Case description"></textarea>
+      <label>Crime Location</label><input id="policeLocation" placeholder="Mumbai, Pune..." />
+      <label>Officer Name</label><input id="policeOfficer" placeholder="Officer Name" />
 
-      document.getElementById('policePortal').style.display = 'none';
-      document.getElementById('courtPortal').style.display = 'none';
-      document.getElementById('publicPortal').style.display = 'none';
+      <div class="row">
+        <div>
+          <label>Crime Date & Time</label>
+          <input id="policeCrimeDate" type="datetime-local" />
+        </div>
+        <div>
+          <label>Registration Date & Time</label>
+          <input id="policeRegDate" type="datetime-local" />
+        </div>
+      </div>
 
-      if (role === 'police' && username === policeUser.username && password === policeUser.password) {
-        document.getElementById('policePortal').style.display = 'block';
-      } else if (role === 'court' && username === courtUser.username && password === courtUser.password) {
-        document.getElementById('courtPortal').style.display = 'block';
-      } else if (role === 'public') {
-        document.getElementById('authFields').style.display = 'none';
-        document.getElementById('publicPortal').style.display = 'block';
-      } else {
-        alert('Invalid credentials');
+      <div class="row" style="margin-top:8px">
+        <div>
+          <label>Unique Case ID (from contract)</label>
+          <input id="uiPreview" readonly />
+        </div>
+        <div>
+          <label>Evidence ID (from contract)</label>
+          <input id="evPreview" readonly />
+        </div>
+      </div>
+
+      <div style="margin-top:10px">
+        <button id="registerBtn">Register Case on-chain</button>
+        <div class="note">All fields required. After registering the form will clear and drop-downs update.</div>
+      </div>
+    </div>
+
+    <!-- COURT CARD -->
+    <div id="courtCard" class="card" style="display:none">
+      <h3>Court — Judgment & Review</h3>
+
+      <label>Choose evidence (or enter Evidence ID / Accused)</label>
+      <select id="courtEvidenceSelect">
+        <option value="">-- Select evidence --</option>
+      </select>
+
+      <label>Or enter Evidence ID or Accused name</label>
+      <input id="courtManualInput" placeholder="EV00001 or accused name" />
+
+      <label>Judgment text</label>
+      <textarea id="courtJudgmentText" placeholder="Enter judgment"></textarea>
+
+      <label>Closing date & time</label>
+      <input id="courtClosingDate" type="datetime-local" />
+
+      <div class="row">
+        <button id="submitJudgmentBtn">Submit / Update Judgment</button>
+        <button id="addReviewBtn" style="background:#ffd166;color:#022">Add Review</button>
+      </div>
+
+      <div class="note">If judgment exists, this updates. Reviews get appended.</div>
+    </div>
+
+    <!-- PUBLIC CARD -->
+    <div id="publicCard" class="card" style="display:none">
+      <h3>Public — Track Case</h3>
+      <label>Evidence ID or Accused Name</label>
+      <input id="publicSearch" placeholder="EV00001 or John Doe" />
+      <button id="publicTrackBtn">Track</button>
+      <div style="margin-top:10px"><pre id="publicOutput" class="output">No data</pre></div>
+    </div>
+
+    <!-- TRACKING / DEBUG -->
+    <div class="card full" id="trackingCard" style="display:none">
+      <h3>Tracking / Results</h3>
+      <label>Enter Evidence ID or Accused Name (any portal)</label>
+      <div class="row">
+        <input id="trackInput" placeholder="EV00001 or accused name" />
+        <button id="trackBtn">Track</button>
+      </div>
+
+      <div style="margin-top:12px">
+        <pre id="trackOutput" class="output">No results yet.</pre>
+      </div>
+    </div>
+  </div>
+
+  <div style="height:18px;"></div>
+  <div class="muted" style="text-align:center">Replace CONTRACT_ADDRESS and CONTRACT_ABI variables below after you deploy the Solidity contract.</div>
+</div>
+
+<script>
+/* ---------------------------
+  SET THESE AFTER DEPLOYMENT
+  - Deploy the Solidity contract from the previous code (Remix/Hardhat).
+  - Replace CONTRACT_ADDRESS and CONTRACT_ABI (the JSON ABI array).
+----------------------------*/
+const CONTRACT_ADDRESS = "PASTE_YOUR_CONTRACT_ADDRESS_HERE";
+const CONTRACT_ABI = [ /* PASTE ABI ARRAY HERE */ ];
+/* -------------------------------------------------- */
+
+let web3, contract, accounts;
+
+// UI elements
+const roleSelect = document.getElementById('roleSelect');
+const connectWalletBtn = document.getElementById('connectWalletBtn');
+const accountText = document.getElementById('accountText');
+
+const policeCard = document.getElementById('policeCard');
+const courtCard = document.getElementById('courtCard');
+const publicCard = document.getElementById('publicCard');
+const trackingCard = document.getElementById('trackingCard');
+
+roleSelect.addEventListener('change', onRoleChange);
+connectWalletBtn.addEventListener('click', connectWallet);
+
+// police fields
+const policeAadhaar = document.getElementById('policeAadhaar');
+const policeAccused = document.getElementById('policeAccused');
+const policeCaseDetail = document.getElementById('policeCaseDetail');
+const policeLocation = document.getElementById('policeLocation');
+const policeOfficer = document.getElementById('policeOfficer');
+const policeCrimeDate = document.getElementById('policeCrimeDate');
+const policeRegDate = document.getElementById('policeRegDate');
+const uiPreview = document.getElementById('uiPreview');
+const evPreview = document.getElementById('evPreview');
+const registerBtn = document.getElementById('registerBtn');
+
+// court fields
+const courtEvidenceSelect = document.getElementById('courtEvidenceSelect');
+const courtManualInput = document.getElementById('courtManualInput');
+const courtJudgmentText = document.getElementById('courtJudgmentText');
+const courtClosingDate = document.getElementById('courtClosingDate');
+const submitJudgmentBtn = document.getElementById('submitJudgmentBtn');
+const addReviewBtn = document.getElementById('addReviewBtn');
+
+// public fields
+const publicSearch = document.getElementById('publicSearch');
+const publicTrackBtn = document.getElementById('publicTrackBtn');
+const publicOutput = document.getElementById('publicOutput');
+
+// tracking
+const trackInput = document.getElementById('trackInput');
+const trackBtn = document.getElementById('trackBtn');
+const trackOutput = document.getElementById('trackOutput');
+
+// wire up buttons
+registerBtn?.addEventListener('click', onRegisterCase);
+submitJudgmentBtn?.addEventListener('click', onSubmitJudgment);
+addReviewBtn?.addEventListener('click', onAddReview);
+publicTrackBtn?.addEventListener('click', () => doTrack(publicSearch.value.trim(), publicOutput));
+trackBtn?.addEventListener('click', () => doTrack(trackInput.value.trim(), trackOutput));
+
+/* ---------- Helpers ---------- */
+function setAccountText(a){
+  accountText.innerText = a ? (a.slice(0,6) + '...' + a.slice(-4)) : 'not connected';
+}
+
+function showCardForRole(r){
+  policeCard.style.display = (r==='police') ? 'block' : 'none';
+  courtCard.style.display = (r==='court') ? 'block' : 'none';
+  publicCard.style.display = (r==='public') ? 'block' : 'none';
+  trackingCard.style.display = r ? 'block' : 'none';
+}
+
+/* ---------- Role change (local login) ---------- */
+function onRoleChange(){
+  const r = roleSelect.value;
+  // police/court require wallet & simple local login step via wallet (we enforce wallet connect)
+  if(r === '') {
+    showCardForRole('');
+    return;
+  }
+  // show wallet connect prompt
+  showCardForRole('');
+  if(!web3) {
+    // Not connected yet: require user to click connect wallet
+    alert('Please connect your wallet (MetaMask) first — click "Connect wallet".');
+  } else {
+    showCardForRole(r);
+    // refresh evidence dropdown
+    refreshEvidenceDropdown();
+  }
+}
+
+/* ---------- Wallet ---------- */
+async function connectWallet(){
+  if(!window.ethereum){
+    alert('MetaMask (or another injected wallet) required.');
+    return;
+  }
+  try {
+    await window.ethereum.request({ method: 'eth_requestAccounts' });
+    web3 = new Web3(window.ethereum);
+    accounts = await web3.eth.getAccounts();
+    setAccountText(accounts[0]);
+    contract = new web3.eth.Contract(CONTRACT_ABI, CONTRACT_ADDRESS);
+    // enable event listeners
+    refreshEvidenceDropdown();
+    // prefetch next IDs by calling getAllEvidenceIds length -> we cannot know next ID without calling register (contract generates)
+    // but we can show placeholder
+    uiPreview.value = '';
+    evPreview.value = '';
+    // auto load if role already selected
+    if(roleSelect.value) showCardForRole(roleSelect.value);
+    alert('Wallet connected: ' + accounts[0]);
+  } catch (err) {
+    console.error(err);
+    alert('Wallet connection failed: ' + (err.message||err));
+  }
+}
+
+/* ---------- UI: refresh evidence select ---------- */
+async function refreshEvidenceDropdown(){
+  if(!contract) return;
+  try {
+    const ids = await contract.methods.getAllEvidenceIds().call();
+    // clear
+    courtEvidenceSelect.innerHTML = '<option value="">-- Select evidence --</option>';
+    ids.forEach(id => {
+      const opt = document.createElement('option');
+      opt.value = id;
+      opt.text = id;
+      courtEvidenceSelect.appendChild(opt);
+    });
+  } catch(err) {
+    console.error('refreshEvidenceDropdown err', err);
+  }
+}
+
+/* ---------- Register case (Police) ---------- */
+async function onRegisterCase(){
+  if(!contract || !accounts || accounts.length===0){
+    return alert('Connect wallet first');
+  }
+  // validate
+  const aad = policeAadhaar.value.trim();
+  const acc = policeAccused.value.trim();
+  const detail = policeCaseDetail.value.trim();
+  const loc = policeLocation.value.trim();
+  const officer = policeOfficer.value.trim();
+  const crimeDT = policeCrimeDate.value;
+  const regDT = policeRegDate.value;
+  if(!aad||!acc||!detail||!loc||!officer||!crimeDT||!regDT) {
+    return alert('Please fill all fields.');
+  }
+
+  try {
+    // send transaction
+    const from = accounts[0];
+    const tx = await contract.methods.registerEvidence(
+      aad, acc, detail, loc, officer, regDT, crimeDT
+    ).send({ from });
+
+    // read event to get generated IDs
+    let uniqueId = '', evidenceId = '';
+    if(tx && tx.events && tx.events.CaseRegistered && tx.events.CaseRegistered.returnValues){
+      uniqueId = tx.events.CaseRegistered.returnValues.uniqueId;
+      evidenceId = tx.events.CaseRegistered.returnValues.evidenceId;
+    } else {
+      // fallback: fetch newly created list and take last id
+      const ids = await contract.methods.getAllEvidenceIds().call();
+      evidenceId = ids[ids.length-1];
+      // try getEvidence to read uniqueId
+      const ev = await contract.methods.getEvidence(evidenceId).call();
+      uniqueId = ev[0];
+    }
+
+    uiPreview.value = uniqueId;
+    evPreview.value = evidenceId;
+
+    // clear form
+    policeAadhaar.value = '';
+    policeAccused.value = '';
+    policeCaseDetail.value = '';
+    policeLocation.value = '';
+    policeOfficer.value = '';
+    policeCrimeDate.value = '';
+    policeRegDate.value = '';
+
+    // refresh court dropdown
+    await refreshEvidenceDropdown();
+
+    alert(`Registered:\nUnique: ${uniqueId}\nEvidence: ${evidenceId}`);
+  } catch (err) {
+    console.error(err);
+    alert('Register failed: ' + (err.message||err));
+  }
+}
+
+/* ---------- Submit judgment (Court) ---------- */
+async function onSubmitJudgment(){
+  if(!contract || !accounts || accounts.length===0) return alert('Connect wallet first');
+  const sel = courtEvidenceSelect.value;
+  const manual = courtManualInput.value.trim();
+  const evidenceId = sel || manual;
+  const judgmentText = courtJudgmentText.value.trim();
+  const closing = courtClosingDate.value;
+  if(!evidenceId || !judgmentText || !closing) return alert('Evidence ID (or manual), judgment and closing datetime required.');
+
+  try {
+    const from = accounts[0];
+    await contract.methods.updateJudgment(evidenceId, judgmentText, closing).send({ from });
+    alert('Judgment updated on-chain for ' + evidenceId);
+    // refresh UI
+    courtManualInput.value = '';
+    courtJudgmentText.value = '';
+    courtClosingDate.value = '';
+    await refreshEvidenceDropdown();
+  } catch (err) {
+    console.error(err);
+    alert('Submit judgment failed: ' + (err.message||err));
+  }
+}
+
+/* ---------- Add review (Court) ---------- */
+async function onAddReview(){
+  if(!contract || !accounts || accounts.length===0) return alert('Connect wallet first');
+  const sel = courtEvidenceSelect.value;
+  const manual = courtManualInput.value.trim();
+  const evidenceId = sel || manual;
+  if(!evidenceId) return alert('Select/enter Evidence ID first.');
+  const reviewText = prompt('Enter review note (will be stored on-chain):');
+  if(!reviewText) return;
+  try {
+    const from = accounts[0];
+    await contract.methods.addReview(evidenceId, reviewText).send({ from });
+    alert('Review added on-chain for ' + evidenceId);
+  } catch (err) {
+    console.error(err);
+    alert('Add review failed: ' + (err.message||err));
+  }
+}
+
+/* ---------- Tracking: single function for public/police/court ---------- */
+async function doTrack(query, outputElement){
+  if(!query) { outputElement.innerText = 'Enter Evidence ID or accused name'; return; }
+  if(!contract){
+    outputElement.innerText = 'Connect wallet (contract not initialized)';
+    return;
+  }
+
+  try {
+    // Try treat query as evidenceId first
+    let found = false;
+    try {
+      const ev = await contract.methods.getEvidence(query).call();
+      // if present, ev[1] is evidenceId
+      if(ev && ev[1] && ev[1] !== ""){
+        // fetch reviews
+        const reviews = await contract.methods.getReviews(ev[1]).call();
+        const out = formatEvidenceFromContract(ev, reviews);
+        outputElement.innerText = out;
+        found = true;
+        return;
       }
+    } catch(e) {
+      // ignore - not found by evidence id
     }
 
-    // TODO: Add Web3 interaction here
-    function registerCase() {
-      alert('Case registered (connect to Web3)');
+    // Next, treat as accused name (case-insensitive)
+    const ids = await contract.methods.getEvidenceIdsByAccused(query).call();
+    if(ids && ids.length > 0){
+      let combined = '';
+      for(let id of ids){
+        const ev = await contract.methods.getEvidence(id).call();
+        const reviews = await contract.methods.getReviews(id).call();
+        combined += formatEvidenceFromContract(ev, reviews) + '\n\n';
+      }
+      outputElement.innerText = combined;
+      return;
     }
 
-    function submitOrUpdateJudgment() {
-      alert('Judgment submitted or updated (connect to Web3)');
+    // Next, treat as aadhaar
+    constids = await contract.methods.getEvidenceIdsByAadhaar(query).call().catch(()=>[]);
+    if(constids && constids.length>0){
+      let combined='';
+      for(let id of constids){
+        const ev = await contract.methods.getEvidence(id).call();
+        const reviews = await contract.methods.getReviews(id).call();
+        combined += formatEvidenceFromContract(ev, reviews) + '\n\n';
+      }
+      outputElement.innerText = combined;
+      return;
     }
 
-    function trackCase() {
-      alert('Tracking data (connect to Web3)');
-    }
-  </script>
+    // not found
+    outputElement.innerText = 'No record found on-chain for: ' + query;
+  } catch(err){
+    console.error(err);
+    outputElement.innerText = 'Lookup failed: ' + (err.message||err);
+  }
+}
+
+function formatEvidenceFromContract(evTuple, reviews){
+  // evTuple: [uniqueId, evidenceId, aadhaar, accused, caseDetail, location, officer, regDateTime, crimeDateTime, judgmentText, closingDate]
+  let out = '';
+  out += `🆔 Unique ID: ${evTuple[0]}\n`;
+  out += `📄 Evidence ID: ${evTuple[1]}\n`;
+  out += `👤 Aadhaar: ${evTuple[2]}\n`;
+  out += `📁 Accused: ${evTuple[3]}\n`;
+  out += `📝 Case Detail: ${evTuple[4]}\n`;
+  out += `📍 Location: ${evTuple[5]}\n`;
+  out += `👮 Officer: ${evTuple[6]}\n`;
+  out += `🕒 Registered: ${evTuple[7]}\n`;
+  out += `🕒 Crime Time: ${evTuple[8]}\n`;
+  out += `⚖ Judgment: ${evTuple[9] && evTuple[9].length ? evTuple[9] : 'Pending'}\n`;
+  out += `📅 Closing: ${evTuple[10] && evTuple[10].length ? evTuple[10] : 'Pending'}\n`;
+  if(reviews && reviews.length){
+    out += `\nReviews:\n`;
+    for(let r of reviews) out += `- ${r}\n`;
+  }
+  return out;
+}
+
+/* ---------- Init on load: if web3 injected, create instance (but require user to click connect) ---------- */
+window.addEventListener('load', async () => {
+  if(window.ethereum){
+    web3 = new Web3(window.ethereum);
+    try {
+      const accountsLocal = await web3.eth.getAccounts();
+      if(accountsLocal && accountsLocal.length){
+        accounts = accountsLocal;
+        setAccountText(accounts[0]);
+        contract = new web3.eth.Contract(CONTRACT_ABI, CONTRACT_ADDRESS);
+        refreshEvidenceDropdown();
+      }
+    } catch(e){}
+  } else {
+    console.warn('No web3 provider injected (MetaMask).');
+  }
+});
+</script>
 </body>
 </html>
 
