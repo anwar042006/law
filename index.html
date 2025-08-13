@@ -376,8 +376,247 @@ window.addEventListener('DOMContentLoaded', () => {
 
   loadDemoBtn.addEventListener('click', () => {
     // Provide a demo contract address and ABI here if you want
-    contractAddrInput.value = '0xYourDemoContractAddress';
-    contractAbiInput.value = '[{"inputs":[], "name":"getAllEvidenceIds", "outputs":[{"internalType":"string[]","name":"","type":"string[]"}], "stateMutability":"view", "type":"function"}]';
+    contractAddrInput.value = '0xBcDe6CA21aa1841744013C4C54ce8cD56A65663f';
+    contractAbiInput.value = '[
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "evidenceId",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "reviewText",
+				"type": "string"
+			}
+		],
+		"name": "addReview",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "uniqueId",
+				"type": "string"
+			}
+		],
+		"name": "EvidenceRegistered",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "evidenceId",
+				"type": "string"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "judgment",
+				"type": "string"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "closingDate",
+				"type": "string"
+			}
+		],
+		"name": "JudgmentSubmitted",
+		"type": "event"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "uniqueId",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "aadhaar",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "accused",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "detail",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "location",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "officer",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "crime",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "registration",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "evidenceData",
+				"type": "string"
+			}
+		],
+		"name": "registerEvidence",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "evidenceId",
+				"type": "string"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "review",
+				"type": "string"
+			}
+		],
+		"name": "ReviewAdded",
+		"type": "event"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "evidenceId",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "judgmentText",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "closing",
+				"type": "string"
+			}
+		],
+		"name": "submitJudgment",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getAllEvidenceIds",
+		"outputs": [
+			{
+				"internalType": "string[]",
+				"name": "",
+				"type": "string[]"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "evidenceId",
+				"type": "string"
+			}
+		],
+		"name": "getEvidenceDetails",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "uniqueId",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "aadhaar",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "accused",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "detail",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "location",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "officer",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "crimeDateTime",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "registration",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "evidenceData",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "judgment",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "closingDate",
+				"type": "string"
+			},
+			{
+				"internalType": "string[]",
+				"name": "reviews",
+				"type": "string[]"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	}
+]';
     contractMsg.innerText = 'Demo contract values loaded. Please save to use.';
   });
 
