@@ -1,4 +1,3 @@
-<!-- Save as index.html -->
 <!doctype html>
 <html lang="en">
 <head>
@@ -7,225 +6,541 @@
   <title>Evidence Tracking — Police · Court · Public</title>
   <script src="https://cdn.jsdelivr.net/npm/web3@1.8.2/dist/web3.min.js"></script>
   <style>
-    /* [STYLES UNCHANGED - KEEP AS IS] */
-    /* ... your existing CSS remains the same ... */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    .wrap {
+      max-width: 800px;
+      margin: auto;
+    }
+    select, input, button, textarea {
+      margin: 5px 0;
+      padding: 8px;
+      font-size: 1em;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    button {
+      cursor: pointer;
+    }
+    .active {
+      display: block !important;
+    }
+    #policeLogin, #courtLogin, #policePage, #courtPage, #publicPage, #resultsCard {
+      display: none;
+      border: 1px solid #ccc;
+      padding: 15px;
+      margin-top: 10px;
+      border-radius: 5px;
+      background: #f9f9f9;
+    }
+    #resultsOutput {
+      white-space: pre-wrap;
+      background: #eee;
+      padding: 10px;
+      min-height: 100px;
+      overflow-y: auto;
+    }
   </style>
 </head>
 <body>
 <div class="wrap">
-  <!-- [UI remains unchanged] -->
-  <!-- Only login logic and credential data has changed -->
+  <h1>Evidence Tracking — Police · Court · Public</h1>
+  
+  <label for="roleSel"><strong>Select Role:</strong></label>
+  <select id="roleSel">
+    <option value="">-- Select Role --</option>
+    <option value="police">Police</option>
+    <option value="court">Court</option>
+    <option value="public">Public</option>
+  </select>
+  <button id="showPublicBtn">Show Public Interface</button>
+
+  <!-- Police Login -->
+  <div id="policeLogin">
+    <h2>Police Login</h2>
+    <input id="policeStationId" placeholder="Station ID" />
+    <input id="policePass" type="password" placeholder="Password" />
+    <button id="policeLoginBtn">Login</button>
+    <button id="policeCancelBtn">Cancel</button>
+  </div>
+
+  <!-- Police Portal -->
+  <div id="policePage">
+    <h2>Police Portal</h2>
+    <button id="policeLogoutBtn">Logout</button>
+    <hr />
+    <h3>Register New Evidence</h3>
+    <input id="p_unique" placeholder="Unique ID" />
+    <input id="p_aadhaar" placeholder="Aadhaar" />
+    <input id="p_accused" placeholder="Accused" />
+    <input id="p_detail" placeholder="Detail" />
+    <input id="p_location" placeholder="Location" />
+    <input id="p_officer" placeholder="Officer" />
+    <input id="p_crime" placeholder="Crime" />
+    <input id="p_reg" placeholder="Registration" />
+    <input id="p_evidence" placeholder="Evidence Data (e.g. IPFS hash)" />
+    <button id="registerBtn">Register Evidence</button>
+    <button id="clearPoliceBtn">Clear</button>
+
+    <h3>Track Evidence</h3>
+    <input id="policeTrackInput" placeholder="Enter Evidence Unique ID" />
+    <button id="policeTrackBtn">Track</button>
+  </div>
+
+  <!-- Court Login -->
+  <div id="courtLogin">
+    <h2>Court Login</h2>
+    <input id="courtId" placeholder="Court ID" />
+    <input id="courtPass" type="password" placeholder="Password" />
+    <button id="courtLoginBtn">Login</button>
+    <button id="courtCancelBtn">Cancel</button>
+  </div>
+
+  <!-- Court Portal -->
+  <div id="courtPage">
+    <h2>Court Portal</h2>
+    <button id="courtLogoutBtn">Logout</button>
+    <hr />
+    <h3>Submit Court Judgment</h3>
+    <select id="courtSelect">
+      <option value="">-- Select Evidence ID --</option>
+    </select>
+    <textarea id="courtJudgment" rows="3" placeholder="Judgment"></textarea>
+    <textarea id="courtClosing" rows="2" placeholder="Court Closing"></textarea>
+    <button id="submitJudgmentBtn">Submit Judgment</button>
+
+    <h3>Add Review</h3>
+    <textarea id="courtManual" rows="2" placeholder="Review text"></textarea>
+    <button id="addReviewBtn">Add Review</button>
+
+    <h3>Track Evidence</h3>
+    <input id="courtTrackInput" placeholder="Enter Evidence Unique ID" />
+    <button id="courtTrackBtn">Track</button>
+  </div>
+
+  <!-- Public Portal -->
+  <div id="publicPage">
+    <h2>Public Evidence Tracker</h2>
+    <input id="publicInput" placeholder="Enter Evidence Unique ID" />
+    <button id="publicTrackBtn">Track Evidence</button>
+    <div id="publicOutput"></div>
+  </div>
+
+  <div id="resultsCard">
+    <h3>Results</h3>
+    <pre id="resultsOutput"></pre>
+  </div>
+
+  <!-- Contract inputs -->
+  <hr />
+  <h3>Contract Setup</h3>
+  <input id="contractAddress" placeholder="Contract Address" />
+  <textarea id="contractAbi" placeholder="Paste Contract ABI JSON here" rows="10"></textarea>
+  <button id="saveContractBtn">Save Contract</button>
+  <button id="loadDemoBtn">Load Demo Contract</button>
+  <div id="contractMsg"></div>
 </div>
 
 <script>
-/* ========= Real login credentials ========= */
-const POLICE_USERS = {
-  'STN-001': 'pass001',
-  'STN-002': 'pass002',
-  'STN-003': 'pass003'
-};
+window.addEventListener('DOMContentLoaded', () => {
+  /* ========= Real login credentials ========= */
+  const POLICE_USERS = {
+    'STN-001': 'pass001',
+    'STN-002': 'pass002',
+    'STN-003': 'pass003'
+  };
 
-const COURT_USERS = {
-  'CRT-001': 'courtpass1',
-  'CRT-002': 'courtpass2',
-  'CRT-003': 'courtpass3'
-};
+  const COURT_USERS = {
+    'CRT-001': 'courtpass1',
+    'CRT-002': 'courtpass2',
+    'CRT-003': 'courtpass3'
+  };
 
-/* ========= State ========= */
-let web3, accounts, contract;
-let CONTRACT_ADDRESS = "";
-let CONTRACT_ABI = [];
-let localEvidenceCache = [];
+  /* ========= State ========= */
+  let web3, accounts, contract;
+  let CONTRACT_ADDRESS = "";
+  let CONTRACT_ABI = [];
+  let localEvidenceCache = [];
 
-const AUTH_KEYS = {
-  police: 'evi_auth_police',
-  court:  'evi_auth_court'
-};
+  const AUTH_KEYS = {
+    police: 'evi_auth_police',
+    court:  'evi_auth_court'
+  };
 
-/* ========= UI Refs ========= */
-const connectBtn = document.getElementById('connectBtn');
-const disconnectBtn = document.getElementById('disconnectBtn');
-const acctSpan = document.getElementById('acctSpan');
+  /* ========= UI Refs ========= */
+  const connectBtn = document.getElementById('connectBtn');
+  const disconnectBtn = document.getElementById('disconnectBtn');
+  const acctSpan = document.getElementById('acctSpan');
 
-const roleSel = document.getElementById('roleSel');
-const showPublicBtn = document.getElementById('showPublicBtn');
+  const roleSel = document.getElementById('roleSel');
+  const showPublicBtn = document.getElementById('showPublicBtn');
 
-const contractAddrInput = document.getElementById('contractAddress');
-const contractAbiInput = document.getElementById('contractAbi');
-const saveContractBtn = document.getElementById('saveContractBtn');
-const loadDemoBtn = document.getElementById('loadDemoBtn');
-const contractMsg = document.getElementById('contractMsg');
+  const contractAddrInput = document.getElementById('contractAddress');
+  const contractAbiInput = document.getElementById('contractAbi');
+  const saveContractBtn = document.getElementById('saveContractBtn');
+  const loadDemoBtn = document.getElementById('loadDemoBtn');
+  const contractMsg = document.getElementById('contractMsg');
 
-/* Login cards */
-const policeLogin = document.getElementById('policeLogin');
-const courtLogin  = document.getElementById('courtLogin');
-const policeStationId = document.getElementById('policeStationId');
-const policePass  = document.getElementById('policePass');
-const courtId     = document.getElementById('courtId');
-const courtPass   = document.getElementById('courtPass');
-const policeLoginBtn = document.getElementById('policeLoginBtn');
-const policeCancelBtn= document.getElementById('policeCancelBtn');
-const courtLoginBtn  = document.getElementById('courtLoginBtn');
-const courtCancelBtn = document.getElementById('courtCancelBtn');
+  /* Login cards */
+  const policeLogin = document.getElementById('policeLogin');
+  const courtLogin  = document.getElementById('courtLogin');
+  const policeStationId = document.getElementById('policeStationId');
+  const policePass  = document.getElementById('policePass');
+  const courtId     = document.getElementById('courtId');
+  const courtPass   = document.getElementById('courtPass');
+  const policeLoginBtn = document.getElementById('policeLoginBtn');
+  const policeCancelBtn= document.getElementById('policeCancelBtn');
+  const courtLoginBtn  = document.getElementById('courtLoginBtn');
+  const courtCancelBtn = document.getElementById('courtCancelBtn');
 
-/* Portals */
-const policePage = document.getElementById('policePage');
-const courtPage  = document.getElementById('courtPage');
-const publicPage = document.getElementById('publicPage');
-const resultsCard = document.getElementById('resultsCard');
-const resultsOutput = document.getElementById('resultsOutput');
+  /* Portals */
+  const policePage = document.getElementById('policePage');
+  const courtPage  = document.getElementById('courtPage');
+  const publicPage = document.getElementById('publicPage');
+  const resultsCard = document.getElementById('resultsCard');
+  const resultsOutput = document.getElementById('resultsOutput');
 
-/* Logout buttons inside portals */
-const policeLogoutBtn = document.getElementById('policeLogoutBtn');
-const courtLogoutBtn  = document.getElementById('courtLogoutBtn');
+  /* Logout buttons inside portals */
+  const policeLogoutBtn = document.getElementById('policeLogoutBtn');
+  const courtLogoutBtn  = document.getElementById('courtLogoutBtn');
 
-/* Police fields */
-const p_aadhaar=document.getElementById('p_aadhaar');
-const p_accused=document.getElementById('p_accused');
-const p_detail=document.getElementById('p_detail');
-const p_location=document.getElementById('p_location');
-const p_officer=document.getElementById('p_officer');
-const p_crime=document.getElementById('p_crime');
-const p_reg=document.getElementById('p_reg');
-const p_unique=document.getElementById('p_unique');
-const p_evidence=document.getElementById('p_evidence');
-const registerBtn=document.getElementById('registerBtn');
-const clearPoliceBtn=document.getElementById('clearPoliceBtn');
-const policeTrackInput=document.getElementById('policeTrackInput');
-const policeTrackBtn=document.getElementById('policeTrackBtn');
+  /* Police fields */
+  const p_aadhaar=document.getElementById('p_aadhaar');
+  const p_accused=document.getElementById('p_accused');
+  const p_detail=document.getElementById('p_detail');
+  const p_location=document.getElementById('p_location');
+  const p_officer=document.getElementById('p_officer');
+  const p_crime=document.getElementById('p_crime');
+  const p_reg=document.getElementById('p_reg');
+  const p_unique=document.getElementById('p_unique');
+  const p_evidence=document.getElementById('p_evidence');
+  const registerBtn=document.getElementById('registerBtn');
+  const clearPoliceBtn=document.getElementById('clearPoliceBtn');
+  const policeTrackInput=document.getElementById('policeTrackInput');
+  const policeTrackBtn=document.getElementById('policeTrackBtn');
 
-/* Court fields */
-const courtSelect=document.getElementById('courtSelect');
-const courtManual=document.getElementById('courtManual');
-const courtJudgment=document.getElementById('courtJudgment');
-const courtClosing=document.getElementById('courtClosing');
-const submitJudgmentBtn=document.getElementById('submitJudgmentBtn');
-const addReviewBtn=document.getElementById('addReviewBtn');
-const courtTrackInput=document.getElementById('courtTrackInput');
-const courtTrackBtn=document.getElementById('courtTrackBtn');
+  /* Court fields */
+  const courtSelect=document.getElementById('courtSelect');
+  const courtManual=document.getElementById('courtManual');
+  const courtJudgment=document.getElementById('courtJudgment');
+  const courtClosing=document.getElementById('courtClosing');
+  const submitJudgmentBtn=document.getElementById('submitJudgmentBtn');
+  const addReviewBtn=document.getElementById('addReviewBtn');
+  const courtTrackInput=document.getElementById('courtTrackInput');
+  const courtTrackBtn=document.getElementById('courtTrackBtn');
 
-/* Public */
-const publicInput=document.getElementById('publicInput');
-const publicTrackBtn=document.getElementById('publicTrackBtn');
-const publicOutput=document.getElementById('publicOutput');
+  /* Public */
+  const publicInput=document.getElementById('publicInput');
+  const publicTrackBtn=document.getElementById('publicTrackBtn');
+  const publicOutput=document.getElementById('publicOutput');
 
-/* ========= Helpers ========= */
-const methodExists = (name)=> contract?.methods && contract.methods[name];
-const tryCall = async (fn, args=[]) => {
-  try { return await fn(...args).call(); } catch(_){ return null; }
-};
-const saveToLocal = ()=> {
-  localStorage.setItem('evi_addr', contractAddrInput.value.trim());
-  localStorage.setItem('evi_abi', contractAbiInput.value.trim());
-};
-const loadFromLocal = ()=> {
-  const a = localStorage.getItem('evi_addr')||'';
-  const abi = localStorage.getItem('evi_abi')||'';
-  if(a) contractAddrInput.value=a;
-  if(abi) contractAbiInput.value=abi;
-  if(a||abi) contractMsg.innerText='Loaded last used values into the form.';
-};
+  /* ========= Helpers ========= */
+  const methodExists = (name)=> contract?.methods && contract.methods[name];
+  const tryCall = async (fn, args=[]) => {
+    try { return await fn(...args).call(); } catch(_){ return null; }
+  };
+  const saveToLocal = ()=> {
+    localStorage.setItem('evi_addr', contractAddrInput.value.trim());
+    localStorage.setItem('evi_abi', contractAbiInput.value.trim());
+  };
+  const loadFromLocal = ()=> {
+    const a = localStorage.getItem('evi_addr')||'';
+    const abi = localStorage.getItem('evi_abi')||'';
+    if(a) contractAddrInput.value=a;
+    if(abi) contractAbiInput.value=abi;
+    if(a||abi) contractMsg.innerText='Loaded last used values into the form.';
+  };
 
-function isAuthed(role){ return sessionStorage.getItem(AUTH_KEYS[role]) === '1'; }
-function setAuthed(role, val){ sessionStorage.setItem(AUTH_KEYS[role], val ? '1':'0'); }
+  function isAuthed(role){ return sessionStorage.getItem(AUTH_KEYS[role]) === '1'; }
+  function setAuthed(role, val){ sessionStorage.setItem(AUTH_KEYS[role], val ? '1':'0'); }
 
-function showOnly(el){ el.classList.add('active'); }
-function hideAllPortalsAndLogins(){
-  [policePage,courtPage,publicPage].forEach(p=>p.classList.remove('active'));
-  [policeLogin,courtLogin].forEach(l=>l.classList.remove('active'));
-}
-function routeForRole(role){
-  hideAllPortalsAndLogins();
-  resultsCard.style.display = role ? 'block' : 'none';
+  function showOnly(el){ el.classList.add('active'); }
+  function hideAllPortalsAndLogins(){
+    [policePage,courtPage,publicPage].forEach(p=>p.classList.remove('active'));
+    [policeLogin,courtLogin].forEach(l=>l.classList.remove('active'));
+  }
+  function routeForRole(role){
+    hideAllPortalsAndLogins();
+    resultsCard.style.display = role ? 'block' : 'none';
 
-  if(!role){ return; }
+    if(!role){ return; }
 
-  if(role==='public'){
-    showOnly(publicPage);
-    return;
+    if(role==='public'){
+      showOnly(publicPage);
+      return;
+    }
+
+    if(!web3 || !accounts || !accounts.length){
+      alert('Connect wallet first.');
+      return;
+    }
+
+    if(role==='police'){
+      if(isAuthed('police')) { showOnly(policePage); }
+      else { showOnly(policeLogin); }
+    }
+
+    if(role==='court'){
+      if(isAuthed('court')) { showOnly(courtPage); }
+      else { showOnly(courtLogin); }
+    }
   }
 
-  if(!web3 || !accounts || !accounts.length){
-    alert('Connect wallet first.');
-    return;
+  async function detectAnyEnumeration(){
+    if(!contract) return [];
+    if(methodExists('getAllEvidenceIds')){
+      const list = await tryCall(contract.methods.getAllEvidenceIds);
+      return Array.isArray(list) ? list : [];
+    }
+    return localEvidenceCache;
   }
 
-  if(role==='police'){
-    if(isAuthed('police')) { showOnly(policePage); }
-    else { showOnly(policeLogin); }
+  async function refreshEvidenceSelect(){
+    if(!contract){ 
+      courtSelect.innerHTML='<option value="">-- none --</option>'; 
+      return; 
+    }
+    let ids = [];
+    if(methodExists('getAllEvidenceIds')){
+      try{ ids = await contract.methods.getAllEvidenceIds().call(); }
+      catch(_){ ids = []; }
+    } else {
+      ids = localEvidenceCache || [];
+    }
+    courtSelect.innerHTML = '<option value="">-- none --</option>';
+    (ids||[]).forEach(id=>{
+      const opt=document.createElement('option');
+      opt.value=id; opt.text=id;
+      courtSelect.appendChild(opt);
+    });
   }
 
-  if(role==='court'){
-    if(isAuthed('court')) { showOnly(courtPage); }
-    else { showOnly(courtLogin); }
-  }
-}
+  /* ========= Role routing ========= */
+  roleSel.addEventListener('change', ()=> routeForRole(roleSel.value));
+  showPublicBtn.addEventListener('click', ()=>{ roleSel.value='public'; routeForRole('public'); });
 
-async function detectAnyEnumeration(){
-  if(!contract) return [];
-  if(methodExists('getAllEvidenceIds')){
-    const list = await tryCall(contract.methods.getAllEvidenceIds);
-    return Array.isArray(list) ? list : [];
-  }
-  return localEvidenceCache;
-}
-
-async function refreshEvidenceSelect(){
-  if(!contract){ courtSelect.innerHTML='<option value="">-- none --</option>'; return; }
-  let ids = [];
-  if(methodExists('getAllEvidenceIds')){
-    try{ ids = await contract.methods.getAllEvidenceIds().call(); }
-    catch(_){ ids = []; }
-  } else {
-    ids = localEvidenceCache || [];
-  }
-  courtSelect.innerHTML = '<option value="">-- none --</option>';
-  (ids||[]).forEach(id=>{
-    const opt=document.createElement('option');
-    opt.value=id; opt.text=id;
-    courtSelect.appendChild(opt);
+  /* ========= Real Login flows ========= */
+  policeLoginBtn.addEventListener('click', ()=>{
+    const stationId = policeStationId.value.trim();
+    const pass = policePass.value.trim();
+    if (!stationId) return alert('Enter Station ID');
+    if (!POLICE_USERS[stationId]) return alert('Station ID not recognized.');
+    if (POLICE_USERS[stationId] !== pass) return alert('Incorrect passcode.');
+    setAuthed('police', true);
+    policePass.value='';
+    routeForRole('police');
   });
-}
+  policeCancelBtn.addEventListener('click', ()=>{ roleSel.value=''; routeForRole(''); });
+  policeLogoutBtn.addEventListener('click', ()=>{
+    setAuthed('police', false);
+    alert('Logged out of Police portal');
+    routeForRole('police');
+  });
 
-/* ========= Role routing ========= */
-roleSel.addEventListener('change', ()=> routeForRole(roleSel.value));
-showPublicBtn.addEventListener('click', ()=>{ roleSel.value='public'; routeForRole('public'); });
+  courtLoginBtn.addEventListener('click', ()=>{
+    const courtCode = courtId.value.trim();
+    const pass = courtPass.value.trim();
+    if (!courtCode) return alert('Enter Court ID');
+    if (!COURT_USERS[courtCode]) return alert('Court ID not recognized.');
+    if (COURT_USERS[courtCode] !== pass) return alert('Incorrect passcode.');
+    setAuthed('court', true);
+    courtPass.value='';
+    routeForRole('court');
+  });
+  courtCancelBtn.addEventListener('click', ()=>{ roleSel.value=''; routeForRole(''); });
+  courtLogoutBtn.addEventListener('click', ()=>{
+    setAuthed('court', false);
+    alert('Logged out of Court portal');
+    routeForRole('court');
+  });
 
-/* ========= Real Login flows ========= */
-policeLoginBtn.addEventListener('click', ()=>{
-  const stationId = policeStationId.value.trim();
-  const pass = policePass.value.trim();
-  if (!stationId) return alert('Enter Station ID');
-  if (!POLICE_USERS[stationId]) return alert('Station ID not recognized.');
-  if (POLICE_USERS[stationId] !== pass) return alert('Incorrect passcode.');
-  setAuthed('police', true);
-  policePass.value='';
-  routeForRole('police');
-});
-policeCancelBtn.addEventListener('click', ()=>{ roleSel.value=''; routeForRole(''); });
-policeLogoutBtn.addEventListener('click', ()=>{
-  setAuthed('police', false);
-  alert('Logged out of Police portal');
-  routeForRole('police');
-});
+  /* ========= Contract Setup ========= */
+  saveContractBtn.addEventListener('click', async () => {
+    const addr = contractAddrInput.value.trim();
+    const abiStr = contractAbiInput.value.trim();
+    if(!addr || !abiStr) return alert('Enter both contract address and ABI');
+    try {
+      const abi = JSON.parse(abiStr);
+      CONTRACT_ADDRESS = addr;
+      CONTRACT_ABI = abi;
+      await initWeb3AndContract();
+      saveToLocal();
+      contractMsg.innerText = 'Contract loaded and saved.';
+      await refreshEvidenceSelect();
+    } catch(e) {
+      alert('Invalid ABI JSON');
+    }
+  });
 
-courtLoginBtn.addEventListener('click', ()=>{
-  const courtCode = courtId.value.trim();
-  const pass = courtPass.value.trim();
-  if (!courtCode) return alert('Enter Court ID');
-  if (!COURT_USERS[courtCode]) return alert('Court ID not recognized.');
-  if (COURT_USERS[courtCode] !== pass) return alert('Incorrect passcode.');
-  setAuthed('court', true);
-  courtPass.value='';
-  routeForRole('court');
-});
-courtCancelBtn.addEventListener('click', ()=>{ roleSel.value=''; routeForRole(''); });
-courtLogoutBtn.addEventListener('click', ()=>{
-  setAuthed('court', false);
-  alert('Logged out of Court portal');
-  routeForRole('court');
-});
+  loadDemoBtn.addEventListener('click', () => {
+    // Provide a demo contract address and ABI here if you want
+    contractAddrInput.value = '0xYourDemoContractAddress';
+    contractAbiInput.value = '[{"inputs":[], "name":"getAllEvidenceIds", "outputs":[{"internalType":"string[]","name":"","type":"string[]"}], "stateMutability":"view", "type":"function"}]';
+    contractMsg.innerText = 'Demo contract values loaded. Please save to use.';
+  });
 
-/* ========= On Load ========= */
-loadFromLocal();
+  async function initWeb3AndContract(){
+    if(typeof window.ethereum === 'undefined') {
+      alert('MetaMask or Ethereum provider not found!');
+      return;
+    }
+    web3 = new Web3(window.ethereum);
+    try {
+      accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+      contract = new web3.eth.Contract(CONTRACT_ABI, CONTRACT_ADDRESS);
+      alert(`Wallet connected: ${accounts[0]}`);
+    } catch(e) {
+      alert('Failed to connect wallet: ' + e.message);
+    }
+  }
+
+  /* ========= Police Register Evidence ========= */
+  registerBtn.addEventListener('click', async () => {
+    if(!contract) return alert('Load contract first.');
+    if(!accounts || !accounts.length) return alert('Connect wallet first.');
+    const data = {
+      uniqueId: p_unique.value.trim(),
+      aadhaar: p_aadhaar.value.trim(),
+      accused: p_accused.value.trim(),
+      detail: p_detail.value.trim(),
+      location: p_location.value.trim(),
+      officer: p_officer.value.trim(),
+      crime: p_crime.value.trim(),
+      registration: p_reg.value.trim(),
+      evidenceData: p_evidence.value.trim()
+    };
+    if(!data.uniqueId) return alert('Unique ID required');
+    try {
+      await contract.methods.registerEvidence(
+        data.uniqueId,
+        data.aadhaar,
+        data.accused,
+        data.detail,
+        data.location,
+        data.officer,
+        data.crime,
+        data.registration,
+        data.evidenceData
+      ).send({from: accounts[0]});
+      alert('Evidence registered on-chain');
+      // Cache locally for demo fallback
+      localEvidenceCache.push(data.uniqueId);
+      await refreshEvidenceSelect();
+      clearPoliceBtn.click();
+    } catch(e){
+      alert('Error registering evidence: ' + e.message);
+    }
+  });
+  clearPoliceBtn.addEventListener('click', () => {
+    [p_unique, p_aadhaar, p_accused, p_detail, p_location, p_officer, p_crime, p_reg, p_evidence].forEach(i => i.value = '');
+  });
+
+  /* ========= Police Track ========= */
+  policeTrackBtn.addEventListener('click', async () => {
+    if(!contract) return alert('Load contract first.');
+    const id = policeTrackInput.value.trim();
+    if(!id) return alert('Enter evidence ID');
+    await trackEvidence(id);
+  });
+
+  /* ========= Court Submit Judgment ========= */
+  submitJudgmentBtn.addEventListener('click', async () => {
+    if(!contract) return alert('Load contract first.');
+    if(!accounts || !accounts.length) return alert('Connect wallet first.');
+    const evidenceId = courtSelect.value;
+    if(!evidenceId) return alert('Select evidence ID');
+    const judgment = courtJudgment.value.trim();
+    const closing = courtClosing.value.trim();
+    if(!judgment || !closing) return alert('Fill judgment and closing');
+    try {
+      await contract.methods.submitJudgment(evidenceId, judgment, closing)
+        .send({from: accounts[0]});
+      alert('Judgment submitted');
+      courtJudgment.value = '';
+      courtClosing.value = '';
+    } catch(e) {
+      alert('Error submitting judgment: ' + e.message);
+    }
+  });
+
+  /* ========= Court Add Review ========= */
+  addReviewBtn.addEventListener('click', async () => {
+    if(!contract) return alert('Load contract first.');
+    if(!accounts || !accounts.length) return alert('Connect wallet first.');
+    const evidenceId = courtSelect.value;
+    if(!evidenceId) return alert('Select evidence ID');
+    const review = courtManual.value.trim();
+    if(!review) return alert('Enter review text');
+    try {
+      await contract.methods.addReview(evidenceId, review)
+        .send({from: accounts[0]});
+      alert('Review added');
+      courtManual.value = '';
+    } catch(e) {
+      alert('Error adding review: ' + e.message);
+    }
+  });
+
+  /* ========= Court Track ========= */
+  courtTrackBtn.addEventListener('click', async () => {
+    if(!contract) return alert('Load contract first.');
+    const id = courtTrackInput.value.trim();
+    if(!id) return alert('Enter evidence ID');
+    await trackEvidence(id);
+  });
+
+  /* ========= Public Track ========= */
+  publicTrackBtn.addEventListener('click', async () => {
+    if(!contract) return alert('Load contract first.');
+    const id = publicInput.value.trim();
+    if(!id) return alert('Enter evidence ID');
+    await trackEvidence(id, true);
+  });
+
+  /* ========= Track Evidence helper ========= */
+  async function trackEvidence(id, isPublic=false){
+    if(!id) return;
+    if(!contract) return alert('Contract not loaded');
+    resultsCard.style.display = 'block';
+    resultsOutput.textContent = 'Loading...';
+    publicOutput.textContent = '';
+    try {
+      // Example: assuming contract has method getEvidenceDetails(string id)
+      let data = null;
+      if(methodExists('getEvidenceDetails')){
+        data = await contract.methods.getEvidenceDetails(id).call();
+      } else {
+        data = `No on-chain details available for evidence ${id}`;
+      }
+      let text = `Evidence ID: ${id}\n\n` + JSON.stringify(data, null, 2);
+      resultsOutput.textContent = text;
+      if(isPublic){
+        publicOutput.textContent = text;
+      }
+    } catch(e){
+      resultsOutput.textContent = 'Error loading evidence: ' + e.message;
+      if(isPublic) publicOutput.textContent = 'Error: ' + e.message;
+    }
+  }
+
+  /* ========= On load ========= */
+  loadFromLocal();
+  // If MetaMask present, try connect silently
+  if(window.ethereum){
+    web3 = new Web3(window.ethereum);
+    window.ethereum.request({ method: 'eth_accounts' }).then(accs=>{
+      accounts = accs;
+      if(accounts && accounts.length){
+        contractAddrInput.value && contractAbiInput.value && saveContractBtn.click();
+      }
+    });
+  }
+
+});
+</script>
+
+</body>
+</html>
 
