@@ -1,900 +1,459 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<title>Evidence Tracking (Web3)</title>
 <meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Evidence Tracking — Police · Court · Public</title>
 <script src="https://cdn.jsdelivr.net/npm/web3@1.8.2/dist/web3.min.js"></script>
 <style>
-  :root {
-    --bg: #0f1724;
-    --card: #111827;
-    --accent: #06b6d4;
-    --muted: #9ca3af;
-  }
+  :root{--bg:#071026;--card:#0f1724;--panel:#0b1220;--accent:#06b6d4;--accent2:#7c3aed;--muted:#94a3b8;--glass:rgba(255,255,255,0.05)}
   *{box-sizing:border-box}
-  body{margin:0;background:linear-gradient(180deg,var(--bg) 0%, #071028 100%);font-family:Inter,Segoe UI,system-ui,Arial;color:#e6eef6;padding:24px;display:flex;align-items:flex-start;justify-content:center;min-height:100vh}
-  .app { width: 100%; max-width: 980px; }
-  header {display:flex;align-items:center;gap:16px;margin-bottom:18px}
-  h1{margin:0;font-size:20px;color:var(--accent)}
-  .grid { display:grid; grid-template-columns: 1fr 1fr; gap:18px; }
-  .card { background:var(--card); padding:18px; border-radius:12px; box-shadow: 0 6px 30px rgba(2,6,23,0.6); }
+  body{margin:0;font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;background:linear-gradient(180deg,#021226 0%, #071026 60%);color:#e6eef6;min-height:100vh;display:flex;justify-content:center;padding:28px}
+  .wrap{width:100%;max-width:1100px}
+  header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:12px}
+  h1{margin:0;color:var(--accent);font-size:20px}
+  .muted{color:var(--muted);font-size:13px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .card{background:linear-gradient(180deg,var(--card),var(--panel));border:1px solid var(--glass);box-shadow:0 8px 40px rgba(2,6,23,.6);border-radius:12px;padding:16px}
   label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
-  input,select,textarea,button { width:100%; padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.03); background:transparent;color:inherit; font-size:14px }
-  textarea{min-height:90px; resize:vertical}
-  button{background:var(--accent); color:#021; border:none; font-weight:700; cursor:pointer}
-  .muted{color:var(--muted); font-size:13px}
-  .small{font-size:13px;padding:8px}
-  .full { grid-column: 1 / -1; }
-  .row { display:flex; gap:10px; align-items:center }
-  .row > * { flex:1 }
-  pre.output { background:#0a0f15; padding:12px; border-radius:8px; color:#dbeafe; white-space:pre-wrap; max-height:360px; overflow:auto; }
-  .topbar { display:flex; gap:12px; align-items:center; justify-content:space-between; margin-bottom:12px }
-  .inline { display:flex; gap:8px; align-items:center }
-  .note { color:var(--muted); font-size:13px; margin-top:6px }
+  input,select,textarea,button{width:100%;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.06);background:transparent;color:#e6eef6;font-size:14px;outline:none}
+  textarea{min-height:96px;resize:vertical}
+  .row{display:flex;gap:10px}
+  .row>*{flex:1}
+  button.primary{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#021;font-weight:800;border:none;cursor:pointer}
+  button.ghost{background:transparent;border:1px solid rgba(255,255,255,.1);color:var(--muted);cursor:pointer}
+  button.small{padding:8px 10px;font-size:13px;border-radius:8px}
+  pre.output{background:#041024;border:1px solid rgba(255,255,255,.06);padding:12px;border-radius:10px;white-space:pre-wrap;max-height:420px;overflow:auto}
+  .full{grid-column:1 / -1}
+  .portal{display:none}
+  .portal.active{display:block}
+  .loginCard{display:none}
+  .loginCard.active{display:block}
+  .loginHint{font-size:12px;color:var(--muted);margin-top:6px}
+  @media (max-width:980px){.grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
-<div class="app">
+<div class="wrap">
   <header>
-    <h1>Evidence Tracking — Web3</h1>
-    <div class="muted">Connects to your injected wallet (MetaMask). Replace CONTRACT_ADDRESS & ABI in the file after deployment.</div>
+    <div>
+      <h1>Evidence Tracking System</h1>
+      <div class="muted">Web3-enabled portal — Police · Court · Public</div>
+    </div>
+    <div style="text-align:right">
+      <div class="muted">Wallet: <span id="acctSpan">not connected</span></div>
+      <div style="height:8px"></div>
+      <div class="row" style="gap:8px;justify-content:flex-end">
+        <button id="connectBtn" class="small">Connect wallet</button>
+        <button id="disconnectBtn" class="small ghost">Disconnect</button>
+      </div>
+    </div>
   </header>
 
-  <div class="topbar card">
-    <div class="inline">
-      <label style="margin-right:8px">Role</label>
-      <select id="roleSelect">
-        <option value="">Select role</option>
-        <option value="police">Police</option>
-        <option value="court">Court</option>
-        <option value="public">Public</option>
-      </select>
+  <!-- Top controls -->
+  <div class="card">
+    <div class="row">
+      <div>
+        <label>Role</label>
+        <select id="roleSel">
+          <option value="">-- choose role --</option>
+          <option value="police">Police</option>
+          <option value="court">Court</option>
+          <option value="public">Public</option>
+        </select>
+      </div>
+      <div>
+        <label>Contract Address</label>
+        <input id="contractAddress" placeholder="0x... (paste & Save + Test)"/>
+      </div>
     </div>
-
-    <div class="inline">
-      <label style="margin-right:8px">Logged wallet</label>
-      <div id="accountText" class="muted">not connected</div>
-      <button id="connectWalletBtn" class="small">Connect wallet</button>
+    <label style="margin-top:10px">ABI (JSON array)</label>
+    <textarea id="contractAbi" placeholder='Paste ABI JSON array here'></textarea>
+    <div class="row" style="margin-top:8px">
+      <button id="saveContractBtn" class="small">Save + Test</button>
+      <button id="loadDemoBtn" class="small ghost">Load last used (if any)</button>
+      <button id="showPublicBtn" class="small ghost">Open Public portal</button>
     </div>
+    <div id="contractMsg" class="muted" style="margin-top:8px"></div>
   </div>
 
-  <div class="grid">
-    <!-- POLICE CARD -->
-    <div id="policeCard" class="card" style="display:none">
-      <h3>Police — Register Case</h3>
+  <div class="grid" style="margin-top:16px">
+    <!-- POLICE LOGIN -->
+    <div id="policeLogin" class="card loginCard">
+      <h3>Police — Login</h3>
+      <label>Station ID</label>
+      <input id="policeStationId" placeholder="e.g., STN-001" />
+      <label>Passcode</label>
+      <input id="policePass" type="password" placeholder="Enter police passcode" />
+      <div class="row" style="margin-top:10px">
+        <button id="policeLoginBtn" class="primary">Login</button>
+        <button id="policeCancelBtn" class="ghost">Cancel</button>
+      </div>
+      <div class="loginHint">Demo passcode: <code>POLICE-1234</code> (change in script)</div>
+    </div>
 
-      <label>Aadhaar ID</label><input id="policeAadhaar" placeholder="Aadhaar ID" />
-      <label>Accused Name</label><input id="policeAccused" placeholder="Accused full name" />
-      <label>Case Detail</label><textarea id="policeCaseDetail" placeholder="Case description"></textarea>
-      <label>Crime Location</label><input id="policeLocation" placeholder="Mumbai, Pune..." />
-      <label>Officer Name</label><input id="policeOfficer" placeholder="Officer Name" />
+    <!-- COURT LOGIN -->
+    <div id="courtLogin" class="card loginCard">
+      <h3>Court — Login</h3>
+      <label>Court ID</label>
+      <input id="courtId" placeholder="e.g., CRT-001" />
+      <label>Passcode</label>
+      <input id="courtPass" type="password" placeholder="Enter court passcode" />
+      <div class="row" style="margin-top:10px">
+        <button id="courtLoginBtn" class="primary">Login</button>
+        <button id="courtCancelBtn" class="ghost">Cancel</button>
+      </div>
+      <div class="loginHint">Demo passcode: <code>COURT-1234</code> (change in script)</div>
+    </div>
 
+    <!-- POLICE PORTAL -->
+    <div id="policePage" class="card portal">
+      <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:6px">
+        <h3 style="margin:0">Police — Register Case</h3>
+        <button id="policeLogoutBtn" class="small ghost">Logout</button>
+      </div>
+      <label>Aadhaar ID</label><input id="p_aadhaar" placeholder="Aadhaar ID" />
+      <label>Accused Name</label><input id="p_accused" placeholder="Full name" />
+      <label>Case Detail</label><textarea id="p_detail" placeholder="Describe the case"></textarea>
+      <label>Crime Location</label><input id="p_location" placeholder="City / address" />
+      <label>Officer Name</label><input id="p_officer" placeholder="Officer name" />
       <div class="row">
         <div>
-          <label>Crime Date & Time</label>
-          <input id="policeCrimeDate" type="datetime-local" />
+          <label>Crime Date & Time</label><input id="p_crime" type="datetime-local" />
         </div>
         <div>
-          <label>Registration Date & Time</label>
-          <input id="policeRegDate" type="datetime-local" />
+          <label>Registration Date & Time</label><input id="p_reg" type="datetime-local" />
         </div>
       </div>
-
       <div class="row" style="margin-top:8px">
         <div>
           <label>Unique Case ID (from contract)</label>
-          <input id="uiPreview" readonly />
+          <input id="p_unique" readonly />
         </div>
         <div>
           <label>Evidence ID (from contract)</label>
-          <input id="evPreview" readonly />
+          <input id="p_evidence" readonly />
         </div>
       </div>
+      <div class="row" style="margin-top:10px">
+        <button id="registerBtn" class="primary">Register On-Chain</button>
+        <button id="clearPoliceBtn" class="ghost">Clear</button>
+      </div>
+      <div class="muted" style="margin-top:8px">After a successful tx, Unique & Evidence IDs will auto-fill here instantly.</div>
 
-      <div style="margin-top:10px">
-        <button id="registerBtn">Register Case on-chain</button>
-        <div class="note">All fields required. After registering the form will clear and drop-downs update.</div>
+      <hr style="border:none;height:1px;background:rgba(255,255,255,.08);margin:14px 0">
+      <h4>Quick Track</h4>
+      <div class="row">
+        <input id="policeTrackInput" placeholder="EV00001 or accused or aadhaar"/>
+        <button id="policeTrackBtn" class="small">Track</button>
       </div>
     </div>
 
-    <!-- COURT CARD -->
-    <div id="courtCard" class="card" style="display:none">
-      <h3>Court — Judgment & Review</h3>
-
-      <label>Choose evidence (or enter Evidence ID / Accused)</label>
-      <select id="courtEvidenceSelect">
-        <option value="">-- Select evidence --</option>
-      </select>
-
-      <label>Or enter Evidence ID or Accused name</label>
-      <input id="courtManualInput" placeholder="EV00001 or accused name" />
-
+    <!-- COURT PORTAL -->
+    <div id="courtPage" class="card portal">
+      <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:6px">
+        <h3 style="margin:0">Court — Judgment & Reviews</h3>
+        <button id="courtLogoutBtn" class="small ghost">Logout</button>
+      </div>
+      <label>Select evidence</label>
+      <select id="courtSelect"><option value="">-- none --</option></select>
+      <label>Or enter Evidence ID / Accused / Aadhaar</label>
+      <input id="courtManual" placeholder="EV00001 or Name or Aadhaar" />
       <label>Judgment text</label>
-      <textarea id="courtJudgmentText" placeholder="Enter judgment"></textarea>
-
-      <label>Closing date & time</label>
-      <input id="courtClosingDate" type="datetime-local" />
-
-      <div class="row">
-        <button id="submitJudgmentBtn">Submit / Update Judgment</button>
-        <button id="addReviewBtn" style="background:#ffd166;color:#022">Add Review</button>
+      <textarea id="courtJudgment" placeholder="Enter judgment/detail"></textarea>
+      <label>Closing Date & Time</label>
+      <input id="courtClosing" type="datetime-local" />
+      <div class="row" style="margin-top:8px">
+        <button id="submitJudgmentBtn" class="primary">Submit / Update Judgment</button>
+        <button id="addReviewBtn" class="ghost">Add Review</button>
       </div>
 
-      <div class="note">If judgment exists, this updates. Reviews get appended.</div>
+      <hr style="border:none;height:1px;background:rgba(255,255,255,.08);margin:14px 0">
+      <h4>Track</h4>
+      <div class="row">
+        <input id="courtTrackInput" placeholder="EV00001 or accused or aadhaar"/>
+        <button id="courtTrackBtn" class="small">Track</button>
+      </div>
     </div>
 
-    <!-- PUBLIC CARD -->
-    <div id="publicCard" class="card" style="display:none">
+    <!-- PUBLIC -->
+    <div id="publicPage" class="card portal">
       <h3>Public — Track Case</h3>
-      <label>Evidence ID or Accused Name</label>
-      <input id="publicSearch" placeholder="EV00001 or John Doe" />
-      <button id="publicTrackBtn">Track</button>
-      <div style="margin-top:10px"><pre id="publicOutput" class="output">No data</pre></div>
+      <label>Evidence ID / Accused / Aadhaar</label>
+      <div class="row">
+        <input id="publicInput" placeholder="EV00001 or John Doe or Aadhaar" />
+        <button id="publicTrackBtn" class="small">Track</button>
+      </div>
+      <div style="margin-top:14px"><pre id="publicOutput" class="output">No query yet.</pre></div>
     </div>
 
-    <!-- TRACKING / DEBUG -->
-    <div class="card full" id="trackingCard" style="display:none">
-      <h3>Tracking / Results</h3>
-      <label>Enter Evidence ID or Accused Name (any portal)</label>
-      <div class="row">
-        <input id="trackInput" placeholder="EV00001 or accused name" />
-        <button id="trackBtn">Track</button>
-      </div>
-
-      <div style="margin-top:12px">
-        <pre id="trackOutput" class="output">No results yet.</pre>
-      </div>
+    <!-- RESULTS -->
+    <div id="resultsCard" class="card full" style="display:none">
+      <h3>Record / Reviews</h3>
+      <pre id="resultsOutput" class="output">No results</pre>
     </div>
   </div>
-
-  <div style="height:18px;"></div>
-  <div class="muted" style="text-align:center">Replace CONTRACT_ADDRESS and CONTRACT_ABI variables below after you deploy the Solidity contract.</div>
 </div>
 
 <script>
-/* ---------------------------
-  SET THESE AFTER DEPLOYMENT
-  - Deploy the Solidity contract from the previous code (Remix/Hardhat).
-  - Replace CONTRACT_ADDRESS and CONTRACT_ABI (the JSON ABI array).
-----------------------------*/
-const CONTRACT_ADDRESS = "0x1395BB24762b3ab9Be87C9CD497F6C5B91F1d1Ae";
-const CONTRACT_ABI = [ 
-	{
-		"inputs": [
-			{
-				"internalType": "string",
-				"name": "aadhaar",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "accusedName",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "caseDescription",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "location",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "officerName",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "crimeDateTime",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "registrationDateTime",
-				"type": "string"
-			}
-		],
-		"name": "registerCase",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "string",
-				"name": "evidenceId",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "judgmentText",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "closingDate",
-				"type": "string"
-			}
-		],
-		"name": "submitJudgment",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "string",
-				"name": "",
-				"type": "string"
-			}
-		],
-		"name": "casesByEvidenceId",
-		"outputs": [
-			{
-				"internalType": "string",
-				"name": "uniqueCaseId",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "evidenceId",
-				"type": "string"
-			},
-			{
-				"internalType": "uint256",
-				"name": "caseCountForAadhaar",
-				"type": "uint256"
-			},
-			{
-				"components": [
-					{
-						"internalType": "string",
-						"name": "aadhaar",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "accusedName",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "caseDescription",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "location",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "officerName",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "crimeDateTime",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "registrationDateTime",
-						"type": "string"
-					}
-				],
-				"internalType": "struct EvidenceTracking.CaseDetails",
-				"name": "details",
-				"type": "tuple"
-			},
-			{
-				"internalType": "string",
-				"name": "judgmentText",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "closingDate",
-				"type": "string"
-			},
-			{
-				"internalType": "bool",
-				"name": "isClosed",
-				"type": "bool"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "string",
-				"name": "",
-				"type": "string"
-			}
-		],
-		"name": "evidenceIdByAccused",
-		"outputs": [
-			{
-				"internalType": "string",
-				"name": "",
-				"type": "string"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "string",
-				"name": "",
-				"type": "string"
-			},
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"name": "evidenceIdsByAadhaar",
-		"outputs": [
-			{
-				"internalType": "string",
-				"name": "",
-				"type": "string"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "string",
-				"name": "aadhaar",
-				"type": "string"
-			}
-		],
-		"name": "getEvidenceIdsByAadhaar",
-		"outputs": [
-			{
-				"internalType": "string[]",
-				"name": "",
-				"type": "string[]"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "string",
-				"name": "accusedName",
-				"type": "string"
-			}
-		],
-		"name": "trackCaseByAccusedName",
-		"outputs": [
-			{
-				"components": [
-					{
-						"internalType": "string",
-						"name": "uniqueCaseId",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "evidenceId",
-						"type": "string"
-					},
-					{
-						"internalType": "uint256",
-						"name": "caseCountForAadhaar",
-						"type": "uint256"
-					},
-					{
-						"components": [
-							{
-								"internalType": "string",
-								"name": "aadhaar",
-								"type": "string"
-							},
-							{
-								"internalType": "string",
-								"name": "accusedName",
-								"type": "string"
-							},
-							{
-								"internalType": "string",
-								"name": "caseDescription",
-								"type": "string"
-							},
-							{
-								"internalType": "string",
-								"name": "location",
-								"type": "string"
-							},
-							{
-								"internalType": "string",
-								"name": "officerName",
-								"type": "string"
-							},
-							{
-								"internalType": "string",
-								"name": "crimeDateTime",
-								"type": "string"
-							},
-							{
-								"internalType": "string",
-								"name": "registrationDateTime",
-								"type": "string"
-							}
-						],
-						"internalType": "struct EvidenceTracking.CaseDetails",
-						"name": "details",
-						"type": "tuple"
-					},
-					{
-						"internalType": "string",
-						"name": "judgmentText",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "closingDate",
-						"type": "string"
-					},
-					{
-						"internalType": "bool",
-						"name": "isClosed",
-						"type": "bool"
-					}
-				],
-				"internalType": "struct EvidenceTracking.CaseRecord",
-				"name": "",
-				"type": "tuple"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "string",
-				"name": "evidenceId",
-				"type": "string"
-			}
-		],
-		"name": "trackCaseByEvidenceId",
-		"outputs": [
-			{
-				"components": [
-					{
-						"internalType": "string",
-						"name": "uniqueCaseId",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "evidenceId",
-						"type": "string"
-					},
-					{
-						"internalType": "uint256",
-						"name": "caseCountForAadhaar",
-						"type": "uint256"
-					},
-					{
-						"components": [
-							{
-								"internalType": "string",
-								"name": "aadhaar",
-								"type": "string"
-							},
-							{
-								"internalType": "string",
-								"name": "accusedName",
-								"type": "string"
-							},
-							{
-								"internalType": "string",
-								"name": "caseDescription",
-								"type": "string"
-							},
-							{
-								"internalType": "string",
-								"name": "location",
-								"type": "string"
-							},
-							{
-								"internalType": "string",
-								"name": "officerName",
-								"type": "string"
-							},
-							{
-								"internalType": "string",
-								"name": "crimeDateTime",
-								"type": "string"
-							},
-							{
-								"internalType": "string",
-								"name": "registrationDateTime",
-								"type": "string"
-							}
-						],
-						"internalType": "struct EvidenceTracking.CaseDetails",
-						"name": "details",
-						"type": "tuple"
-					},
-					{
-						"internalType": "string",
-						"name": "judgmentText",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "closingDate",
-						"type": "string"
-					},
-					{
-						"internalType": "bool",
-						"name": "isClosed",
-						"type": "bool"
-					}
-				],
-				"internalType": "struct EvidenceTracking.CaseRecord",
-				"name": "",
-				"type": "tuple"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	}
-];
-/* -------------------------------------------------- */
+/* ========= Demo passcodes (change for production) ========= */
+const DEMO_POLICE_PASS = 'POLICE-1234';
+const DEMO_COURT_PASS  = 'COURT-1234';
 
-let web3, contract, accounts;
+/* ========= State ========= */
+let web3, accounts, contract;
+let CONTRACT_ADDRESS = "";   // set via form
+let CONTRACT_ABI = [];       // set via form
+let localEvidenceCache = []; // optional fallback
 
-// UI elements
-const roleSelect = document.getElementById('roleSelect');
-const connectWalletBtn = document.getElementById('connectWalletBtn');
-const accountText = document.getElementById('accountText');
+/* Auth flags (kept in sessionStorage to persist across reloads in this tab) */
+const AUTH_KEYS = {
+  police: 'evi_auth_police',
+  court:  'evi_auth_court'
+};
 
-const policeCard = document.getElementById('policeCard');
-const courtCard = document.getElementById('courtCard');
-const publicCard = document.getElementById('publicCard');
-const trackingCard = document.getElementById('trackingCard');
+/* ========= UI Refs ========= */
+const connectBtn = document.getElementById('connectBtn');
+const disconnectBtn = document.getElementById('disconnectBtn');
+const acctSpan = document.getElementById('acctSpan');
 
-roleSelect.addEventListener('change', onRoleChange);
-connectWalletBtn.addEventListener('click', connectWallet);
+const roleSel = document.getElementById('roleSel');
+const showPublicBtn = document.getElementById('showPublicBtn');
 
-// police fields
-const policeAadhaar = document.getElementById('policeAadhaar');
-const policeAccused = document.getElementById('policeAccused');
-const policeCaseDetail = document.getElementById('policeCaseDetail');
-const policeLocation = document.getElementById('policeLocation');
-const policeOfficer = document.getElementById('policeOfficer');
-const policeCrimeDate = document.getElementById('policeCrimeDate');
-const policeRegDate = document.getElementById('policeRegDate');
-const uiPreview = document.getElementById('uiPreview');
-const evPreview = document.getElementById('evPreview');
-const registerBtn = document.getElementById('registerBtn');
+const contractAddrInput = document.getElementById('contractAddress');
+const contractAbiInput = document.getElementById('contractAbi');
+const saveContractBtn = document.getElementById('saveContractBtn');
+const loadDemoBtn = document.getElementById('loadDemoBtn');
+const contractMsg = document.getElementById('contractMsg');
 
-// court fields
-const courtEvidenceSelect = document.getElementById('courtEvidenceSelect');
-const courtManualInput = document.getElementById('courtManualInput');
-const courtJudgmentText = document.getElementById('courtJudgmentText');
-const courtClosingDate = document.getElementById('courtClosingDate');
-const submitJudgmentBtn = document.getElementById('submitJudgmentBtn');
-const addReviewBtn = document.getElementById('addReviewBtn');
+/* Login cards */
+const policeLogin = document.getElementById('policeLogin');
+const courtLogin  = document.getElementById('courtLogin');
+const policeStationId = document.getElementById('policeStationId');
+const policePass  = document.getElementById('policePass');
+const courtId     = document.getElementById('courtId');
+const courtPass   = document.getElementById('courtPass');
+const policeLoginBtn = document.getElementById('policeLoginBtn');
+const policeCancelBtn= document.getElementById('policeCancelBtn');
+const courtLoginBtn  = document.getElementById('courtLoginBtn');
+const courtCancelBtn = document.getElementById('courtCancelBtn');
 
-// public fields
-const publicSearch = document.getElementById('publicSearch');
-const publicTrackBtn = document.getElementById('publicTrackBtn');
-const publicOutput = document.getElementById('publicOutput');
+/* Portals */
+const policePage = document.getElementById('policePage');
+const courtPage  = document.getElementById('courtPage');
+const publicPage = document.getElementById('publicPage');
+const resultsCard = document.getElementById('resultsCard');
+const resultsOutput = document.getElementById('resultsOutput');
 
-// tracking
-const trackInput = document.getElementById('trackInput');
-const trackBtn = document.getElementById('trackBtn');
-const trackOutput = document.getElementById('trackOutput');
+/* Logout buttons inside portals */
+const policeLogoutBtn = document.getElementById('policeLogoutBtn');
+const courtLogoutBtn  = document.getElementById('courtLogoutBtn');
 
-// wire up buttons
-registerBtn?.addEventListener('click', onRegisterCase);
-submitJudgmentBtn?.addEventListener('click', onSubmitJudgment);
-addReviewBtn?.addEventListener('click', onAddReview);
-publicTrackBtn?.addEventListener('click', () => doTrack(publicSearch.value.trim(), publicOutput));
-trackBtn?.addEventListener('click', () => doTrack(trackInput.value.trim(), trackOutput));
+/* Police fields */
+const p_aadhaar=document.getElementById('p_aadhaar');
+const p_accused=document.getElementById('p_accused');
+const p_detail=document.getElementById('p_detail');
+const p_location=document.getElementById('p_location');
+const p_officer=document.getElementById('p_officer');
+const p_crime=document.getElementById('p_crime');
+const p_reg=document.getElementById('p_reg');
+const p_unique=document.getElementById('p_unique');
+const p_evidence=document.getElementById('p_evidence');
+const registerBtn=document.getElementById('registerBtn');
+const clearPoliceBtn=document.getElementById('clearPoliceBtn');
+const policeTrackInput=document.getElementById('policeTrackInput');
+const policeTrackBtn=document.getElementById('policeTrackBtn');
 
-/* ---------- Helpers ---------- */
-function setAccountText(a){
-  accountText.innerText = a ? (a.slice(0,6) + '...' + a.slice(-4)) : 'not connected';
+/* Court fields */
+const courtSelect=document.getElementById('courtSelect');
+const courtManual=document.getElementById('courtManual');
+const courtJudgment=document.getElementById('courtJudgment');
+const courtClosing=document.getElementById('courtClosing');
+const submitJudgmentBtn=document.getElementById('submitJudgmentBtn');
+const addReviewBtn=document.getElementById('addReviewBtn');
+const courtTrackInput=document.getElementById('courtTrackInput');
+const courtTrackBtn=document.getElementById('courtTrackBtn');
+
+/* Public */
+const publicInput=document.getElementById('publicInput');
+const publicTrackBtn=document.getElementById('publicTrackBtn');
+const publicOutput=document.getElementById('publicOutput');
+
+/* ========= Helpers ========= */
+const methodExists = (name)=> contract?.methods && contract.methods[name];
+const tryCall = async (fn, args=[]) => {
+  try { return await fn(...args).call(); } catch(_){ return null; }
+};
+const saveToLocal = ()=>{
+  localStorage.setItem('evi_addr', contractAddrInput.value.trim());
+  localStorage.setItem('evi_abi', contractAbiInput.value.trim());
+};
+const loadFromLocal = ()=>{
+  const a = localStorage.getItem('evi_addr')||'';
+  const abi = localStorage.getItem('evi_abi')||'';
+  if(a) contractAddrInput.value=a;
+  if(abi) contractAbiInput.value=abi;
+  if(a||abi) contractMsg.innerText='Loaded last used values into the form.';
+};
+
+function isAuthed(role){ return sessionStorage.getItem(AUTH_KEYS[role]) === '1'; }
+function setAuthed(role, val){ sessionStorage.setItem(AUTH_KEYS[role], val ? '1':'0'); }
+
+/* show/hide portals or login cards */
+function showOnly(el){ el.classList.add('active'); }
+function hideAllPortalsAndLogins(){
+  [policePage,courtPage,publicPage].forEach(p=>p.classList.remove('active'));
+  [policeLogin,courtLogin].forEach(l=>l.classList.remove('active'));
 }
+function routeForRole(role){
+  hideAllPortalsAndLogins();
+  resultsCard.style.display = role ? 'block' : 'none';
 
-function showCardForRole(r){
-  policeCard.style.display = (r==='police') ? 'block' : 'none';
-  courtCard.style.display = (r==='court') ? 'block' : 'none';
-  publicCard.style.display = (r==='public') ? 'block' : 'none';
-  trackingCard.style.display = r ? 'block' : 'none';
-}
+  if(!role){ return; }
 
-/* ---------- Role change (local login) ---------- */
-function onRoleChange(){
-  const r = roleSelect.value;
-  // police/court require wallet & simple local login step via wallet (we enforce wallet connect)
-  if(r === '') {
-    showCardForRole('');
+  if(role==='public'){
+    showOnly(publicPage);
     return;
   }
-  // show wallet connect prompt
-  showCardForRole('');
-  if(!web3) {
-    // Not connected yet: require user to click connect wallet
-    alert('Please connect your wallet (MetaMask) first — click "Connect wallet".');
+
+  // Require wallet for police/court
+  if(!web3 || !accounts || !accounts.length){
+    alert('Connect wallet first.');
+    return;
+  }
+
+  if(role==='police'){
+    if(isAuthed('police')) { showOnly(policePage); }
+    else { showOnly(policeLogin); }
+  }
+
+  if(role==='court'){
+    if(isAuthed('court')) { showOnly(courtPage); }
+    else { showOnly(courtLogin); }
+  }
+}
+
+/* Evidence enumeration helpers (safe fallbacks) */
+async function detectAnyEnumeration(){
+  if(!contract) return [];
+  if(methodExists('getAllEvidenceIds')){
+    const list = await tryCall(contract.methods.getAllEvidenceIds);
+    return Array.isArray(list) ? list : [];
+  }
+  // no enumeration method; return cache
+  return localEvidenceCache;
+}
+
+async function refreshEvidenceSelect(){
+  if(!contract){ courtSelect.innerHTML='<option value="">-- none --</option>'; return; }
+  let ids = [];
+  if(methodExists('getAllEvidenceIds')){
+    try{ ids = await contract.methods.getAllEvidenceIds().call(); }
+    catch(_){ ids = []; }
   } else {
-    showCardForRole(r);
-    // refresh evidence dropdown
-    refreshEvidenceDropdown();
+    ids = localEvidenceCache || [];
   }
+  courtSelect.innerHTML = '<option value="">-- none --</option>';
+  (ids||[]).forEach(id=>{
+    const opt=document.createElement('option');
+    opt.value=id; opt.text=id;
+    courtSelect.appendChild(opt);
+  });
 }
 
-/* ---------- Wallet ---------- */
-async function connectWallet(){
-  if(!window.ethereum){
-    alert('MetaMask (or another injected wallet) required.');
-    return;
-  }
-  try {
-    await window.ethereum.request({ method: 'eth_requestAccounts' });
-    web3 = new Web3(window.ethereum);
-    accounts = await web3.eth.getAccounts();
-    setAccountText(accounts[0]);
+/* ========= Role routing ========= */
+roleSel.addEventListener('change', ()=> routeForRole(roleSel.value));
+showPublicBtn.addEventListener('click', ()=>{ roleSel.value='public'; routeForRole('public'); });
+
+/* ========= Login flows ========= */
+policeLoginBtn.addEventListener('click', ()=>{
+  const pass = policePass.value.trim();
+  if(!policeStationId.value.trim()) return alert('Enter Station ID');
+  if(pass !== DEMO_POLICE_PASS) return alert('Wrong passcode');
+  setAuthed('police', true);
+  policePass.value='';
+  routeForRole('police');
+});
+policeCancelBtn.addEventListener('click', ()=>{ roleSel.value=''; routeForRole(''); });
+policeLogoutBtn.addEventListener('click', ()=>{
+  setAuthed('police', false);
+  alert('Logged out of Police portal');
+  routeForRole('police');
+});
+
+courtLoginBtn.addEventListener('click', ()=>{
+  const pass = courtPass.value.trim();
+  if(!courtId.value.trim()) return alert('Enter Court ID');
+  if(pass !== DEMO_COURT_PASS) return alert('Wrong passcode');
+  setAuthed('court', true);
+  courtPass.value='';
+  routeForRole('court');
+});
+courtCancelBtn.addEventListener('click', ()=>{ roleSel.value=''; routeForRole(''); });
+courtLogoutBtn.addEventListener('click', ()=>{
+  setAuthed('court', false);
+  alert('Logged out of Court portal');
+  routeForRole('court');
+});
+
+/* ========= Wallet ========= */
+connectBtn.addEventListener('click', async ()=>{
+  if(!window.ethereum) return alert('MetaMask not available.');
+  try{
+    await window.ethereum.request({method:'eth_requestAccounts'});
+    web3=new Web3(window.ethereum);
+    accounts=await web3.eth.getAccounts();
+    acctSpan.innerText = accounts[0].slice(0,6)+'...'+accounts[0].slice(-4);
+    alert('Wallet connected: '+accounts[0]);
+    // If a role is already selected, re-route (may unlock portal now)
+    if(roleSel.value) routeForRole(roleSel.value);
+  }catch(e){ alert('Connect failed: '+(e.message||e)); }
+});
+disconnectBtn.addEventListener('click', ()=>{
+  web3=null; accounts=null; contract=null;
+  acctSpan.innerText='not connected';
+  alert('Disconnected locally. (Lock MetaMask to fully disconnect)');
+  // force portals requiring wallet to bounce back to login prompt
+  if(roleSel.value==='police' || roleSel.value==='court') routeForRole(roleSel.value);
+});
+
+/* ========= Contract load/test ========= */
+saveContractBtn.addEventListener('click', async ()=>{
+  const addr = contractAddrInput.value.trim();
+  if(!addr) return alert('Paste contract address first.');
+  let abiText = contractAbiInput.value.trim();
+  try{ CONTRACT_ABI = JSON.parse(abiText); }catch(e){ return alert('ABI parse error: '+e.message); }
+  CONTRACT_ADDRESS = addr;
+  try{
+    if(!web3) await connectBtn.click();
     contract = new web3.eth.Contract(CONTRACT_ABI, CONTRACT_ADDRESS);
-    // enable event listeners
-    refreshEvidenceDropdown();
-    // prefetch next IDs by calling getAllEvidenceIds length -> we cannot know next ID without calling register (contract generates)
-    // but we can show placeholder
-    uiPreview.value = '';
-    evPreview.value = '';
-    // auto load if role already selected
-    if(roleSelect.value) showCardForRole(roleSelect.value);
-    alert('Wallet connected: ' + accounts[0]);
-  } catch (err) {
-    console.error(err);
-    alert('Wallet connection failed: ' + (err.message||err));
-  }
-}
+    const ok = await detectAnyEnumeration();
+    contractMsg.innerText = 'Contract OK. Evidence entries detected: '+(ok?.length ?? 'unknown');
+    saveToLocal();
+    await refreshEvidenceSelect();
+  }catch(e){ console.error(e); alert('Contract init failed: '+(e.message||e)); }
+});
 
-/* ---------- UI: refresh evidence select ---------- */
-async function refreshEvidenceDropdown(){
-  if(!contract) return;
-  try {
-    const ids = await contract.methods.getAllEvidenceIds().call();
-    // clear
-    courtEvidenceSelect.innerHTML = '<option value="">-- Select evidence --</option>';
-    ids.forEach(id => {
-      const opt = document.createElement('option');
-      opt.value = id;
-      opt.text = id;
-      courtEvidenceSelect.appendChild(opt);
-    });
-  } catch(err) {
-    console.error('refreshEvidenceDropdown err', err);
-  }
-}
+loadDemoBtn.addEventListener('click', loadFromLocal);
 
-/* ---------- Register case (Police) ---------- */
-async function onRegisterCase(){
-  if(!contract || !accounts || accounts.length===0){
-    return alert('Connect wallet first');
-  }
-  // validate
-  const aad = policeAadhaar.value.trim();
-  const acc = policeAccused.value.trim();
-  const detail = policeCaseDetail.value.trim();
-  const loc = policeLocation.value.trim();
-  const officer = policeOfficer.value.trim();
-  const crimeDT = policeCrimeDate.value;
-  const regDT = policeRegDate.value;
-  if(!aad||!acc||!detail||!loc||!officer||!crimeDT||!regDT) {
-    return alert('Please fill all fields.');
-  }
+/* ========= Optional: wire simple placeholders so clicks don't error ========= */
+registerBtn.addEventListener('click', ()=>{
+  if(!contract || !accounts?.length){ alert('Connect wallet and set contract first.'); return; }
+  alert('Register flow not wired in this snippet. Hook up your contract method here.');
+});
+clearPoliceBtn.addEventListener('click', ()=>{
+  [p_aadhaar,p_accused,p_detail,p_location,p_officer,p_crime,p_reg,p_unique,p_evidence].forEach(el=> el.value='');
+});
+policeTrackBtn.addEventListener('click', ()=>{ resultsCard.style.display='block'; resultsOutput.innerText='(Police track) Implement your tracking call here.'; });
+courtTrackBtn.addEventListener('click',  ()=>{ resultsCard.style.display='block'; resultsOutput.innerText='(Court track) Implement your tracking call here.'; });
+publicTrackBtn.addEventListener('click', ()=>{ resultsOutput.innerText='(Public track) Implement your tracking call here.'; resultsCard.style.display='block'; });
 
-  try {
-    // send transaction
-    const from = accounts[0];
-    const tx = await contract.methods.registerEvidence(
-      aad, acc, detail, loc, officer, regDT, crimeDT
-    ).send({ from });
-
-    // read event to get generated IDs
-    let uniqueId = '', evidenceId = '';
-    if(tx && tx.events && tx.events.CaseRegistered && tx.events.CaseRegistered.returnValues){
-      uniqueId = tx.events.CaseRegistered.returnValues.uniqueId;
-      evidenceId = tx.events.CaseRegistered.returnValues.evidenceId;
-    } else {
-      // fallback: fetch newly created list and take last id
-      const ids = await contract.methods.getAllEvidenceIds().call();
-      evidenceId = ids[ids.length-1];
-      // try getEvidence to read uniqueId
-      const ev = await contract.methods.getEvidence(evidenceId).call();
-      uniqueId = ev[0];
-    }
-
-    uiPreview.value = uniqueId;
-    evPreview.value = evidenceId;
-
-    // clear form
-    policeAadhaar.value = '';
-    policeAccused.value = '';
-    policeCaseDetail.value = '';
-    policeLocation.value = '';
-    policeOfficer.value = '';
-    policeCrimeDate.value = '';
-    policeRegDate.value = '';
-
-    // refresh court dropdown
-    await refreshEvidenceDropdown();
-
-    alert(`Registered:\nUnique: ${uniqueId}\nEvidence: ${evidenceId}`);
-  } catch (err) {
-    console.error(err);
-    alert('Register failed: ' + (err.message||err));
-  }
-}
-
-/* ---------- Submit judgment (Court) ---------- */
-async function onSubmitJudgment(){
-  if(!contract || !accounts || accounts.length===0) return alert('Connect wallet first');
-  const sel = courtEvidenceSelect.value;
-  const manual = courtManualInput.value.trim();
-  const evidenceId = sel || manual;
-  const judgmentText = courtJudgmentText.value.trim();
-  const closing = courtClosingDate.value;
-  if(!evidenceId || !judgmentText || !closing) return alert('Evidence ID (or manual), judgment and closing datetime required.');
-
-  try {
-    const from = accounts[0];
-    await contract.methods.updateJudgment(evidenceId, judgmentText, closing).send({ from });
-    alert('Judgment updated on-chain for ' + evidenceId);
-    // refresh UI
-    courtManualInput.value = '';
-    courtJudgmentText.value = '';
-    courtClosingDate.value = '';
-    await refreshEvidenceDropdown();
-  } catch (err) {
-    console.error(err);
-    alert('Submit judgment failed: ' + (err.message||err));
-  }
-}
-
-/* ---------- Add review (Court) ---------- */
-async function onAddReview(){
-  if(!contract || !accounts || accounts.length===0) return alert('Connect wallet first');
-  const sel = courtEvidenceSelect.value;
-  const manual = courtManualInput.value.trim();
-  const evidenceId = sel || manual;
-  if(!evidenceId) return alert('Select/enter Evidence ID first.');
-  const reviewText = prompt('Enter review note (will be stored on-chain):');
-  if(!reviewText) return;
-  try {
-    const from = accounts[0];
-    await contract.methods.addReview(evidenceId, reviewText).send({ from });
-    alert('Review added on-chain for ' + evidenceId);
-  } catch (err) {
-    console.error(err);
-    alert('Add review failed: ' + (err.message||err));
-  }
-}
-
-/* ---------- Tracking: single function for public/police/court ---------- */
-async function doTrack(query, outputElement){
-  if(!query) { outputElement.innerText = 'Enter Evidence ID or accused name'; return; }
-  if(!contract){
-    outputElement.innerText = 'Connect wallet (contract not initialized)';
-    return;
-  }
-
-  try {
-    // Try treat query as evidenceId first
-    let found = false;
-    try {
-      const ev = await contract.methods.getEvidence(query).call();
-      // if present, ev[1] is evidenceId
-      if(ev && ev[1] && ev[1] !== ""){
-        // fetch reviews
-        const reviews = await contract.methods.getReviews(ev[1]).call();
-        const out = formatEvidenceFromContract(ev, reviews);
-        outputElement.innerText = out;
-        found = true;
-        return;
-      }
-    } catch(e) {
-      // ignore - not found by evidence id
-    }
-
-    // Next, treat as accused name (case-insensitive)
-    const ids = await contract.methods.getEvidenceIdsByAccused(query).call();
-    if(ids && ids.length > 0){
-      let combined = '';
-      for(let id of ids){
-        const ev = await contract.methods.getEvidence(id).call();
-        const reviews = await contract.methods.getReviews(id).call();
-        combined += formatEvidenceFromContract(ev, reviews) + '\n\n';
-      }
-      outputElement.innerText = combined;
-      return;
-    }
-
-    // Next, treat as aadhaar
-    constids = await contract.methods.getEvidenceIdsByAadhaar(query).call().catch(()=>[]);
-    if(constids && constids.length>0){
-      let combined='';
-      for(let id of constids){
-        const ev = await contract.methods.getEvidence(id).call();
-        const reviews = await contract.methods.getReviews(id).call();
-        combined += formatEvidenceFromContract(ev, reviews) + '\n\n';
-      }
-      outputElement.innerText = combined;
-      return;
-    }
-
-    // not found
-    outputElement.innerText = 'No record found on-chain for: ' + query;
-  } catch(err){
-    console.error(err);
-    outputElement.innerText = 'Lookup failed: ' + (err.message||err);
-  }
-}
-
-function formatEvidenceFromContract(evTuple, reviews){
-  // evTuple: [uniqueId, evidenceId, aadhaar, accused, caseDetail, location, officer, regDateTime, crimeDateTime, judgmentText, closingDate]
-  let out = '';
-  out += `🆔 Unique ID: ${evTuple[0]}\n`;
-  out += `📄 Evidence ID: ${evTuple[1]}\n`;
-  out += `👤 Aadhaar: ${evTuple[2]}\n`;
-  out += `📁 Accused: ${evTuple[3]}\n`;
-  out += `📝 Case Detail: ${evTuple[4]}\n`;
-  out += `📍 Location: ${evTuple[5]}\n`;
-  out += `👮 Officer: ${evTuple[6]}\n`;
-  out += `🕒 Registered: ${evTuple[7]}\n`;
-  out += `🕒 Crime Time: ${evTuple[8]}\n`;
-  out += `⚖ Judgment: ${evTuple[9] && evTuple[9].length ? evTuple[9] : 'Pending'}\n`;
-  out += `📅 Closing: ${evTuple[10] && evTuple[10].length ? evTuple[10] : 'Pending'}\n`;
-  if(reviews && reviews.length){
-    out += `\nReviews:\n`;
-    for(let r of reviews) out += `- ${r}\n`;
-  }
-  return out;
-}
-
-/* ---------- Init on load: if web3 injected, create instance (but require user to click connect) ---------- */
-window.addEventListener('load', async () => {
-  if(window.ethereum){
-    web3 = new Web3(window.ethereum);
-    try {
-      const accountsLocal = await web3.eth.getAccounts();
-      if(accountsLocal && accountsLocal.length){
-        accounts = accountsLocal;
-        setAccountText(accounts[0]);
-        contract = new web3.eth.Contract(CONTRACT_ABI, CONTRACT_ADDRESS);
-        refreshEvidenceDropdown();
-      }
-    } catch(e){}
-  } else {
-    console.warn('No web3 provider injected (MetaMask).');
-  }
+/* ========= Initial load ========= */
+window.addEventListener('load', ()=>{
+  loadFromLocal();
+  // restore authed flags (sessionStorage survives reload in same tab)
+  routeForRole(roleSel.value || '');
 });
 </script>
 </body>
 </html>
-
