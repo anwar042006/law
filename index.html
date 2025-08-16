@@ -37,16 +37,16 @@ button:hover { opacity:0.9; }
 <!-- Police Login -->
 <div id="policeLogin" class="hidden">
   <h2><i class="fas fa-user-shield"></i> Police Login</h2>
-  <input type="text" id="policeUser" placeholder="👤 Username">
-  <input type="password" id="policePass" placeholder="🔑 Password">
+  <input type="text" id="policeUser" placeholder="👤 Username" autocomplete="off">
+  <input type="password" id="policePass" placeholder="🔑 Password" autocomplete="new-password">
   <button onclick="login('police')">Login</button>
 </div>
 
 <!-- Court Login -->
 <div id="courtLogin" class="hidden">
   <h2><i class="fas fa-gavel"></i> Court Login</h2>
-  <input type="text" id="courtUser" placeholder="👤 Username">
-  <input type="password" id="courtPass" placeholder="🔑 Password">
+  <input type="text" id="courtUser" placeholder="👤 Username" autocomplete="off">
+  <input type="password" id="courtPass" placeholder="🔑 Password" autocomplete="new-password">
   <button onclick="login('court')">Login</button>
 </div>
 
@@ -111,8 +111,39 @@ button:hover { opacity:0.9; }
 <script>
 let accounts;
 let contract;
-const contractAddress = "0x670daF4982b68BC7F45080e52F373705FC85E23B";
+const contractAddress = "0xf9489DB1Fc9c94616588e0cB8C84A0EDE3fd42DF";
 const abi = [
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "courtAddr",
+				"type": "address"
+			}
+		],
+		"name": "addCourt",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "policeAddr",
+				"type": "address"
+			}
+		],
+		"name": "addPolice",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"stateMutability": "nonpayable",
+		"type": "constructor"
+	},
 	{
 		"anonymous": false,
 		"inputs": [
@@ -133,6 +164,18 @@ const abi = [
 				"internalType": "string",
 				"name": "aadhaar",
 				"type": "string"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "accused",
+				"type": "string"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "officer",
+				"type": "string"
 			}
 		],
 		"name": "CaseRegistered",
@@ -143,12 +186,50 @@ const abi = [
 		"inputs": [
 			{
 				"indexed": false,
+				"internalType": "address",
+				"name": "court",
+				"type": "address"
+			}
+		],
+		"name": "CourtAdded",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
 				"internalType": "string",
 				"name": "evidenceID",
+				"type": "string"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "judgmentText",
+				"type": "string"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "closingDate",
 				"type": "string"
 			}
 		],
 		"name": "JudgmentSubmitted",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"internalType": "address",
+				"name": "police",
+				"type": "address"
+			}
+		],
+		"name": "PoliceAdded",
 		"type": "event"
 	},
 	{
@@ -278,6 +359,19 @@ const abi = [
 	},
 	{
 		"inputs": [],
+		"name": "admin",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
 		"name": "caseCounter",
 		"outputs": [
 			{
@@ -349,6 +443,25 @@ const abi = [
 		"type": "function"
 	},
 	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"name": "courtAccounts",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
 		"inputs": [],
 		"name": "evidenceCounter",
 		"outputs": [
@@ -356,6 +469,44 @@ const abi = [
 				"internalType": "uint256",
 				"name": "",
 				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "aadhaar",
+				"type": "string"
+			}
+		],
+		"name": "getEvidenceIDsByAadhaar",
+		"outputs": [
+			{
+				"internalType": "string[]",
+				"name": "",
+				"type": "string[]"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "aadhaar",
+				"type": "string"
+			}
+		],
+		"name": "getUniqueCaseID",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
 			}
 		],
 		"stateMutability": "view",
@@ -390,6 +541,25 @@ const abi = [
 				"internalType": "string",
 				"name": "rejudgment",
 				"type": "string"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"name": "policeAccounts",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
 			}
 		],
 		"stateMutability": "view",
@@ -674,7 +844,7 @@ const abi = [
 		"stateMutability": "view",
 		"type": "function"
 	}
-];
+] ;
 
 async function loadWeb3() {
     if(window.ethereum){
@@ -716,7 +886,6 @@ function login(role){
     }
 }
 
-// --- LOGOUT FUNCTION ---
 function logout(){
     document.querySelectorAll('#policeLogin,#courtLogin,#policePortal,#courtPortal,#publicPortal')
     .forEach(el=>el.classList.add('hidden'));
@@ -743,25 +912,23 @@ async function registerCase(){
 
         const uid = tx.events.CaseRegistered.returnValues.uniqueCaseID;
         const eid = tx.events.CaseRegistered.returnValues.evidenceID;
+
+        // Always generate NEW IDs for new case under same Aadhaar
         document.getElementById('uniqueCaseID').value = uid;
         document.getElementById('evidenceID').value = eid;
-        alert("✅ Case Registered On-Chain!");
+
+        alert("✅ New Case Registered On-Chain for Aadhaar: " + aadhaar);
         clearPoliceFields();
     } catch(e){ console.error(e); alert("❌ Transaction Failed"); }
 }
 
-// --- Auto-clear Police fields ---
+// Auto-clear fields after police registration
 function clearPoliceFields(){
-    document.getElementById('aadhaar').value="";
-    document.getElementById('accused').value="";
-    document.getElementById('caseDetails').value="";
-    document.getElementById('location').value="";
-    document.getElementById('officer').value="";
-    document.getElementById('crimeDate').value="";
-    document.getElementById('regDate').value="";
+    document.querySelectorAll('#aadhaar,#accused,#caseDetails,#location,#officer,#crimeDate,#regDate,#uniqueCaseID,#evidenceID')
+    .forEach(el=>el.value="");
 }
 
-// --- TRACK CASE ---
+// --- TRACK CASE (shows all Aadhaar-linked cases) ---
 async function trackCase(role){
     const inputId = role==='police'?'trackPolice':role==='court'?'trackCourt':'trackPublic';
     const resultId = role==='police'?'policeTrackResult':role==='court'?'courtTrackResult':'publicTrackResult';
@@ -774,9 +941,11 @@ async function trackCase(role){
         let res2 = await contract.methods.trackByAccused(query).call();
         document.getElementById(resultId).innerText = JSON.stringify(res2,null,2);
     }
+
+    document.getElementById(inputId).value=""; // auto-clear search
 }
 
-// --- COURT: Search ---
+// --- COURT: Search + Dropdown ---
 async function searchCourt(){
     const query = document.getElementById('trackCourt').value;
     try{
@@ -785,9 +954,10 @@ async function searchCourt(){
         document.getElementById('courtTrackResult').innerText = JSON.stringify([res],null,2);
     } catch{
         let res2 = await contract.methods.trackByAccused(query).call();
-        populateEvidenceDropdown(res2[0]);
+        populateEvidenceDropdown(res2);
         document.getElementById('courtTrackResult').innerText = JSON.stringify(res2,null,2);
     }
+    document.getElementById('trackCourt').value="";
 }
 
 function populateEvidenceDropdown(caseArray){
@@ -818,11 +988,8 @@ async function submitJudgment(){
     } catch(e){ console.error(e); alert("❌ Transaction Failed"); }
 }
 
-// --- Auto-clear Court fields ---
 function clearCourtFields(){
-    document.getElementById('judgment').value="";
-    document.getElementById('closingDate').value="";
-    document.getElementById('rejudgment').value="";
+    document.querySelectorAll('#judgment,#closingDate,#rejudgment').forEach(el=>el.value="");
 }
 
 window.onload = loadWeb3;
