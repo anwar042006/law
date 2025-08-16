@@ -16,9 +16,9 @@ button { padding:10px 20px; border:none; border-radius:6px; cursor:pointer; font
 button:hover { opacity:0.9; }
 .hidden { display:none; }
 .role-btn { background:#e67e22; margin:5px; color:#000; }
+.logout-btn { background:#e74c3c; color:#fff; margin-top:15px; }
 .track-section { background:#2c2c3c; padding:15px; border-radius:10px; margin-top:20px; text-align:left;}
 .readonly { background: rgba(255,255,255,0.2); }
-.invalid { border: 2px solid red; }
 </style>
 </head>
 <body>
@@ -70,6 +70,8 @@ button:hover { opacity:0.9; }
 <button onclick="trackCase('police')">Track</button>
 <pre id="policeTrackResult"></pre>
 </div>
+
+<button class="logout-btn" onclick="logout()">🚪 Logout</button>
 </div>
 
 <!-- Court Portal -->
@@ -89,6 +91,8 @@ button:hover { opacity:0.9; }
 <h3>🔎 Track Case</h3>
 <pre id="courtTrackResult"></pre>
 </div>
+
+<button class="logout-btn" onclick="logout()">🚪 Logout</button>
 </div>
 
 <!-- Public Portal -->
@@ -100,13 +104,14 @@ button:hover { opacity:0.9; }
 <button onclick="trackCase('public')">Track</button>
 <pre id="publicTrackResult"></pre>
 </div>
+<button class="logout-btn" onclick="logout()">🚪 Logout</button>
 </div>
 </div>
 
 <script>
 let accounts;
 let contract;
-const contractAddress = "0x025Ab68FD4fe638Dd5dA0f8AceCD5882BFB02808";
+const contractAddress = "0x670daF4982b68BC7F45080e52F373705FC85E23B";
 const abi = [
 	{
 		"anonymous": false,
@@ -253,6 +258,25 @@ const abi = [
 		"type": "function"
 	},
 	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"name": "aadhaarUniqueID",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
 		"inputs": [],
 		"name": "caseCounter",
 		"outputs": [
@@ -366,6 +390,99 @@ const abi = [
 				"internalType": "string",
 				"name": "rejudgment",
 				"type": "string"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "aadhaar",
+				"type": "string"
+			}
+		],
+		"name": "trackByAadhaar",
+		"outputs": [
+			{
+				"components": [
+					{
+						"internalType": "string",
+						"name": "uniqueCaseID",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "evidenceID",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "aadhaar",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "accused",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "details",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "location",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "officer",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "crimeDate",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "regDate",
+						"type": "string"
+					}
+				],
+				"internalType": "struct EvidenceTracking.Case[]",
+				"name": "",
+				"type": "tuple[]"
+			},
+			{
+				"components": [
+					{
+						"internalType": "string",
+						"name": "evidenceID",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "judgmentText",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "closingDate",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "rejudgment",
+						"type": "string"
+					}
+				],
+				"internalType": "struct EvidenceTracking.Judgment[]",
+				"name": "",
+				"type": "tuple[]"
 			}
 		],
 		"stateMutability": "view",
@@ -557,7 +674,7 @@ const abi = [
 		"stateMutability": "view",
 		"type": "function"
 	}
-] ;
+];
 
 async function loadWeb3() {
     if(window.ethereum){
@@ -599,7 +716,15 @@ function login(role){
     }
 }
 
-// POLICE: Register Case (on-chain)
+// --- LOGOUT FUNCTION ---
+function logout(){
+    document.querySelectorAll('#policeLogin,#courtLogin,#policePortal,#courtPortal,#publicPortal')
+    .forEach(el=>el.classList.add('hidden'));
+    document.getElementById('roleSelect').classList.remove('hidden');
+    alert("🚪 Logged out successfully");
+}
+
+// --- POLICE: Register Case ---
 async function registerCase(){
     const aadhaar=document.getElementById('aadhaar').value;
     const accused=document.getElementById('accused').value;
@@ -621,27 +746,37 @@ async function registerCase(){
         document.getElementById('uniqueCaseID').value = uid;
         document.getElementById('evidenceID').value = eid;
         alert("✅ Case Registered On-Chain!");
+        clearPoliceFields();
     } catch(e){ console.error(e); alert("❌ Transaction Failed"); }
 }
 
-// TRACK CASE
+// --- Auto-clear Police fields ---
+function clearPoliceFields(){
+    document.getElementById('aadhaar').value="";
+    document.getElementById('accused').value="";
+    document.getElementById('caseDetails').value="";
+    document.getElementById('location').value="";
+    document.getElementById('officer').value="";
+    document.getElementById('crimeDate').value="";
+    document.getElementById('regDate').value="";
+}
+
+// --- TRACK CASE ---
 async function trackCase(role){
     const inputId = role==='police'?'trackPolice':role==='court'?'trackCourt':'trackPublic';
     const resultId = role==='police'?'policeTrackResult':role==='court'?'courtTrackResult':'publicTrackResult';
     const query = document.getElementById(inputId).value;
 
     try{
-        // Try Evidence ID first
         let res = await contract.methods.trackByEvidenceID(query).call();
         document.getElementById(resultId).innerText = JSON.stringify(res,null,2);
     } catch{
-        // If not, search by Accused Name
         let res2 = await contract.methods.trackByAccused(query).call();
         document.getElementById(resultId).innerText = JSON.stringify(res2,null,2);
     }
 }
 
-// COURT: Search + populate dropdown
+// --- COURT: Search ---
 async function searchCourt(){
     const query = document.getElementById('trackCourt').value;
     try{
@@ -650,7 +785,7 @@ async function searchCourt(){
         document.getElementById('courtTrackResult').innerText = JSON.stringify([res],null,2);
     } catch{
         let res2 = await contract.methods.trackByAccused(query).call();
-        populateEvidenceDropdown(res2[0]); // first element is array of Cases
+        populateEvidenceDropdown(res2[0]);
         document.getElementById('courtTrackResult').innerText = JSON.stringify(res2,null,2);
     }
 }
@@ -666,7 +801,7 @@ function populateEvidenceDropdown(caseArray){
     });
 }
 
-// COURT: Submit Judgment
+// --- COURT: Submit Judgment ---
 async function submitJudgment(){
     const eid = document.getElementById('evidenceSelect').value;
     const judgment = document.getElementById('judgment').value;
@@ -679,7 +814,15 @@ async function submitJudgment(){
         await contract.methods.submitJudgment(eid, judgment, closingDate, rejudgment)
         .send({from: accounts[0]});
         alert("✅ Judgment Submitted On-Chain!");
+        clearCourtFields();
     } catch(e){ console.error(e); alert("❌ Transaction Failed"); }
+}
+
+// --- Auto-clear Court fields ---
+function clearCourtFields(){
+    document.getElementById('judgment').value="";
+    document.getElementById('closingDate').value="";
+    document.getElementById('rejudgment').value="";
 }
 
 window.onload = loadWeb3;
