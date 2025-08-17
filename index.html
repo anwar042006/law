@@ -19,7 +19,6 @@ button:hover { opacity:0.9; }
 .logout-btn { background:#e74c3c; color:#fff; margin-top:15px; }
 .track-section { background:#2c2c3c; padding:15px; border-radius:10px; margin-top:20px; text-align:left;}
 .readonly { background: rgba(255,255,255,0.2); }
-.case-box { background:#333; padding:10px; margin:10px 0; border-radius:8px; }
 </style>
 </head>
 <body>
@@ -38,16 +37,16 @@ button:hover { opacity:0.9; }
 <!-- Police Login -->
 <div id="policeLogin" class="hidden">
   <h2><i class="fas fa-user-shield"></i> Police Login</h2>
-  <input type="text" id="policeUser" placeholder="👤 Username" autocomplete="off">
-  <input type="password" id="policePass" placeholder="🔑 Password" autocomplete="new-password">
+  <input type="text" id="policeUser" placeholder="👤 Username">
+  <input type="password" id="policePass" placeholder="🔑 Password">
   <button onclick="login('police')">Login</button>
 </div>
 
 <!-- Court Login -->
 <div id="courtLogin" class="hidden">
   <h2><i class="fas fa-gavel"></i> Court Login</h2>
-  <input type="text" id="courtUser" placeholder="👤 Username" autocomplete="off">
-  <input type="password" id="courtPass" placeholder="🔑 Password" autocomplete="new-password">
+  <input type="text" id="courtUser" placeholder="👤 Username">
+  <input type="password" id="courtPass" placeholder="🔑 Password">
   <button onclick="login('court')">Login</button>
 </div>
 
@@ -69,7 +68,7 @@ button:hover { opacity:0.9; }
 <h3>🔎 Track Case</h3>
 <input type="text" id="trackPolice" placeholder="Enter Evidence ID or Accused Name">
 <button onclick="trackCase('police')">Track</button>
-<div id="policeTrackResult"></div>
+<pre id="policeTrackResult"></pre>
 </div>
 
 <button class="logout-btn" onclick="logout()">🚪 Logout</button>
@@ -90,7 +89,7 @@ button:hover { opacity:0.9; }
 
 <div class="track-section">
 <h3>🔎 Track Case</h3>
-<div id="courtTrackResult"></div>
+<pre id="courtTrackResult"></pre>
 </div>
 
 <button class="logout-btn" onclick="logout()">🚪 Logout</button>
@@ -103,7 +102,7 @@ button:hover { opacity:0.9; }
 <h3>🔎 Track Case</h3>
 <input type="text" id="trackPublic" placeholder="Enter Evidence ID or Accused Name">
 <button onclick="trackCase('public')">Track</button>
-<div id="publicTrackResult"></div>
+<pre id="publicTrackResult"></pre>
 </div>
 <button class="logout-btn" onclick="logout()">🚪 Logout</button>
 </div>
@@ -112,234 +111,8 @@ button:hover { opacity:0.9; }
 <script>
 let accounts;
 let contract;
-const contractAddress = "0x144B98070F1bfCd3A1066A09DC16E5d22e1824f2";
-const abi = [
-	{
-		"inputs": [
-			{
-				"internalType": "string",
-				"name": "aadhaarId",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "accusedName",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "caseDescription",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "crimeLocation",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "officerName",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "crimeDateTime",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "registrationDateTime",
-				"type": "string"
-			}
-		],
-		"name": "registerCase",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "string",
-				"name": "evidenceId",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "judgmentText",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "closingDate",
-				"type": "string"
-			}
-		],
-		"name": "submitJudgment",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "string",
-				"name": "aadhaarId",
-				"type": "string"
-			}
-		],
-		"name": "trackByAccusedName",
-		"outputs": [
-			{
-				"components": [
-					{
-						"internalType": "string",
-						"name": "uniqueCaseId",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "evidenceId",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "aadhaarId",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "accusedName",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "caseDescription",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "crimeLocation",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "officerName",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "crimeDateTime",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "registrationDateTime",
-						"type": "string"
-					}
-				],
-				"internalType": "struct EvidenceTracking.CaseDetail[]",
-				"name": "",
-				"type": "tuple[]"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "string",
-				"name": "evidenceId",
-				"type": "string"
-			}
-		],
-		"name": "trackByEvidenceId",
-		"outputs": [
-			{
-				"components": [
-					{
-						"internalType": "string",
-						"name": "uniqueCaseId",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "evidenceId",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "aadhaarId",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "accusedName",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "caseDescription",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "crimeLocation",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "officerName",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "crimeDateTime",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "registrationDateTime",
-						"type": "string"
-					}
-				],
-				"internalType": "struct EvidenceTracking.CaseDetail",
-				"name": "",
-				"type": "tuple"
-			},
-			{
-				"components": [
-					{
-						"internalType": "string",
-						"name": "evidenceId",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "accusedName",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "judgmentText",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "closingDate",
-						"type": "string"
-					}
-				],
-				"internalType": "struct EvidenceTracking.Judgment",
-				"name": "",
-				"type": "tuple"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	}
-];
+const contractAddress = "YOUR_CONTRACT_ADDRESS";
+const abi = [ /* Paste ABI JSON here */ ];
 
 async function loadWeb3() {
     if(window.ethereum){
@@ -381,6 +154,7 @@ function login(role){
     }
 }
 
+// --- LOGOUT FUNCTION ---
 function logout(){
     document.querySelectorAll('#policeLogin,#courtLogin,#policePortal,#courtPortal,#publicPortal')
     .forEach(el=>el.classList.add('hidden'));
@@ -409,14 +183,20 @@ async function registerCase(){
         const eid = tx.events.CaseRegistered.returnValues.evidenceID;
         document.getElementById('uniqueCaseID').value = uid;
         document.getElementById('evidenceID').value = eid;
-        alert("✅ Case Registered (Aadhaar may already exist, linked under same IDs)");
+        alert("✅ Case Registered On-Chain!");
         clearPoliceFields();
     } catch(e){ console.error(e); alert("❌ Transaction Failed"); }
 }
 
+// --- Auto-clear Police fields ---
 function clearPoliceFields(){
-    document.querySelectorAll('#aadhaar,#accused,#caseDetails,#location,#officer,#crimeDate,#regDate')
-    .forEach(el=>el.value="");
+    document.getElementById('aadhaar').value="";
+    document.getElementById('accused').value="";
+    document.getElementById('caseDetails').value="";
+    document.getElementById('location').value="";
+    document.getElementById('officer').value="";
+    document.getElementById('crimeDate').value="";
+    document.getElementById('regDate').value="";
 }
 
 // --- TRACK CASE ---
@@ -425,58 +205,27 @@ async function trackCase(role){
     const resultId = role==='police'?'policeTrackResult':role==='court'?'courtTrackResult':'publicTrackResult';
     const query = document.getElementById(inputId).value;
 
-    const resultBox = document.getElementById(resultId);
-    resultBox.innerHTML = "";
-
     try{
-        let cases = await contract.methods.trackByEvidenceID(query).call();
-        if(!Array.isArray(cases)) cases=[cases];
-        displayCases(cases,resultBox);
+        let res = await contract.methods.trackByEvidenceID(query).call();
+        document.getElementById(resultId).innerText = JSON.stringify(res,null,2);
     } catch{
-        let cases2 = await contract.methods.trackByAccused(query).call();
-        if(!Array.isArray(cases2)) cases2=[cases2];
-        displayCases(cases2,resultBox);
+        let res2 = await contract.methods.trackByAccused(query).call();
+        document.getElementById(resultId).innerText = JSON.stringify(res2,null,2);
     }
-    document.getElementById(inputId).value="";
-}
-
-function displayCases(cases,resultBox){
-    cases.forEach(c=>{
-        let div=document.createElement("div");
-        div.classList.add("case-box");
-        div.innerHTML=`
-          <b>Unique ID:</b> ${c.uniqueCaseID}<br>
-          <b>Evidence ID:</b> ${c.evidenceID}<br>
-          <b>Aadhaar:</b> ${c.aadhaar}<br>
-          <b>Accused:</b> ${c.accused}<br>
-          <b>Details:</b> ${c.details}<br>
-          <b>Location:</b> ${c.location}<br>
-          <b>Officer:</b> ${c.officer}<br>
-          <b>Crime Date:</b> ${c.crimeDate}<br>
-          <b>Registered:</b> ${c.regDate}<br>
-          <b>Judgment:</b> ${c.judgment || "Pending"}
-        `;
-        resultBox.appendChild(div);
-    });
 }
 
 // --- COURT: Search ---
 async function searchCourt(){
     const query = document.getElementById('trackCourt').value;
-    const resultBox=document.getElementById('courtTrackResult');
-    resultBox.innerHTML="";
     try{
         let res = await contract.methods.trackByEvidenceID(query).call();
-        if(!Array.isArray(res)) res=[res];
-        populateEvidenceDropdown(res);
-        displayCases(res,resultBox);
+        populateEvidenceDropdown([res]);
+        document.getElementById('courtTrackResult').innerText = JSON.stringify([res],null,2);
     } catch{
         let res2 = await contract.methods.trackByAccused(query).call();
-        if(!Array.isArray(res2)) res2=[res2];
-        populateEvidenceDropdown(res2);
-        displayCases(res2,resultBox);
+        populateEvidenceDropdown(res2[0]);
+        document.getElementById('courtTrackResult').innerText = JSON.stringify(res2,null,2);
     }
-    document.getElementById('trackCourt').value="";
 }
 
 function populateEvidenceDropdown(caseArray){
@@ -485,7 +234,7 @@ function populateEvidenceDropdown(caseArray){
     caseArray.forEach(c=>{
         let opt = document.createElement('option');
         opt.value = c.evidenceID;
-        opt.text = `${c.evidenceID} | ${c.accused} | ${c.uniqueCaseID}`;
+        opt.text = ${c.evidenceID} | ${c.accused} | ${c.uniqueCaseID};
         select.add(opt);
     });
 }
@@ -507,12 +256,15 @@ async function submitJudgment(){
     } catch(e){ console.error(e); alert("❌ Transaction Failed"); }
 }
 
+// --- Auto-clear Court fields ---
 function clearCourtFields(){
-    document.querySelectorAll('#judgment,#closingDate,#rejudgment').forEach(el=>el.value="");
+    document.getElementById('judgment').value="";
+    document.getElementById('closingDate').value="";
+    document.getElementById('rejudgment').value="";
 }
 
 window.onload = loadWeb3;
 </script>
 
 </body>
-</html>  
+</html>
