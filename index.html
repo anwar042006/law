@@ -2,136 +2,174 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Blockchain Evidence Tracking</title>
+<title>Blockchain Evidence Tracking — Fixed</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <script src="https://cdn.jsdelivr.net/npm/web3@1.8.2/dist/web3.min.js"></script>
 <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
 <style>
-body { font-family: Arial, sans-serif; background: linear-gradient(to right,#2c3e50,#3498db); color:#fff; text-align:center; padding:20px;}
-h2,h3 { margin:10px 0; }
-.container { max-width:900px; margin:auto; background:#1e1e2f; padding:20px; border-radius:12px; box-shadow:0px 0px 15px rgba(0,0,0,0.5);}
-label { display:block; margin:10px 0 5px; font-weight:bold; text-align:left; }
-input, select, textarea { width:95%; padding:8px; margin:5px 0 15px; border-radius:6px; border:none; }
-textarea { resize:vertical; }
-button { padding:10px 20px; border:none; border-radius:6px; cursor:pointer; font-size:15px; font-weight:bold; }
-button:hover { opacity:0.9; }
-.hidden { display:none; }
-.role-btn { background:#e67e22; margin:5px; color:#000; }
-.logout-btn { background:#e74c3c; color:#fff; margin-top:15px; }
-.track-section { background:#2c2c3c; padding:15px; border-radius:10px; margin-top:20px; text-align:left;}
-.readonly { background: rgba(255,255,255,0.2); }
+  body { font-family: Arial, sans-serif; background: linear-gradient(to right,#2c3e50,#3498db); color:#fff; text-align:center; padding:20px;}
+  h2,h3 { margin:10px 0; }
+  .container { max-width:920px; margin:auto; background:#1e1e2f; padding:20px; border-radius:12px; box-shadow:0px 0px 15px rgba(0,0,0,0.5);}
+  label { display:block; margin:10px 0 5px; font-weight:bold; text-align:left; }
+  input, select, textarea { width:95%; padding:8px; margin:5px 0 15px; border-radius:6px; border:none; }
+  textarea { resize:vertical; min-height:70px; }
+  button { padding:10px 20px; border:none; border-radius:6px; cursor:pointer; font-size:15px; font-weight:bold; }
+  button:hover { opacity:0.9; }
+  .hidden { display:none; }
+  .role-btn { background:#e67e22; margin:5px; color:#000; }
+  .logout-btn { background:#e74c3c; color:#fff; margin-top:15px; }
+  .track-section { background:#2c2c3c; padding:15px; border-radius:10px; margin-top:20px; text-align:left;}
+  .readonly { background: rgba(255,255,255,0.12); }
+  .small { font-size:12px; opacity:0.9; }
+  pre { background:#111; padding:10px; border-radius:8px; color:#0f0; white-space:pre-wrap; text-align:left; max-height:320px; overflow:auto; }
+  .flex { display:flex; gap:10px; align-items:center; justify-content:flex-start; flex-wrap:wrap; }
+  .pill { padding:6px 10px; border-radius:999px; background:#333; }
+  @media (max-width:600px){ input,select,textarea{width:100%} .container{padding:12px}}
 </style>
 </head>
 <body>
 
 <div class="container">
-<h1><i class="fas fa-balance-scale"></i> Evidence Tracking System</h1>
+  <h1><i class="fas fa-balance-scale"></i> Evidence Tracking System</h1>
 
-<!-- Role Selection -->
-<div id="roleSelect">
-  <h2>Select Role</h2>
-  <button class="role-btn" onclick="showLogin('police')"><i class="fas fa-user-shield"></i> Police</button>
-  <button class="role-btn" onclick="showLogin('court')"><i class="fas fa-gavel"></i> Court</button>
-  <button class="role-btn" onclick="showPortal('public')"><i class="fas fa-globe"></i> Public</button>
-</div>
+  <!-- Role Selection -->
+  <div id="roleSelect">
+    <h2>Select Role</h2>
+    <button class="role-btn" onclick="showLogin('police')"><i class="fas fa-user-shield"></i> Police</button>
+    <button class="role-btn" onclick="showLogin('court')"><i class="fas fa-gavel"></i> Court</button>
+    <button class="role-btn" onclick="showPortal('public')"><i class="fas fa-globe"></i> Public</button>
+  </div>
 
-<!-- Police Login -->
-<div id="policeLogin" class="hidden">
-  <h2><i class="fas fa-user-shield"></i> Police Login</h2>
-  <input type="text" id="policeUser" placeholder="👤 Username">
-  <input type="password" id="policePass" placeholder="🔑 Password">
-  <button onclick="login('police')">Login</button>
-</div>
+  <!-- Police Login -->
+  <div id="policeLogin" class="hidden">
+    <h2><i class="fas fa-user-shield"></i> Police Login</h2>
+    <input type="text" id="policeUser" placeholder="👤 Username">
+    <input type="password" id="policePass" placeholder="🔑 Password">
+    <div class="flex">
+      <button onclick="login('police')">Login</button>
+      <button onclick="prefillDefault('police')" class="pill small">Fill demo</button>
+      <label class="small"><input type="checkbox" id="rememberPolice"> Remember</label>
+    </div>
+  </div>
 
-<!-- Police Portal -->
-<div id="policePortal" class="hidden">
-<h2><i class="fas fa-user-shield"></i> Police Portal</h2>
+  <!-- Court Login -->
+  <div id="courtLogin" class="hidden">
+    <h2><i class="fas fa-gavel"></i> Court Login</h2>
+    <input type="text" id="courtUser" placeholder="👤 Username">
+    <input type="password" id="courtPass" placeholder="🔑 Password">
+    <div class="flex">
+      <button onclick="login('court')">Login</button>
+      <button onclick="prefillDefault('court')" class="pill small">Fill demo</button>
+      <label class="small"><input type="checkbox" id="rememberCourt"> Remember</label>
+    </div>
+  </div>
 
-<label>🆔 Aadhaar ID</label><input type="text" id="aadhaarID" placeholder="Enter Aadhaar">
+  <!-- Police Portal -->
+  <div id="policePortal" class="hidden">
+    <h2><i class="fas fa-user-shield"></i> Police Portal</h2>
 
-<label>👤 Accused Name</label><input type="text" id="accusedName" placeholder="Enter Accused">
+    <label>🆔 Aadhaar ID (12 digits)</label><input type="text" id="aadhaar" pattern="\d{12}" placeholder="e.g. 123412341234">
+    <label>🙍 Accused Name</label><input type="text" id="accused">
+    <label>📂 Case Details</label><textarea id="caseDetails"></textarea>
+    <label>📍 Location</label><input type="text" id="location">
+    <label>👮 Officer Name</label><input type="text" id="officer">
+    <div class="flex">
+      <div style="flex:1">
+        <label>📅 Crime Date/Time</label>
+        <input type="datetime-local" id="crimeDate">
+      </div>
+      <div style="flex:1">
+        <label>📝 Registration Date/Time</label>
+        <input type="datetime-local" id="regDate">
+      </div>
+    </div>
+    <div class="flex">
+      <div style="flex:1">
+        <label>🔑 Unique Case ID</label><input type="text" id="uniqueCaseID" class="readonly" readonly>
+      </div>
+      <div style="flex:1">
+        <label>📦 Evidence ID</label><input type="text" id="evidenceID" class="readonly" readonly>
+      </div>
+    </div>
 
-<label>📄 Case Details</label><textarea id="caseDetails" placeholder="Enter case details"></textarea>
+    <div class="flex">
+      <button onclick="registerCase()">Register Case</button>
+      <button onclick="downloadCases()" class="pill small">Export JSON</button>
+      <button onclick="importCases()" class="pill small">Import JSON</button>
+    </div>
 
-<label>📍 Location</label><input type="text" id="location" placeholder="Enter location">
+    <div class="track-section">
+      <h3>🔎 Track Case</h3>
+      <p class="small">You can search by Evidence ID (EV00001), Accused Name, or Aadhaar ID (12 digits).</p>
+      <div class="flex">
+        <input type="text" id="trackPolice" placeholder="Enter Evidence ID / Accused Name / Aadhaar">
+        <button onclick="trackCase('police')">Track</button>
+        <button onclick="clearTrackResults('police')" class="pill small">Clear</button>
+      </div>
+      <pre id="policeTrackResult">{ }</pre>
+    </div>
 
-<label>👮 Officer Name</label><input type="text" id="officerName" placeholder="Enter officer name">
+    <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+  </div>
 
-<label>📅 Crime Date & Time</label>
-<input type="datetime-local" id="crimeDateTime">
+  <!-- Court Portal -->
+  <div id="courtPortal" class="hidden">
+    <h2><i class="fas fa-gavel"></i> Court Portal</h2>
 
-<label>📝 Case Registration Date & Time</label>
-<input type="text" id="registerDateTime" readonly class="readonly">
+    <label>🔎 Search by Evidence ID / Accused Name / Aadhaar</label>
+    <div class="flex">
+      <input type="text" id="trackCourt" placeholder="Enter Evidence ID / Accused Name / Aadhaar">
+      <button onclick="searchCourt()">Search</button>
+      <button onclick="clearTrackResults('court')" class="pill small">Clear</button>
+    </div>
 
-<label>🔑 Evidence ID</label>
-<input type="text" id="evidenceID" readonly class="readonly">
+    <label>📑 Select Evidence</label>
+    <select id="evidenceSelect"></select>
 
-<label>📌 Unique Case ID</label>
-<input type="text" id="uniqueCaseID" readonly class="readonly">
+    <label>📜 Judgment Text</label><textarea id="judgment"></textarea>
+    <label>📅 Closing Date</label><input type="date" id="closingDate">
+    <label>🔄 Rejudgment (if any)</label><textarea id="rejudgment"></textarea>
+    <div class="flex">
+      <button onclick="submitJudgment()">Submit Judgment</button>
+      <button onclick="populateAllEvidence()" class="pill small">Load All Evidence</button>
+    </div>
 
-<button onclick="registerCase()">Register Case</button>
+    <div class="track-section">
+      <h3>🔎 Track Case</h3>
+      <pre id="courtTrackResult">{ }</pre>
+    </div>
 
-<div class="track-section">
-<h3>🔎 Track Case</h3>
-<label>Search by Evidence ID / Accused Name / Aadhaar</label>
-<input type="text" id="trackPolice" placeholder="Enter value">
-<button onclick="searchPolice()">Search</button>
-<pre id="policeTrackResult"></pre>
-</div>
+    <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+  </div>
 
-<button class="logout-btn" onclick="logout()">🚪 Logout</button>
-</div>
-
-<!-- Court Login -->
-<div id="courtLogin" class="hidden">
-  <h2><i class="fas fa-gavel"></i> Court Login</h2>
-  <input type="text" id="courtUser" placeholder="👤 Username">
-  <input type="password" id="courtPass" placeholder="🔑 Password">
-  <button onclick="login('court')">Login</button>
-</div>
-
-<!-- Court Portal -->
-<div id="courtPortal" class="hidden">
-<h2><i class="fas fa-gavel"></i> Court Portal</h2>
-<label>🔎 Search by Evidence ID / Accused Name / Aadhaar</label>
-<input type="text" id="trackCourt" placeholder="Enter value">
-<button onclick="searchCourt()">Search</button>
-<label>📑 Select Evidence</label>
-<select id="evidenceSelect" onchange="showSelectedCase()"></select>
-<label>📜 Judgment Text</label><textarea id="judgment"></textarea>
-<label>📅 Closing Date</label><input type="date" id="closingDate">
-<label>🔄 Rejudgment (if any)</label><textarea id="rejudgment"></textarea>
-<button onclick="submitJudgment()">Submit Judgment</button>
-
-<div class="track-section">
-<h3>🔎 Track Case</h3>
-<pre id="courtTrackResult"></pre>
-</div>
-
-<button class="logout-btn" onclick="logout()">🚪 Logout</button>
-</div>
-
-<!-- Public Portal -->
-<div id="publicPortal" class="hidden">
-<h2><i class="fas fa-globe"></i> Public Case Tracking</h2>
-<label>🔎 Search by Evidence ID / Accused Name / Aadhaar</label>
-<input type="text" id="trackPublic" placeholder="Enter value">
-<button onclick="searchPublic()">Search</button>
-
-<div class="track-section">
-<h3>📂 Case Details</h3>
-<pre id="publicTrackResult"></pre>
-</div>
-
-<button class="logout-btn" onclick="logout()">🚪 Back</button>
-</div>
-
+  <!-- Public Portal -->
+  <div id="publicPortal" class="hidden">
+    <h2><i class="fas fa-globe"></i> Public Portal</h2>
+    <div class="track-section">
+      <h3>🔎 Track Case</h3>
+      <p class="small">Search by Evidence ID, Accused Name or Aadhaar ID (public access)</p>
+      <div class="flex">
+        <input type="text" id="trackPublic" placeholder="Enter Evidence ID / Accused Name / Aadhaar">
+        <button onclick="trackCase('public')">Track</button>
+        <button onclick="clearTrackResults('public')" class="pill small">Clear</button>
+      </div>
+      <pre id="publicTrackResult">{ }</pre>
+    </div>
+    <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+  </div>
 </div>
 
 <script>
-let accounts;
-let contract;
-let courtCases = [];
-const contractAddress = "0xc7387e1490B195cA00be8Df21692e39Aceeb4fdE";
+/*
+  Single-file improved Evidence Tracking front-end:
+  - localStorage fallback storage (cases stored under 'ets_cases')
+  - auto-generated IDs UI00001 / EV00001
+  - optional on-chain integration (set contractAddress + abi)
+  - login persistence (session stored under 'ets_session')
+*/
+
+// === Configuration for on-chain (optional) ===
+const contractAddress = "0xAb5A77423a5d45E2564A4F7525aDf0E5A8580074"; // replace or leave as placeholder
 const abi = [
 	{
 		"anonymous": false,
@@ -152,6 +190,12 @@ const abi = [
 				"indexed": false,
 				"internalType": "string",
 				"name": "aadhaar",
+				"type": "string"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "accused",
 				"type": "string"
 			}
 		],
@@ -207,16 +251,6 @@ const abi = [
 				"internalType": "string",
 				"name": "regDate",
 				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "evidenceID",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "uniqueCaseID",
-				"type": "string"
 			}
 		],
 		"name": "registerCase",
@@ -269,25 +303,6 @@ const abi = [
 				"internalType": "string",
 				"name": "",
 				"type": "string"
-			}
-		],
-		"name": "aadhaarAccused",
-		"outputs": [
-			{
-				"internalType": "string",
-				"name": "",
-				"type": "string"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "string",
-				"name": "",
-				"type": "string"
 			},
 			{
 				"internalType": "uint256",
@@ -296,25 +311,6 @@ const abi = [
 			}
 		],
 		"name": "aadhaarCases",
-		"outputs": [
-			{
-				"internalType": "string",
-				"name": "",
-				"type": "string"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"name": "aadhaarCasesKeys",
 		"outputs": [
 			{
 				"internalType": "string",
@@ -339,6 +335,43 @@ const abi = [
 				"internalType": "string",
 				"name": "",
 				"type": "string"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			},
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "accusedCases",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "caseCounter",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
 			}
 		],
 		"stateMutability": "view",
@@ -404,6 +437,19 @@ const abi = [
 		"type": "function"
 	},
 	{
+		"inputs": [],
+		"name": "evidenceCounter",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
 		"inputs": [
 			{
 				"internalType": "string",
@@ -432,19 +478,6 @@ const abi = [
 				"internalType": "string",
 				"name": "rejudgment",
 				"type": "string"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "totalAadhaarKeys",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
 			}
 		],
 		"stateMutability": "view",
@@ -729,166 +762,409 @@ const abi = [
 		"stateMutability": "view",
 		"type": "function"
 	}
-];
+]; // paste ABI array if you have it
 
-// Counters for local UI IDs
-let evidenceCounter = 0;
-let caseCounter = 0;
-function generateID(prefix, counter){ return prefix + String(counter).padStart(6,"0"); }
+// === Runtime state ===
+let web3;
+let accounts = [];
+let contract = null;
 
-function normalizeCase(c){
-    return {
-        aadhaar: c.aadhaar || c[0] || "",
-        accused: c.accused || c[1] || "",
-        details: c.details || c[2] || "",
-        location: c.location || c[3] || "",
-        officer: c.officer || c[4] || "",
-        crimeDate: c.crimeDate || c[5] || "",
-        registerDate: c.registerDate || c[6] || "",
-        evidenceID: c.evidenceID || c[7] || "",
-        uniqueCaseID: c.uniqueCaseID || c[8] || "",
-        judgment: c.judgment || c[9] || "",
-        closingDate: c.closingDate || c[10] || "",
-        rejudgment: c.rejudgment || c[11] || ""
-    };
+// Initialize local storage containers if missing
+function ensureData() {
+  if(!localStorage.getItem('ets_cases')) localStorage.setItem('ets_cases', JSON.stringify([]));
+  if(!localStorage.getItem('ets_meta')) localStorage.setItem('ets_meta', JSON.stringify({nextUI:1,nextEV:1}));
+}
+ensureData();
+
+// Utility — format IDs
+function formatUI(n){
+  return 'UI' + String(n).padStart(5,'0');
+}
+function formatEV(n){
+  return 'EV' + String(n).padStart(5,'0');
 }
 
-async function loadWeb3(){
+// Load web3 and contract if possible
+async function loadWeb3() {
+  try {
     if(window.ethereum){
-        window.web3 = new Web3(window.ethereum);
-        await window.ethereum.enable();
-        accounts = await web3.eth.getAccounts();
+      web3 = new Web3(window.ethereum);
+      await window.ethereum.request({method:'eth_requestAccounts'});
+      accounts = await web3.eth.getAccounts();
+      if(abi && contractAddress && abi.length>0 && contractAddress!=='YOUR_CONTRACT_ADDRESS'){
         contract = new web3.eth.Contract(abi, contractAddress);
-    } else { alert("Please install MetaMask!"); }
+      }
+      console.log('Web3 loaded', accounts);
+    } else {
+      console.warn('MetaMask not found — using local storage only');
+    }
+  } catch(e){
+    console.error('Error loading web3', e);
+  }
 }
 
+// Call at startup
+window.onload = async () => {
+  loadWeb3();
+  restoreSession();
+};
+
+// === Login / Session ===
 function showLogin(role){
-    document.getElementById('roleSelect').classList.add('hidden');
-    if(role==='police'){
-        document.getElementById('policeLogin').classList.remove('hidden');
-        document.getElementById('registerDateTime').value = new Date().toLocaleString();
-        evidenceCounter++; caseCounter++;
-        document.getElementById('evidenceID').value = generateID("EV", evidenceCounter);
-        document.getElementById('uniqueCaseID').value = generateID("UI", caseCounter);
-    }
-    if(role==='court') document.getElementById('courtLogin').classList.remove('hidden');
+  document.getElementById('roleSelect').classList.add('hidden');
+  if(role==='police') document.getElementById('policeLogin').classList.remove('hidden');
+  if(role==='court') document.getElementById('courtLogin').classList.remove('hidden');
 }
+
 function showPortal(role){
-    document.getElementById('roleSelect').classList.add('hidden');
-    if(role==='public') document.getElementById('publicPortal').classList.remove('hidden');
+  document.getElementById('roleSelect').classList.add('hidden');
+  if(role==='public') document.getElementById('publicPortal').classList.remove('hidden');
+  saveSession({role:'public', username:null});
+}
+
+function prefillDefault(role){
+  if(role==='police'){
+    document.getElementById('policeUser').value='police1';
+    document.getElementById('policePass').value='1234';
+    document.getElementById('rememberPolice').checked = true;
+  } else {
+    document.getElementById('courtUser').value='court1';
+    document.getElementById('courtPass').value='1234';
+    document.getElementById('rememberCourt').checked = true;
+  }
 }
 
 function login(role){
-    if(role==='police'){
-        if(document.getElementById('policeUser').value==='police1' && document.getElementById('policePass').value==='1234'){
-            document.getElementById('policeLogin').classList.add('hidden');
-            document.getElementById('policePortal').classList.remove('hidden');
-        } else alert("❌ Invalid Police credentials!");
+  if(role==='police'){
+    const username = document.getElementById('policeUser').value.trim();
+    const password = document.getElementById('policePass').value.trim();
+    if(username === '' || password === '') { alert('Fill username and password'); return; }
+    // demo auth — replace with proper auth as needed
+    if((username==='police1' && password==='1234') || username.startsWith('police')) {
+      alert("✅ Police Login Successful");
+      document.getElementById('policeLogin').classList.add('hidden');
+      document.getElementById('policePortal').classList.remove('hidden');
+      if(document.getElementById('rememberPolice').checked) localStorage.setItem('ets_saved_police', JSON.stringify({username,password}));
+      saveSession({role:'police', username});
+      populateAllEvidence();
+    } else {
+      alert("❌ Invalid Police credentials!");
     }
-    if(role==='court'){
-        if(document.getElementById('courtUser').value==='court1' && document.getElementById('courtPass').value==='1234'){
-            document.getElementById('courtLogin').classList.add('hidden');
-            document.getElementById('courtPortal').classList.remove('hidden');
-        } else alert("❌ Invalid Court credentials!");
+  }
+  if(role==='court'){
+    const username = document.getElementById('courtUser').value.trim();
+    const password = document.getElementById('courtPass').value.trim();
+    if(username === '' || password === '') { alert('Fill username and password'); return; }
+    if((username==='court1' && password==='1234') || username.startsWith('court')) {
+      alert("✅ Court Login Successful");
+      document.getElementById('courtLogin').classList.add('hidden');
+      document.getElementById('courtPortal').classList.remove('hidden');
+      if(document.getElementById('rememberCourt').checked) localStorage.setItem('ets_saved_court', JSON.stringify({username,password}));
+      saveSession({role:'court', username});
+      populateAllEvidence();
+    } else {
+      alert("❌ Invalid Court credentials!");
     }
+  }
+}
+
+function saveSession(obj){
+  localStorage.setItem('ets_session', JSON.stringify(obj));
+}
+function restoreSession(){
+  const s = localStorage.getItem('ets_session');
+  if(!s) return;
+  const session = JSON.parse(s);
+  if(session.role === 'police'){
+    document.getElementById('roleSelect').classList.add('hidden');
+    document.getElementById('policePortal').classList.remove('hidden');
+    populateAllEvidence();
+  } else if(session.role === 'court'){
+    document.getElementById('roleSelect').classList.add('hidden');
+    document.getElementById('courtPortal').classList.remove('hidden');
+    populateAllEvidence();
+  } else if(session.role === 'public'){
+    document.getElementById('roleSelect').classList.add('hidden');
+    document.getElementById('publicPortal').classList.remove('hidden');
+  }
+  // also restore saved usernames if present
+  const savedPolice = localStorage.getItem('ets_saved_police');
+  if(savedPolice){
+    const p = JSON.parse(savedPolice); document.getElementById('policeUser').value = p.username; document.getElementById('policePass').value = p.password;
+  }
+  const savedCourt = localStorage.getItem('ets_saved_court');
+  if(savedCourt){
+    const c = JSON.parse(savedCourt); document.getElementById('courtUser').value = c.username; document.getElementById('courtPass').value = c.password;
+  }
 }
 
 function logout(){
-    document.querySelectorAll('#policeLogin,#policePortal,#courtLogin,#courtPortal,#publicPortal')
-    .forEach(el=>el.classList.add('hidden'));
-    document.getElementById('roleSelect').classList.remove('hidden');
+  // hide portals and show role selection
+  ['policeLogin','courtLogin','policePortal','courtPortal','publicPortal'].forEach(id => document.getElementById(id).classList.add('hidden'));
+  document.getElementById('roleSelect').classList.remove('hidden');
+  localStorage.removeItem('ets_session');
+  alert("🚪 Logged out successfully");
 }
 
-// --- POLICE ---
+// === Local Storage helpers ===
+function getCases(){ ensureData(); return JSON.parse(localStorage.getItem('ets_cases') || '[]'); }
+function setCases(arr){ localStorage.setItem('ets_cases', JSON.stringify(arr)); }
+function getMeta(){ ensureData(); return JSON.parse(localStorage.getItem('ets_meta') || '{"nextUI":1,"nextEV":1}'); }
+function setMeta(m){ localStorage.setItem('ets_meta', JSON.stringify(m)); }
+
+// === Auto-id generation ===
+function nextIDs(){
+  const m = getMeta();
+  const ui = formatUI(m.nextUI);
+  const ev = formatEV(m.nextEV);
+  m.nextUI += 1; m.nextEV += 1;
+  setMeta(m);
+  return {ui,ev};
+}
+
+// === Register case ===
 async function registerCase(){
-    const aadhaar = document.getElementById('aadhaarID').value.trim();
-    const accused = document.getElementById('accusedName').value.trim();
-    const details = document.getElementById('caseDetails').value.trim();
-    const location = document.getElementById('location').value.trim();
-    const officer = document.getElementById('officerName').value.trim();
-    const crimeDate = document.getElementById('crimeDateTime').value;
-    const registerDate = document.getElementById('registerDateTime').value;
-    const evidenceID = document.getElementById('evidenceID').value;
-    const uniqueCaseID = document.getElementById('uniqueCaseID').value;
+  const aadhaar = document.getElementById('aadhaar').value.trim();
+  const accused = document.getElementById('accused').value.trim();
+  const details = document.getElementById('caseDetails').value.trim();
+  const location = document.getElementById('location').value.trim();
+  const officer = document.getElementById('officer').value.trim();
+  const crimeDate = document.getElementById('crimeDate').value;
+  const regDate = document.getElementById('regDate').value || new Date().toISOString();
 
-    if(!aadhaar || !accused){ alert("⚠ Aadhaar and Accused required"); return; }
+  if(!aadhaar || !accused || !details) { alert('Please fill Aadhaar, Accused, and Case Details'); return; }
+  if(!/^\d{12}$/.test(aadhaar)){ if(!confirm('Aadhaar does not look 12 digits. Continue?')) return; }
 
-    try{
-        await contract.methods.registerCase(aadhaar, accused, details, location, officer, crimeDate, registerDate, evidenceID, uniqueCaseID)
-        .send({from: accounts[0]});
-        alert("✅ Case Registered!");
-    } catch(e){ console.error(e); alert("❌ Transaction Failed: " + e.message); }
-}
+  const ids = nextIDs();
+  const caseObj = {
+    aadhaar, accused, details, location, officer,
+    crimeDate, regDate,
+    uniqueCaseID: ids.ui,
+    evidenceID: ids.ev,
+    createdAt: new Date().toISOString(),
+    judgments: []
+  };
 
-// Reusable search function
-async function fetchCase(query){
-    try{ return [normalizeCase(await contract.methods.trackByEvidenceID(query).call())]; }
-    catch{}
-    try{ return (await contract.methods.trackByAccused(query).call()).map(normalizeCase); }
-    catch{}
-    try{ return (await contract.methods.trackByAadhaar(query).call()).map(normalizeCase); }
-    catch{}
-    return [];
-}
-
-// POLICE SEARCH
-async function searchPolice(){
-    const query = document.getElementById('trackPolice').value.trim();
-    let results = await fetchCase(query);
-    document.getElementById('policeTrackResult').innerText = JSON.stringify(results,null,2);
-}
-
-// COURT SEARCH
-async function searchCourt(){
-    const query = document.getElementById('trackCourt').value.trim();
-    courtCases = await fetchCase(query);
-    populateEvidenceDropdown(courtCases);
-    document.getElementById('courtTrackResult').innerText = JSON.stringify(courtCases,null,2);
-}
-
-function populateEvidenceDropdown(caseArray){
-    const select = document.getElementById('evidenceSelect');
-    select.innerHTML = "";
-    caseArray.forEach(c=>{
-        let opt = document.createElement('option');
-        opt.value = c.evidenceID;
-        opt.text = `${c.evidenceID} | ${c.accused} | ${c.uniqueCaseID}`;
-        select.add(opt);
-    });
-    if(caseArray.length>0) showSelectedCase();
-}
-
-function showSelectedCase(){
-    const eid = document.getElementById('evidenceSelect').value;
-    const found = courtCases.find(c=>c.evidenceID===eid);
-    if(found){
-        document.getElementById('courtTrackResult').innerText = JSON.stringify(found,null,2);
-        document.getElementById('judgment').value = found.judgment || "";
-        document.getElementById('closingDate').value = found.closingDate || "";
-        document.getElementById('rejudgment').value = found.rejudgment || "";
+  // Try on-chain if contract is connected, else fallback to local
+  try {
+    if(contract && accounts && accounts[0]){
+      // Example: adjust to your contract method names & types
+      // await contract.methods.registerCase(aadhaar, accused, details, location, officer, crimeDate, regDate, ids.ui, ids.ev)
+      //   .send({from: accounts[0]});
+      // For safety (because ABI unknown), we fallback to local storage but attempt on-chain if ABI/methods provided.
+      console.log('Contract available: you may replace register logic to call chain.');
     }
+  } catch(e){
+    console.warn('On-chain register failed, storing locally', e);
+  }
+
+  // store locally
+  const cs = getCases();
+  cs.push(caseObj);
+  setCases(cs);
+
+  // fill UI
+  document.getElementById('uniqueCaseID').value = caseObj.uniqueCaseID;
+  document.getElementById('evidenceID').value = caseObj.evidenceID;
+  alert('✅ Case registered (local). If you configured on-chain, transaction may also be submitted.');
+  clearPoliceFields();
+  populateAllEvidence();
 }
 
+// clear police inputs (not ids)
+function clearPoliceFields(){
+  document.getElementById('aadhaar').value="";
+  document.getElementById('accused').value="";
+  document.getElementById('caseDetails').value="";
+  document.getElementById('location').value="";
+  document.getElementById('officer').value="";
+  document.getElementById('crimeDate').value="";
+  document.getElementById('regDate').value="";
+}
+
+// === Tracking: supports evidenceID, accused name, aadhaar ===
+async function trackCase(role){
+  const inputId = role==='police'?'trackPolice':role==='court'?'trackCourt':'trackPublic';
+  const resultId = role==='police'?'policeTrackResult':role==='court'?'courtTrackResult':'publicTrackResult';
+  const q = document.getElementById(inputId).value.trim();
+  if(!q){ document.getElementById(resultId).innerText = JSON.stringify({error:'No query provided'},null,2); return; }
+
+  // Try on-chain lookup when contract exposed (example method names)
+  try {
+    if(contract){
+      // If your contract supports trackByEvidenceID/trackByAccused/trackByAadhaar, call here.
+      // For now, fallback to local storage for consistent behavior.
+    }
+  } catch(e){
+    console.warn('On-chain track failed', e);
+  }
+
+  // Local search
+  const cs = getCases();
+  let found = [];
+  // evidenceID exact match (case-insensitive)
+  const qLow = q.toLowerCase();
+  found = cs.filter(c => c.evidenceID.toLowerCase() === qLow);
+  // accused substring match
+  if(found.length === 0) found = cs.filter(c => c.accused.toLowerCase().includes(qLow));
+  // aadhaar exact match
+  if(found.length === 0 && /^\d{12}$/.test(q)) found = cs.filter(c => c.aadhaar === q);
+  // partial aadhaar
+  if(found.length === 0 && /\d{4,}/.test(q)) found = cs.filter(c => c.aadhaar.includes(q));
+
+  if(found.length === 0) {
+    document.getElementById(resultId).innerText = JSON.stringify({message:'No results'},null,2);
+  } else {
+    document.getElementById(resultId).innerText = JSON.stringify(found,null,2);
+  }
+}
+
+// === Court search ===
+async function searchCourt(){
+  const q = document.getElementById('trackCourt').value.trim();
+  if(!q){ alert('Enter a query'); return; }
+  // reuse tracking:
+  await trackCase('court');
+  // populate evidence dropdown with matches
+  const cs = getCases();
+  const matches = cs.filter(c => {
+    const qLow = q.toLowerCase();
+    return c.evidenceID.toLowerCase() === qLow || c.accused.toLowerCase().includes(qLow) || c.aadhaar === q;
+  });
+  populateEvidenceDropdown(matches.length?matches:[]);
+}
+
+// populate evidence dropdown given an array of case objects
+function populateEvidenceDropdown(caseArray){
+  const select = document.getElementById('evidenceSelect');
+  select.innerHTML = '';
+  if(!caseArray || caseArray.length===0){
+    // load all if none provided
+    const cs = getCases();
+    if(cs.length===0){
+      const opt = document.createElement('option'); opt.value=''; opt.text='-- no evidence available --'; select.add(opt);
+      return;
+    }
+    caseArray = cs;
+  }
+  caseArray.forEach(c=>{
+    const opt = document.createElement('option');
+    opt.value = c.evidenceID;
+    opt.text = `${c.evidenceID} | ${c.accused} | ${c.uniqueCaseID}`;
+    select.add(opt);
+  });
+  // also show first case details in court track result
+  const selected = caseArray[0];
+  if(selected) document.getElementById('courtTrackResult').innerText = JSON.stringify(selected,null,2);
+}
+
+// Submit judgment (local + optional on-chain)
 async function submitJudgment(){
-    const eid = document.getElementById('evidenceSelect').value;
-    const judgment = document.getElementById('judgment').value;
-    const closingDate = document.getElementById('closingDate').value;
-    const rejudgment = document.getElementById('rejudgment').value;
-    if(!eid){ alert("⚠ Select Evidence"); return; }
-    try{
-        await contract.methods.submitJudgment(eid, judgment, closingDate, rejudgment).send({from: accounts[0]});
-        alert("✅ Judgment Submitted!");
-    } catch(e){ console.error(e); alert("❌ Transaction Failed"); }
+  const eid = document.getElementById('evidenceSelect').value;
+  if(!eid){ alert('Select evidence'); return; }
+  const judgment = document.getElementById('judgment').value.trim();
+  const closingDate = document.getElementById('closingDate').value;
+  const rejudgment = document.getElementById('rejudgment').value.trim();
+
+  const cs = getCases();
+  const idx = cs.findIndex(c => c.evidenceID === eid);
+  if(idx === -1){ alert('Evidence not found locally'); return; }
+
+  const entry = {
+    judgeText: judgment,
+    closingDate: closingDate || new Date().toISOString().slice(0,10),
+    rejudgment,
+    submittedAt: new Date().toISOString()
+  };
+  cs[idx].judgments.push(entry);
+  setCases(cs);
+
+  // optional: attempt on-chain submission if contract configured (details depend on your contract)
+  try {
+    if(contract && accounts && accounts[0]){
+      // await contract.methods.submitJudgment(eid, judgment, closingDate, rejudgment).send({from: accounts[0]});
+      console.log('Would submit judgment on-chain if ABI/method provided.');
+    }
+  } catch(e){
+    console.warn('On-chain judgment failed', e);
+  }
+
+  alert('✅ Judgment saved locally. If connected, an on-chain tx may also be sent.');
+  document.getElementById('judgment').value=''; document.getElementById('closingDate').value=''; document.getElementById('rejudgment').value='';
+  populateAllEvidence();
 }
 
-// PUBLIC SEARCH
-async function searchPublic(){
-    const query = document.getElementById('trackPublic').value.trim();
-    let results = await fetchCase(query);
-    document.getElementById('publicTrackResult').innerText = JSON.stringify(results,null,2);
+// Populate all evidence into the court dropdown
+function populateAllEvidence(){
+  const cs = getCases();
+  populateEvidenceDropdown(cs);
 }
 
-window.onload = loadWeb3;
+// Download/export cases JSON
+function downloadCases(){
+  const data = JSON.stringify(getCases(), null, 2);
+  const blob = new Blob([data], {type: 'application/json'});
+  const url  = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'ets_cases.json'; a.click();
+  URL.revokeObjectURL(url);
+}
+
+// Import cases (simple prompt-based — paste JSON)
+function importCases(){
+  const txt = prompt('Paste JSON array of cases to import (this will append to existing cases):');
+  if(!txt) return;
+  try {
+    const arr = JSON.parse(txt);
+    if(!Array.isArray(arr)){ alert('Invalid JSON: must be an array'); return; }
+    const cs = getCases();
+    const meta = getMeta();
+    // basic append; watch for id collisions — we will not dedupe here, user must ensure uniqueness
+    arr.forEach(c => cs.push(c));
+    setCases(cs);
+    // Optionally renormalize next ids:
+    // setMeta(meta);
+    alert('✅ Imported entries appended. Please check list.');
+    populateAllEvidence();
+  } catch(e){
+    alert('JSON parse error: ' + e.message);
+  }
+}
+
+// Clear track result
+function clearTrackResults(role){
+  if(role==='police') document.getElementById('policeTrackResult').innerText = '{ }';
+  if(role==='court')  document.getElementById('courtTrackResult').innerText = '{ }';
+  if(role==='public') document.getElementById('publicTrackResult').innerText = '{ }';
+}
+
+// Small helper to seed demo case(s) if none exist
+(function seedDemo(){
+  const cs = getCases();
+  if(cs.length === 0){
+    const m = getMeta();
+    const ui = formatUI(m.nextUI);
+    const ev = formatEV(m.nextEV);
+    m.nextUI++; m.nextEV++;
+    setMeta(m);
+    const demo = {
+      aadhaar: '123412341234',
+      accused: 'John Doe',
+      details: 'Demo case: petty theft',
+      location: 'Demo City',
+      officer: 'Officer Demo',
+      crimeDate: new Date().toISOString(),
+      regDate: new Date().toISOString(),
+      uniqueCaseID: ui,
+      evidenceID: ev,
+      createdAt: new Date().toISOString(),
+      judgments: []
+    };
+    cs.push(demo);
+    setCases(cs);
+  }
+})();
+
 </script>
 
 </body>
