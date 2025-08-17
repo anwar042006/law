@@ -131,7 +131,7 @@ button:hover { opacity:0.9; }
 let accounts;
 let contract;
 let courtCases = [];
-const contractAddress = "0xebf9ba5EA60ED08924b6885fe490f012eC6E90f9";
+const contractAddress = "0xF9e0fAbFEb99A7BC5b8499Ca998ff1512EF59916";
 const abi = [
 	{
 		"anonymous": false,
@@ -206,6 +206,16 @@ const abi = [
 			{
 				"internalType": "string",
 				"name": "regDate",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "uniqueCaseID",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "evidenceID",
 				"type": "string"
 			}
 		],
@@ -299,12 +309,12 @@ const abi = [
 	{
 		"inputs": [
 			{
-				"internalType": "string",
+				"internalType": "uint256",
 				"name": "",
-				"type": "string"
+				"type": "uint256"
 			}
 		],
-		"name": "aadhaarUniqueID",
+		"name": "aadhaarCasesKeys",
 		"outputs": [
 			{
 				"internalType": "string",
@@ -316,13 +326,19 @@ const abi = [
 		"type": "function"
 	},
 	{
-		"inputs": [],
-		"name": "caseCounter",
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"name": "aadhaarUniqueID",
 		"outputs": [
 			{
-				"internalType": "uint256",
+				"internalType": "string",
 				"name": "",
-				"type": "uint256"
+				"type": "string"
 			}
 		],
 		"stateMutability": "view",
@@ -382,19 +398,6 @@ const abi = [
 				"internalType": "string",
 				"name": "regDate",
 				"type": "string"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "evidenceCounter",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
 			}
 		],
 		"stateMutability": "view",
@@ -714,7 +717,7 @@ const abi = [
 		"type": "function"
 	}
 ];
-
+	
 // --- ID Counters ---
 let evidenceCounter = 0;
 let caseCounter = 0;
