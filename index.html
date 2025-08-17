@@ -19,6 +19,8 @@ button:hover { opacity:0.9; }
 .logout-btn { background:#e74c3c; color:#fff; margin-top:15px; }
 .track-section { background:#2c2c3c; padding:15px; border-radius:10px; margin-top:20px; text-align:left;}
 .readonly { background: rgba(255,255,255,0.2); }
+pre { white-space:pre-wrap; word-wrap:break-word; }
+.small { font-size:12px; opacity:.8; }
 </style>
 </head>
 <body>
@@ -32,12 +34,13 @@ button:hover { opacity:0.9; }
   <button class="role-btn" onclick="showLogin('police')"><i class="fas fa-user-shield"></i> Police</button>
   <button class="role-btn" onclick="showLogin('court')"><i class="fas fa-gavel"></i> Court</button>
   <button class="role-btn" onclick="showPortal('public')"><i class="fas fa-globe"></i> Public</button>
+  <p class="small">Connects to MetaMask automatically when the page loads.</p>
 </div>
 
 <!-- Police Login -->
 <div id="policeLogin" class="hidden">
   <h2><i class="fas fa-user-shield"></i> Police Login</h2>
-  <input type="text" id="policeUser" placeholder="👤 Username" autocomplete="off">
+  <input type="text" id="policeUser" placeholder="👤 Username" autocomplete="off" inputmode="text">
   <input type="password" id="policePass" placeholder="🔑 Password" autocomplete="new-password">
   <button onclick="login('police')">Login</button>
 </div>
@@ -45,7 +48,7 @@ button:hover { opacity:0.9; }
 <!-- Court Login -->
 <div id="courtLogin" class="hidden">
   <h2><i class="fas fa-gavel"></i> Court Login</h2>
-  <input type="text" id="courtUser" placeholder="👤 Username" autocomplete="off">
+  <input type="text" id="courtUser" placeholder="👤 Username" autocomplete="off" inputmode="text">
   <input type="password" id="courtPass" placeholder="🔑 Password" autocomplete="new-password">
   <button onclick="login('court')">Login</button>
 </div>
@@ -53,20 +56,20 @@ button:hover { opacity:0.9; }
 <!-- Police Portal -->
 <div id="policePortal" class="hidden">
 <h2><i class="fas fa-user-shield"></i> Police Portal</h2>
-<label>🆔 Aadhaar ID</label><input type="text" id="aadhaar">
-<label>🙍 Accused Name</label><input type="text" id="accused">
-<label>📂 Case Details</label><textarea id="caseDetails"></textarea>
-<label>📍 Location</label><input type="text" id="location">
-<label>👮 Officer Name</label><input type="text" id="officer">
+<label>🆔 Aadhaar ID</label><input type="text" id="aadhaar" autocomplete="off" inputmode="numeric" pattern="[0-9]*">
+<label>🙍 Accused Name</label><input type="text" id="accused" autocomplete="off">
+<label>📂 Case Details</label><textarea id="caseDetails" autocomplete="off"></textarea>
+<label>📍 Location</label><input type="text" id="location" autocomplete="off">
+<label>👮 Officer Name</label><input type="text" id="officer" autocomplete="off">
 <label>📅 Crime Date/Time</label><input type="datetime-local" id="crimeDate">
 <label>📝 Registration Date/Time</label><input type="datetime-local" id="regDate">
 <label>🔑 Unique Case ID</label><input type="text" id="uniqueCaseID" class="readonly" readonly>
 <label>📦 Evidence ID</label><input type="text" id="evidenceID" class="readonly" readonly>
-<button onclick="registerCase()">Register Case</button>
+<button id="btnRegister" onclick="registerCase()">Register Case</button>
 
 <div class="track-section">
 <h3>🔎 Track Case</h3>
-<input type="text" id="trackPolice" placeholder="Enter Evidence ID or Accused Name">
+<input type="text" id="trackPolice" placeholder="Enter Evidence ID or Accused Name" autocomplete="off">
 <button onclick="trackCase('police')">Track</button>
 <pre id="policeTrackResult"></pre>
 </div>
@@ -78,14 +81,14 @@ button:hover { opacity:0.9; }
 <div id="courtPortal" class="hidden">
 <h2><i class="fas fa-gavel"></i> Court Portal</h2>
 <label>🔎 Search by Evidence ID or Accused Name</label>
-<input type="text" id="trackCourt" placeholder="Enter Evidence ID or Accused Name">
+<input type="text" id="trackCourt" placeholder="Enter Evidence ID or Accused Name" autocomplete="off">
 <button onclick="searchCourt()">Search</button>
 <label>📑 Select Evidence</label>
 <select id="evidenceSelect"></select>
-<label>📜 Judgment Text</label><textarea id="judgment"></textarea>
+<label>📜 Judgment Text</label><textarea id="judgment" autocomplete="off"></textarea>
 <label>📅 Closing Date</label><input type="date" id="closingDate">
-<label>🔄 Rejudgment (if any)</label><textarea id="rejudgment"></textarea>
-<button onclick="submitJudgment()">Submit Judgment</button>
+<label>🔄 Rejudgment (if any)</label><textarea id="rejudgment" autocomplete="off"></textarea>
+<button id="btnSubmitJudge" onclick="submitJudgment()">Submit Judgment</button>
 
 <div class="track-section">
 <h3>🔎 Track Case</h3>
@@ -100,7 +103,7 @@ button:hover { opacity:0.9; }
 <h2><i class="fas fa-globe"></i> Public Portal</h2>
 <div class="track-section">
 <h3>🔎 Track Case</h3>
-<input type="text" id="trackPublic" placeholder="Enter Evidence ID or Accused Name">
+<input type="text" id="trackPublic" placeholder="Enter Evidence ID or Accused Name" autocomplete="off">
 <button onclick="trackCase('public')">Track</button>
 <pre id="publicTrackResult"></pre>
 </div>
@@ -111,6 +114,8 @@ button:hover { opacity:0.9; }
 <script>
 let accounts;
 let contract;
+
+// TODO: replace with your deployed values
 const contractAddress = "0xa9E9585e2B389ec648D9C0aea13868Ff6BDd2dFa";
 const abi = [
 	{
@@ -677,172 +682,257 @@ const abi = [
 ];
 
 async function loadWeb3() {
-    if(window.ethereum){
-        window.web3 = new Web3(window.ethereum);
-        await window.ethereum.enable();
-        accounts = await web3.eth.getAccounts();
-        contract = new web3.eth.Contract(abi, contractAddress);
-    } else { alert("Please install MetaMask!"); }
+  if (!window.ethereum) { alert("Please install MetaMask!"); return; }
+  try {
+    // Request accounts (new API)
+    accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+    window.web3 = new Web3(window.ethereum);
+    contract = new web3.eth.Contract(abi, contractAddress);
+    console.log("Connected as", accounts[0]);
+  } catch (e) {
+    console.error(e);
+    alert("MetaMask connection rejected.");
+  }
 }
 
 function showLogin(role){
-    document.getElementById('roleSelect').classList.add('hidden');
-    if(role==='police') document.getElementById('policeLogin').classList.remove('hidden');
-    if(role==='court') document.getElementById('courtLogin').classList.remove('hidden');
+  hideAll();
+  document.getElementById('roleSelect').classList.add('hidden');
+  if(role==='police') document.getElementById('policeLogin').classList.remove('hidden');
+  if(role==='court') document.getElementById('courtLogin').classList.remove('hidden');
 }
 function showPortal(role){
-    document.getElementById('roleSelect').classList.add('hidden');
-    if(role==='public') document.getElementById('publicPortal').classList.remove('hidden');
+  hideAll();
+  document.getElementById('roleSelect').classList.add('hidden');
+  if(role==='public') document.getElementById('publicPortal').classList.remove('hidden');
 }
-
-function login(role){
-    if(role==='police'){
-        const username = document.getElementById('policeUser').value;
-        const password = document.getElementById('policePass').value;
-        if(username==='police1' && password==='1234'){
-            alert("✅ Police Login Successful");
-            document.getElementById('policeUser').value="";
-            document.getElementById('policePass').value="";
-            document.getElementById('policeLogin').classList.add('hidden');
-            document.getElementById('policePortal').classList.remove('hidden');
-        } else { 
-            alert("❌ Invalid Police credentials!");
-            document.getElementById('policePass').value="";
-        }
-    }
-    if(role==='court'){
-        const username = document.getElementById('courtUser').value;
-        const password = document.getElementById('courtPass').value;
-        if(username==='court1' && password==='1234'){
-            alert("✅ Court Login Successful");
-            document.getElementById('courtUser').value="";
-            document.getElementById('courtPass').value="";
-            document.getElementById('courtLogin').classList.add('hidden');
-            document.getElementById('courtPortal').classList.remove('hidden');
-        } else { 
-            alert("❌ Invalid Court credentials!");
-            document.getElementById('courtPass').value="";
-        }
-    }
-}
-
-// --- LOGOUT FUNCTION ---
-function logout(){
-    document.querySelectorAll('#policeLogin,#courtLogin,#policePortal,#courtPortal,#publicPortal')
+function hideAll(){
+  document.querySelectorAll('#policeLogin,#courtLogin,#policePortal,#courtPortal,#publicPortal')
     .forEach(el=>el.classList.add('hidden'));
-    document.getElementById('roleSelect').classList.remove('hidden');
-    alert("🚪 Logged out successfully");
 }
 
-// --- POLICE: Register Case ---
+// Simple demo logins (no storage, no persistence)
+function login(role){
+  if(role==='police'){
+    const u = document.getElementById('policeUser').value.trim();
+    const p = document.getElementById('policePass').value;
+    if(u==='police1' && p==='1234'){
+      alert("✅ Police Login Successful");
+      // Clear creds immediately (don’t save)
+      document.getElementById('policeUser').value="";
+      document.getElementById('policePass').value="";
+      document.getElementById('policeLogin').classList.add('hidden');
+      document.getElementById('policePortal').classList.remove('hidden');
+    } else {
+      alert("❌ Invalid Police credentials!");
+      document.getElementById('policePass').value="";
+    }
+  }
+  if(role==='court'){
+    const u = document.getElementById('courtUser').value.trim();
+    const p = document.getElementById('courtPass').value;
+    if(u==='court1' && p==='1234'){
+      alert("✅ Court Login Successful");
+      document.getElementById('courtUser').value="";
+      document.getElementById('courtPass').value="";
+      document.getElementById('courtLogin').classList.add('hidden');
+      document.getElementById('courtPortal').classList.remove('hidden');
+    } else {
+      alert("❌ Invalid Court credentials!");
+      document.getElementById('courtPass').value="";
+    }
+  }
+}
+
+// LOGOUT
+function logout(){
+  // Clear all transient UI state
+  clearPoliceFields();
+  clearCourtFields();
+  clearTrackOutputs();
+  // Hide all portals, show role selection
+  hideAll();
+  document.getElementById('roleSelect').classList.remove('hidden');
+  alert("🚪 Logged out successfully");
+}
+function clearTrackOutputs(){
+  document.getElementById('policeTrackResult').innerText="";
+  document.getElementById('courtTrackResult').innerText="";
+  document.getElementById('publicTrackResult').innerText="";
+  document.getElementById('trackPolice').value="";
+  document.getElementById('trackCourt').value="";
+  document.getElementById('trackPublic').value="";
+}
+
+// POLICE: Register Case + Aadhaar rule pre-check
 async function registerCase(){
-    const aadhaar=document.getElementById('aadhaar').value;
-    const accused=document.getElementById('accused').value;
-    const details=document.getElementById('caseDetails').value;
-    const location=document.getElementById('location').value;
-    const officer=document.getElementById('officer').value;
-    const crimeDate=document.getElementById('crimeDate').value;
-    const regDate=document.getElementById('regDate').value;
+  const btn = document.getElementById('btnRegister');
+  const aadhaar=document.getElementById('aadhaar').value.trim();
+  const accused=document.getElementById('accused').value.trim();
+  const details=document.getElementById('caseDetails').value.trim();
+  const location=document.getElementById('location').value.trim();
+  const officer=document.getElementById('officer').value.trim();
+  const crimeDate=document.getElementById('crimeDate').value;
+  const regDate=document.getElementById('regDate').value;
 
-    if(!aadhaar||!accused||!details){ alert("Fill required fields"); return; }
+  if(!aadhaar||!accused||!details){
+    alert("⚠️ Fill required fields (Aadhaar, Accused, Details)");
+    return;
+  }
 
-    try{
-        const tx = await contract.methods.registerCase(
-            aadhaar, accused, details, location, officer, crimeDate, regDate
-        ).send({from: accounts[0]});
+  try{
+    btn.disabled = true;
 
-        const uid = tx.events.CaseRegistered.returnValues.uniqueCaseID;
-        const eid = tx.events.CaseRegistered.returnValues.evidenceID;
-        document.getElementById('uniqueCaseID').value = uid;
-        document.getElementById('evidenceID').value = eid;
-        alert("✅ Case Registered On-Chain!");
-        clearPoliceFields();
-    } catch(e){ console.error(e); alert("❌ Transaction Failed"); }
+    // ===== Aadhaar rule: pre-check (if the contract exposes the getter) =====
+    let existingAccused = "";
+    if (contract?.methods?.getAccusedByAadhaar) {
+      try {
+        existingAccused = await contract.methods.getAccusedByAadhaar(aadhaar).call();
+      } catch (e) {
+        console.warn("getAccusedByAadhaar call failed (method may not exist). Proceeding...");
+      }
+    }
+    if(existingAccused && existingAccused !== "" && existingAccused !== accused){
+      alert("❌ This Aadhaar is already linked to another accused. Use the same accused name or a different Aadhaar.");
+      btn.disabled = false;
+      return;
+    }
+    // =======================================================================
+
+    const tx = await contract.methods.registerCase(
+      aadhaar, accused, details, location, officer, crimeDate, regDate
+    ).send({from: accounts[0]});
+
+    // Expecting CaseRegistered event with uniqueCaseID, evidenceID
+    const uid = tx?.events?.CaseRegistered?.returnValues?.uniqueCaseID || "";
+    const eid = tx?.events?.CaseRegistered?.returnValues?.evidenceID || "";
+    document.getElementById('uniqueCaseID').value = uid;
+    document.getElementById('evidenceID').value = eid;
+
+    alert("✅ Case Registered On-Chain!");
+    clearPoliceFields(); // auto-clear inputs (tracking input too)
+  } catch(e){
+    console.error(e);
+    alert("❌ Transaction Failed");
+  } finally {
+    btn.disabled = false;
+  }
 }
 
-// --- Auto-clear Police fields ---
 function clearPoliceFields(){
-    document.getElementById('aadhaar').value="";
-    document.getElementById('accused').value="";
-    document.getElementById('caseDetails').value="";
-    document.getElementById('location').value="";
-    document.getElementById('officer').value="";
-    document.getElementById('crimeDate').value="";
-    document.getElementById('regDate').value="";
-    document.getElementById('trackPolice').value="";
+  document.getElementById('aadhaar').value="";
+  document.getElementById('accused').value="";
+  document.getElementById('caseDetails').value="";
+  document.getElementById('location').value="";
+  document.getElementById('officer').value="";
+  document.getElementById('crimeDate').value="";
+  document.getElementById('regDate').value="";
+  document.getElementById('trackPolice').value="";
+  // keep the generated IDs visible to copy if needed
 }
 
-// --- TRACK CASE ---
+// TRACK CASE (police/court/public)
 async function trackCase(role){
-    const inputId = role==='police'?'trackPolice':role==='court'?'trackCourt':'trackPublic';
-    const resultId = role==='police'?'policeTrackResult':role==='court'?'courtTrackResult':'publicTrackResult';
-    const query = document.getElementById(inputId).value;
+  const inputId = role==='police'?'trackPolice':role==='court'?'trackCourt':'trackPublic';
+  const resultId = role==='police'?'policeTrackResult':role==='court'?'courtTrackResult':'publicTrackResult';
+  const query = document.getElementById(inputId).value.trim();
 
-    if(!query){ alert("Enter a search term"); return; }
+  if(!query){ alert("Enter a search term"); return; }
 
+  try{
+    let res = await contract.methods.trackByEvidenceID(query).call();
+    // normalize to array if needed
+    res = Array.isArray(res) ? res : [res];
+    document.getElementById(resultId).innerText = JSON.stringify(res,null,2);
+  } catch{
     try{
-        let res = await contract.methods.trackByEvidenceID(query).call();
-        document.getElementById(resultId).innerText = JSON.stringify(res,null,2);
-    } catch{
-        let res2 = await contract.methods.trackByAccused(query).call();
-        document.getElementById(resultId).innerText = JSON.stringify(res2,null,2);
+      let res2 = await contract.methods.trackByAccused(query).call();
+      res2 = Array.isArray(res2) ? res2 : [res2];
+      document.getElementById(resultId).innerText = JSON.stringify(res2,null,2);
+    } catch (e2){
+      console.error(e2);
+      document.getElementById(resultId).innerText = "No results or call failed.";
     }
-    document.getElementById(inputId).value="";
+  } finally {
+    document.getElementById(inputId).value=""; // auto-clear search box
+  }
 }
 
-// --- COURT: Search ---
+// COURT: Search (fills dropdown and shows results)
 async function searchCourt(){
-    const query = document.getElementById('trackCourt').value;
-    if(!query){ alert("Enter search term"); return; }
-    try{
-        let res = await contract.methods.trackByEvidenceID(query).call();
-        populateEvidenceDropdown([res]);
-        document.getElementById('courtTrackResult').innerText = JSON.stringify([res],null,2);
-    } catch{
-        let res2 = await contract.methods.trackByAccused(query).call();
-        populateEvidenceDropdown(res2[0]);
-        document.getElementById('courtTrackResult').innerText = JSON.stringify(res2,null,2);
+  const box = document.getElementById('trackCourt');
+  const q = box.value.trim();
+  if(!q){ alert("Enter search term"); return; }
+
+  const resultBox = document.getElementById('courtTrackResult');
+  try{
+    let byEid = await contract.methods.trackByEvidenceID(q).call();
+    byEid = Array.isArray(byEid) ? byEid : [byEid];
+    populateEvidenceDropdown(byEid);
+    resultBox.innerText = JSON.stringify(byEid,null,2);
+  } catch {
+    try {
+      let byAcc = await contract.methods.trackByAccused(q).call();
+      byAcc = Array.isArray(byAcc) ? byAcc : [byAcc];
+      populateEvidenceDropdown(byAcc);
+      resultBox.innerText = JSON.stringify(byAcc,null,2);
+    } catch (e2) {
+      console.error(e2);
+      resultBox.innerText = "No results or call failed.";
+      document.getElementById('evidenceSelect').innerHTML = "";
     }
-    document.getElementById('trackCourt').value="";
+  } finally {
+    box.value=""; // auto-clear
+  }
 }
 
 function populateEvidenceDropdown(caseArray){
-    const select = document.getElementById('evidenceSelect');
-    select.innerHTML = "";
-    caseArray.forEach(c=>{
-        let opt = document.createElement('option');
-        opt.value = c.evidenceID;
-        opt.text = `${c.evidenceID} | ${c.accused} | ${c.uniqueCaseID}`;
-        select.add(opt);
-    });
+  const select = document.getElementById('evidenceSelect');
+  select.innerHTML = "";
+  (caseArray || []).forEach(c=>{
+    if(!c) return;
+    const opt = document.createElement('option');
+    opt.value = c.evidenceID || "";
+    const eid = c.evidenceID || "N/A";
+    const acc = c.accused || "N/A";
+    const uid = c.uniqueCaseID || "N/A";
+    opt.text = `${eid} | ${acc} | ${uid}`;
+    select.add(opt);
+  });
 }
 
-// --- COURT: Submit Judgment ---
+// COURT: Submit Judgment
 async function submitJudgment(){
-    const eid = document.getElementById('evidenceSelect').value;
-    const judgment = document.getElementById('judgment').value;
-    const closingDate = document.getElementById('closingDate').value;
-    const rejudgment = document.getElementById('rejudgment').value;
+  const btn = document.getElementById('btnSubmitJudge');
+  const eid = document.getElementById('evidenceSelect').value;
+  const judgment = (document.getElementById('judgment').value || "").trim();
+  const closingDate = document.getElementById('closingDate').value;
+  const rejudgment = (document.getElementById('rejudgment').value || "").trim();
 
-    if(!eid){ alert("Select Evidence"); return; }
+  if(!eid){ alert("Select Evidence"); return; }
 
-    try{
-        await contract.methods.submitJudgment(eid, judgment, closingDate, rejudgment)
-        .send({from: accounts[0]});
-        alert("✅ Judgment Submitted On-Chain!");
-        clearCourtFields();
-    } catch(e){ console.error(e); alert("❌ Transaction Failed"); }
+  try{
+    btn.disabled = true;
+    await contract.methods.submitJudgment(eid, judgment, closingDate, rejudgment)
+      .send({from: accounts[0]});
+    alert("✅ Judgment Submitted On-Chain!");
+    clearCourtFields();
+  } catch(e){
+    console.error(e);
+    alert("❌ Transaction Failed");
+  } finally {
+    btn.disabled = false;
+  }
 }
 
-// --- Auto-clear Court fields ---
 function clearCourtFields(){
-    document.getElementById('judgment').value="";
-    document.getElementById('closingDate').value="";
-    document.getElementById('rejudgment').value="";
-    document.getElementById('trackCourt').value="";
+  document.getElementById('judgment').value="";
+  document.getElementById('closingDate').value="";
+  document.getElementById('rejudgment').value="";
+  document.getElementById('trackCourt').value="";
 }
 
-window.onload = loadWeb3;
+window.addEventListener('load', loadWeb3);
 </script>
 
 </body>
