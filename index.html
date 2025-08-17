@@ -131,7 +131,7 @@ button:hover { opacity:0.9; }
 let accounts;
 let contract;
 let courtCases = [];
-const contractAddress = "0xF9e0fAbFEb99A7BC5b8499Ca998ff1512EF59916";
+const contractAddress = "0xc7387e1490B195cA00be8Df21692e39Aceeb4fdE";
 const abi = [
 	{
 		"anonymous": false,
@@ -210,12 +210,12 @@ const abi = [
 			},
 			{
 				"internalType": "string",
-				"name": "uniqueCaseID",
+				"name": "evidenceID",
 				"type": "string"
 			},
 			{
 				"internalType": "string",
-				"name": "evidenceID",
+				"name": "uniqueCaseID",
 				"type": "string"
 			}
 		],
@@ -432,6 +432,19 @@ const abi = [
 				"internalType": "string",
 				"name": "rejudgment",
 				"type": "string"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "totalAadhaarKeys",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
 			}
 		],
 		"stateMutability": "view",
@@ -717,29 +730,30 @@ const abi = [
 		"type": "function"
 	}
 ];
-	
-// --- ID Counters ---
+
+// Counters for local UI IDs
 let evidenceCounter = 0;
 let caseCounter = 0;
-
-// Generate sequential IDs like EV000001, UI000001
-function generateID(prefix, counter){
-    return prefix + String(counter).padStart(6,"0");
-}
+function generateID(prefix, counter){ return prefix + String(counter).padStart(6,"0"); }
 
 function normalizeCase(c){
     return {
-        evidenceID: c.evidenceID || c[0] || "",
+        aadhaar: c.aadhaar || c[0] || "",
         accused: c.accused || c[1] || "",
-        uniqueCaseID: c.uniqueCaseID || c[2] || "",
-        aadhaar: c.aadhaar || c[3] || "",
-        judgment: c.judgment || c[4] || "",
-        closingDate: c.closingDate || c[5] || "",
-        rejudgment: c.rejudgment || c[6] || ""
+        details: c.details || c[2] || "",
+        location: c.location || c[3] || "",
+        officer: c.officer || c[4] || "",
+        crimeDate: c.crimeDate || c[5] || "",
+        registerDate: c.registerDate || c[6] || "",
+        evidenceID: c.evidenceID || c[7] || "",
+        uniqueCaseID: c.uniqueCaseID || c[8] || "",
+        judgment: c.judgment || c[9] || "",
+        closingDate: c.closingDate || c[10] || "",
+        rejudgment: c.rejudgment || c[11] || ""
     };
 }
 
-async function loadWeb3() {
+async function loadWeb3(){
     if(window.ethereum){
         window.web3 = new Web3(window.ethereum);
         await window.ethereum.enable();
@@ -752,11 +766,8 @@ function showLogin(role){
     document.getElementById('roleSelect').classList.add('hidden');
     if(role==='police'){
         document.getElementById('policeLogin').classList.remove('hidden');
-        // auto fill register date
         document.getElementById('registerDateTime').value = new Date().toLocaleString();
-        // generate IDs
-        evidenceCounter++;
-        caseCounter++;
+        evidenceCounter++; caseCounter++;
         document.getElementById('evidenceID').value = generateID("EV", evidenceCounter);
         document.getElementById('uniqueCaseID').value = generateID("UI", caseCounter);
     }
@@ -800,7 +811,7 @@ async function registerCase(){
     const evidenceID = document.getElementById('evidenceID').value;
     const uniqueCaseID = document.getElementById('uniqueCaseID').value;
 
-    if(!aadhaar || !accused){ alert("⚠️ Aadhaar and Accused required"); return; }
+    if(!aadhaar || !accused){ alert("⚠ Aadhaar and Accused required"); return; }
 
     try{
         await contract.methods.registerCase(aadhaar, accused, details, location, officer, crimeDate, registerDate, evidenceID, uniqueCaseID)
@@ -809,46 +820,28 @@ async function registerCase(){
     } catch(e){ console.error(e); alert("❌ Transaction Failed: " + e.message); }
 }
 
-// --- POLICE SEARCH ---
+// Reusable search function
+async function fetchCase(query){
+    try{ return [normalizeCase(await contract.methods.trackByEvidenceID(query).call())]; }
+    catch{}
+    try{ return (await contract.methods.trackByAccused(query).call()).map(normalizeCase); }
+    catch{}
+    try{ return (await contract.methods.trackByAadhaar(query).call()).map(normalizeCase); }
+    catch{}
+    return [];
+}
+
+// POLICE SEARCH
 async function searchPolice(){
     const query = document.getElementById('trackPolice').value.trim();
-    let results = [];
-    try{
-        let res = await contract.methods.trackByEvidenceID(query).call();
-        results = [normalizeCase(res)];
-    } catch{
-        try{
-            let res2 = await contract.methods.trackByAccused(query).call();
-            results = res2.map(normalizeCase);
-        } catch{
-            try{
-                let res3 = await contract.methods.trackByAadhaar(query).call();
-                results = res3.map(normalizeCase);
-            } catch(e){ alert("⚠️ No case found"); }
-        }
-    }
+    let results = await fetchCase(query);
     document.getElementById('policeTrackResult').innerText = JSON.stringify(results,null,2);
 }
 
-// --- COURT ---
+// COURT SEARCH
 async function searchCourt(){
     const query = document.getElementById('trackCourt').value.trim();
-    let results = [];
-    try{
-        let res = await contract.methods.trackByEvidenceID(query).call();
-        results = [normalizeCase(res)];
-    } catch{
-        try{
-            let res2 = await contract.methods.trackByAccused(query).call();
-            results = res2.map(normalizeCase);
-        } catch{
-            try{
-                let res3 = await contract.methods.trackByAadhaar(query).call();
-                results = res3.map(normalizeCase);
-            } catch(e){ alert("⚠️ No case found"); }
-        }
-    }
-    courtCases = results;
+    courtCases = await fetchCase(query);
     populateEvidenceDropdown(courtCases);
     document.getElementById('courtTrackResult').innerText = JSON.stringify(courtCases,null,2);
 }
@@ -862,12 +855,12 @@ function populateEvidenceDropdown(caseArray){
         opt.text = `${c.evidenceID} | ${c.accused} | ${c.uniqueCaseID}`;
         select.add(opt);
     });
-    if(caseArray.length > 0) showSelectedCase();
+    if(caseArray.length>0) showSelectedCase();
 }
 
 function showSelectedCase(){
     const eid = document.getElementById('evidenceSelect').value;
-    const found = courtCases.find(c => c.evidenceID === eid);
+    const found = courtCases.find(c=>c.evidenceID===eid);
     if(found){
         document.getElementById('courtTrackResult').innerText = JSON.stringify(found,null,2);
         document.getElementById('judgment').value = found.judgment || "";
@@ -881,34 +874,17 @@ async function submitJudgment(){
     const judgment = document.getElementById('judgment').value;
     const closingDate = document.getElementById('closingDate').value;
     const rejudgment = document.getElementById('rejudgment').value;
-
-    if(!eid){ alert("⚠️ Select Evidence"); return; }
-
+    if(!eid){ alert("⚠ Select Evidence"); return; }
     try{
-        await contract.methods.submitJudgment(eid, judgment, closingDate, rejudgment)
-        .send({from: accounts[0]});
+        await contract.methods.submitJudgment(eid, judgment, closingDate, rejudgment).send({from: accounts[0]});
         alert("✅ Judgment Submitted!");
     } catch(e){ console.error(e); alert("❌ Transaction Failed"); }
 }
 
-// --- PUBLIC ---
+// PUBLIC SEARCH
 async function searchPublic(){
     const query = document.getElementById('trackPublic').value.trim();
-    let results = [];
-    try{
-        let res = await contract.methods.trackByEvidenceID(query).call();
-        results = [normalizeCase(res)];
-    } catch{
-        try{
-            let res2 = await contract.methods.trackByAccused(query).call();
-            results = res2.map(normalizeCase);
-        } catch{
-            try{
-                let res3 = await contract.methods.trackByAadhaar(query).call();
-                results = res3.map(normalizeCase);
-            } catch(e){ alert("⚠️ No case found"); }
-        }
-    }
+    let results = await fetchCase(query);
     document.getElementById('publicTrackResult').innerText = JSON.stringify(results,null,2);
 }
 
@@ -916,4 +892,4 @@ window.onload = loadWeb3;
 </script>
 
 </body>
-</html> 
+</html>
