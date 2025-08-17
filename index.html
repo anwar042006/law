@@ -111,7 +111,7 @@ button:hover { opacity:0.9; }
 <script>
 let accounts;
 let contract;
-const contractAddress = "0x6c23bd591f595161Bc656e1DCAD42772C91F2DEC";
+const contractAddress = "0x19823f91cD6479Fbc4d214f62E48F48F11135296";
 const abi = [
 	{
 		"anonymous": false,
@@ -231,6 +231,25 @@ const abi = [
 		"name": "submitJudgment",
 		"outputs": [],
 		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"name": "aadhaarAccused",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"stateMutability": "view",
 		"type": "function"
 	},
 	{
@@ -719,8 +738,8 @@ function logout(){
 
 // --- POLICE: Register Case ---
 async function registerCase(){
-    const aadhaar=document.getElementById('aadhaar').value;
-    const accused=document.getElementById('accused').value;
+    const aadhaar=document.getElementById('aadhaar').value.trim();
+    const accused=document.getElementById('accused').value.trim();
     const details=document.getElementById('caseDetails').value;
     const location=document.getElementById('location').value;
     const officer=document.getElementById('officer').value;
@@ -729,12 +748,18 @@ async function registerCase(){
 
     if(!aadhaar||!accused||!details){ alert("⚠️ Fill required fields"); return; }
 
+    if(!/^\d{12}$/.test(aadhaar)) { alert("⚠️ Aadhaar must be 12 digits"); return; }
+
     try{
         // Aadhaar check before registering
         let existingCases = await contract.methods.trackByAadhaar(aadhaar).call();
-        if(existingCases.length>0 && existingCases[0].accused !== accused){
-            alert("❌ Aadhaar already registered with a different accused!");
-            return;
+
+        if(existingCases.length > 0){
+            let samePerson = existingCases.every(c => c.accused === accused);
+            if(!samePerson){
+                alert("❌ Aadhaar already registered with a different accused!");
+                return;
+            }
         }
 
         const tx = await contract.methods.registerCase(
