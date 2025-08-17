@@ -111,7 +111,7 @@ button:hover { opacity:0.9; }
 <script>
 let accounts;
 let contract;
-const contractAddress = "0xb91185460feC306c0E58bFc7948697465972B4f6";
+const contractAddress = "0x5111F9C3B04B1f5CB009906E707282C69e49261A";
 const abi = [
 	{
 		"inputs": [
@@ -199,6 +199,19 @@ const abi = [
 		"inputs": [
 			{
 				"indexed": false,
+				"internalType": "address",
+				"name": "court",
+				"type": "address"
+			}
+		],
+		"name": "CourtRemoved",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
 				"internalType": "string",
 				"name": "evidenceID",
 				"type": "string"
@@ -211,9 +224,9 @@ const abi = [
 			},
 			{
 				"indexed": false,
-				"internalType": "string",
+				"internalType": "uint256",
 				"name": "closingDate",
-				"type": "string"
+				"type": "uint256"
 			}
 		],
 		"name": "JudgmentSubmitted",
@@ -230,6 +243,19 @@ const abi = [
 			}
 		],
 		"name": "PoliceAdded",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"internalType": "address",
+				"name": "police",
+				"type": "address"
+			}
+		],
+		"name": "PoliceRemoved",
 		"type": "event"
 	},
 	{
@@ -260,14 +286,9 @@ const abi = [
 				"type": "string"
 			},
 			{
-				"internalType": "string",
+				"internalType": "uint256",
 				"name": "crimeDate",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "regDate",
-				"type": "string"
+				"type": "uint256"
 			}
 		],
 		"name": "registerCase",
@@ -289,6 +310,32 @@ const abi = [
 	{
 		"inputs": [
 			{
+				"internalType": "address",
+				"name": "courtAddr",
+				"type": "address"
+			}
+		],
+		"name": "removeCourt",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "policeAddr",
+				"type": "address"
+			}
+		],
+		"name": "removePolice",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
 				"internalType": "string",
 				"name": "evidenceID",
 				"type": "string"
@@ -296,11 +343,6 @@ const abi = [
 			{
 				"internalType": "string",
 				"name": "judgmentText",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "closingDate",
 				"type": "string"
 			},
 			{
@@ -371,6 +413,25 @@ const abi = [
 		"type": "function"
 	},
 	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "allEvidenceIDs",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
 		"inputs": [],
 		"name": "caseCounter",
 		"outputs": [
@@ -429,14 +490,14 @@ const abi = [
 				"type": "string"
 			},
 			{
-				"internalType": "string",
+				"internalType": "uint256",
 				"name": "crimeDate",
-				"type": "string"
+				"type": "uint256"
 			},
 			{
-				"internalType": "string",
+				"internalType": "uint256",
 				"name": "regDate",
-				"type": "string"
+				"type": "uint256"
 			}
 		],
 		"stateMutability": "view",
@@ -469,6 +530,19 @@ const abi = [
 				"internalType": "uint256",
 				"name": "",
 				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getAllEvidenceIDs",
+		"outputs": [
+			{
+				"internalType": "string[]",
+				"name": "",
+				"type": "string[]"
 			}
 		],
 		"stateMutability": "view",
@@ -533,14 +607,19 @@ const abi = [
 				"type": "string"
 			},
 			{
-				"internalType": "string",
+				"internalType": "uint256",
 				"name": "closingDate",
-				"type": "string"
+				"type": "uint256"
 			},
 			{
 				"internalType": "string",
 				"name": "rejudgment",
 				"type": "string"
+			},
+			{
+				"internalType": "bool",
+				"name": "exists",
+				"type": "bool"
 			}
 		],
 		"stateMutability": "view",
@@ -613,14 +692,14 @@ const abi = [
 						"type": "string"
 					},
 					{
-						"internalType": "string",
+						"internalType": "uint256",
 						"name": "crimeDate",
-						"type": "string"
+						"type": "uint256"
 					},
 					{
-						"internalType": "string",
+						"internalType": "uint256",
 						"name": "regDate",
-						"type": "string"
+						"type": "uint256"
 					}
 				],
 				"internalType": "struct EvidenceTracking.Case[]",
@@ -640,14 +719,19 @@ const abi = [
 						"type": "string"
 					},
 					{
-						"internalType": "string",
+						"internalType": "uint256",
 						"name": "closingDate",
-						"type": "string"
+						"type": "uint256"
 					},
 					{
 						"internalType": "string",
 						"name": "rejudgment",
 						"type": "string"
+					},
+					{
+						"internalType": "bool",
+						"name": "exists",
+						"type": "bool"
 					}
 				],
 				"internalType": "struct EvidenceTracking.Judgment[]",
@@ -706,14 +790,14 @@ const abi = [
 						"type": "string"
 					},
 					{
-						"internalType": "string",
+						"internalType": "uint256",
 						"name": "crimeDate",
-						"type": "string"
+						"type": "uint256"
 					},
 					{
-						"internalType": "string",
+						"internalType": "uint256",
 						"name": "regDate",
-						"type": "string"
+						"type": "uint256"
 					}
 				],
 				"internalType": "struct EvidenceTracking.Case[]",
@@ -733,14 +817,19 @@ const abi = [
 						"type": "string"
 					},
 					{
-						"internalType": "string",
+						"internalType": "uint256",
 						"name": "closingDate",
-						"type": "string"
+						"type": "uint256"
 					},
 					{
 						"internalType": "string",
 						"name": "rejudgment",
 						"type": "string"
+					},
+					{
+						"internalType": "bool",
+						"name": "exists",
+						"type": "bool"
 					}
 				],
 				"internalType": "struct EvidenceTracking.Judgment[]",
@@ -799,14 +888,14 @@ const abi = [
 						"type": "string"
 					},
 					{
-						"internalType": "string",
+						"internalType": "uint256",
 						"name": "crimeDate",
-						"type": "string"
+						"type": "uint256"
 					},
 					{
-						"internalType": "string",
+						"internalType": "uint256",
 						"name": "regDate",
-						"type": "string"
+						"type": "uint256"
 					}
 				],
 				"internalType": "struct EvidenceTracking.Case",
@@ -826,14 +915,19 @@ const abi = [
 						"type": "string"
 					},
 					{
-						"internalType": "string",
+						"internalType": "uint256",
 						"name": "closingDate",
-						"type": "string"
+						"type": "uint256"
 					},
 					{
 						"internalType": "string",
 						"name": "rejudgment",
 						"type": "string"
+					},
+					{
+						"internalType": "bool",
+						"name": "exists",
+						"type": "bool"
 					}
 				],
 				"internalType": "struct EvidenceTracking.Judgment",
@@ -996,4 +1090,4 @@ window.onload = loadWeb3;
 </script>
 
 </body>
-</html>
+</html>        transaction problem 
