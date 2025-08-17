@@ -77,7 +77,7 @@ button:hover { opacity:0.9; }
 let accounts;
 let contract;
 let courtCases = []; // store cases for court portal
-const contractAddress = "0x1036D7F71049bB7F1a17a9A2AA2F3b44e709d4bb";
+const contractAddress = "0xF2BE069d72633F518dFf269158e76469386A7678";
 const abi = [
 	{
 		"anonymous": false,
@@ -661,6 +661,18 @@ const abi = [
 	}
 ];
 
+// normalize struct/object returned from Solidity
+function normalizeCase(c){
+    return {
+        evidenceID: c.evidenceID || c[0] || "",
+        accused: c.accused || c[1] || "",
+        uniqueCaseID: c.uniqueCaseID || c[2] || "",
+        judgment: c.judgment || c[3] || "",
+        closingDate: c.closingDate || c[4] || "",
+        rejudgment: c.rejudgment || c[5] || ""
+    };
+}
+
 async function loadWeb3() {
     if(window.ethereum){
         window.web3 = new Web3(window.ethereum);
@@ -677,7 +689,9 @@ function showLogin(role){
 }
 function showPortal(role){
     document.getElementById('roleSelect').classList.add('hidden');
-    if(role==='public') document.getElementById('publicPortal').classList.remove('hidden');
+    if(role==='public') {
+        alert("Public portal not implemented yet!");
+    }
 }
 
 function login(role){
@@ -697,18 +711,23 @@ function logout(){
 
 // --- COURT ---
 async function searchCourt(){
-    const query = document.getElementById('trackCourt').value;
+    const query = document.getElementById('trackCourt').value.trim();
+    let results = [];
     try{
         let res = await contract.methods.trackByEvidenceID(query).call();
-        courtCases = [res];
-        populateEvidenceDropdown(courtCases);
-        document.getElementById('courtTrackResult').innerText = JSON.stringify(courtCases,null,2);
+        results = [normalizeCase(res)];
     } catch{
-        let res2 = await contract.methods.trackByAccused(query).call();
-        courtCases = res2;
-        populateEvidenceDropdown(courtCases);
-        document.getElementById('courtTrackResult').innerText = JSON.stringify(courtCases,null,2);
+        try {
+            let res2 = await contract.methods.trackByAccused(query).call();
+            results = res2.map(normalizeCase);
+        } catch(e) {
+            console.error(e);
+            alert("⚠️ No case found");
+        }
     }
+    courtCases = results;
+    populateEvidenceDropdown(courtCases);
+    document.getElementById('courtTrackResult').innerText = JSON.stringify(courtCases,null,2);
 }
 
 function populateEvidenceDropdown(caseArray){
@@ -728,6 +747,9 @@ function showSelectedCase(){
     const found = courtCases.find(c => c.evidenceID === eid);
     if(found){
         document.getElementById('courtTrackResult').innerText = JSON.stringify(found,null,2);
+        document.getElementById('judgment').value = found.judgment || "";
+        document.getElementById('closingDate').value = found.closingDate || "";
+        document.getElementById('rejudgment').value = found.rejudgment || "";
     }
 }
 
