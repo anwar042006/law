@@ -42,6 +42,27 @@ button:hover { opacity:0.9; }
   <button onclick="login('police')">Login</button>
 </div>
 
+<!-- Police Portal -->
+<div id="policePortal" class="hidden">
+<h2><i class="fas fa-user-shield"></i> Police Portal</h2>
+<label>🆔 Aadhaar ID</label><input type="text" id="aadhaarID" placeholder="Enter Aadhaar">
+<label>👤 Accused Name</label><input type="text" id="accusedName" placeholder="Enter Accused">
+<label>📄 Case Details</label><textarea id="caseDetails" placeholder="Enter case details"></textarea>
+<label>📍 Location</label><input type="text" id="location" placeholder="Enter location">
+<label>👮 Officer Name</label><input type="text" id="officerName" placeholder="Enter officer name">
+<button onclick="registerCase()">Register Case</button>
+
+<div class="track-section">
+<h3>🔎 Track Case</h3>
+<label>Search by Evidence ID / Accused Name / Aadhaar</label>
+<input type="text" id="trackPolice" placeholder="Enter value">
+<button onclick="searchPolice()">Search</button>
+<pre id="policeTrackResult"></pre>
+</div>
+
+<button class="logout-btn" onclick="logout()">🚪 Logout</button>
+</div>
+
 <!-- Court Login -->
 <div id="courtLogin" class="hidden">
   <h2><i class="fas fa-gavel"></i> Court Login</h2>
@@ -53,8 +74,8 @@ button:hover { opacity:0.9; }
 <!-- Court Portal -->
 <div id="courtPortal" class="hidden">
 <h2><i class="fas fa-gavel"></i> Court Portal</h2>
-<label>🔎 Search by Evidence ID or Accused Name</label>
-<input type="text" id="trackCourt" placeholder="Enter Evidence ID or Accused Name">
+<label>🔎 Search by Evidence ID / Accused Name / Aadhaar</label>
+<input type="text" id="trackCourt" placeholder="Enter value">
 <button onclick="searchCourt()">Search</button>
 <label>📑 Select Evidence</label>
 <select id="evidenceSelect" onchange="showSelectedCase()"></select>
@@ -71,13 +92,28 @@ button:hover { opacity:0.9; }
 <button class="logout-btn" onclick="logout()">🚪 Logout</button>
 </div>
 
+<!-- Public Portal -->
+<div id="publicPortal" class="hidden">
+<h2><i class="fas fa-globe"></i> Public Case Tracking</h2>
+<label>🔎 Search by Evidence ID / Accused Name / Aadhaar</label>
+<input type="text" id="trackPublic" placeholder="Enter value">
+<button onclick="searchPublic()">Search</button>
+
+<div class="track-section">
+<h3>📂 Case Details</h3>
+<pre id="publicTrackResult"></pre>
+</div>
+
+<button class="logout-btn" onclick="logout()">🚪 Back</button>
+</div>
+
 </div>
 
 <script>
 let accounts;
 let contract;
-let courtCases = []; // store cases for court portal
-const contractAddress = "0xF2BE069d72633F518dFf269158e76469386A7678";
+let courtCases = [];
+const contractAddress = "0xebf9ba5EA60ED08924b6885fe490f012eC6E90f9";
 const abi = [
 	{
 		"anonymous": false,
@@ -661,15 +697,15 @@ const abi = [
 	}
 ];
 
-// normalize struct/object returned from Solidity
 function normalizeCase(c){
     return {
         evidenceID: c.evidenceID || c[0] || "",
         accused: c.accused || c[1] || "",
         uniqueCaseID: c.uniqueCaseID || c[2] || "",
-        judgment: c.judgment || c[3] || "",
-        closingDate: c.closingDate || c[4] || "",
-        rejudgment: c.rejudgment || c[5] || ""
+        aadhaar: c.aadhaar || c[3] || "",
+        judgment: c.judgment || c[4] || "",
+        closingDate: c.closingDate || c[5] || "",
+        rejudgment: c.rejudgment || c[6] || ""
     };
 }
 
@@ -689,12 +725,16 @@ function showLogin(role){
 }
 function showPortal(role){
     document.getElementById('roleSelect').classList.add('hidden');
-    if(role==='public') {
-        alert("Public portal not implemented yet!");
-    }
+    if(role==='public') document.getElementById('publicPortal').classList.remove('hidden');
 }
 
 function login(role){
+    if(role==='police'){
+        if(document.getElementById('policeUser').value==='police1' && document.getElementById('policePass').value==='1234'){
+            document.getElementById('policeLogin').classList.add('hidden');
+            document.getElementById('policePortal').classList.remove('hidden');
+        } else alert("❌ Invalid Police credentials!");
+    }
     if(role==='court'){
         if(document.getElementById('courtUser').value==='court1' && document.getElementById('courtPass').value==='1234'){
             document.getElementById('courtLogin').classList.add('hidden');
@@ -704,9 +744,46 @@ function login(role){
 }
 
 function logout(){
-    document.querySelectorAll('#policeLogin,#courtLogin,#courtPortal')
+    document.querySelectorAll('#policeLogin,#policePortal,#courtLogin,#courtPortal,#publicPortal')
     .forEach(el=>el.classList.add('hidden'));
     document.getElementById('roleSelect').classList.remove('hidden');
+}
+
+// --- POLICE ---
+async function registerCase(){
+    const aadhaar = document.getElementById('aadhaarID').value.trim();
+    const accused = document.getElementById('accusedName').value.trim();
+    const details = document.getElementById('caseDetails').value.trim();
+    const location = document.getElementById('location').value.trim();
+    const officer = document.getElementById('officerName').value.trim();
+
+    if(!aadhaar || !accused){ alert("⚠️ Aadhaar and Accused required"); return; }
+
+    try{
+        await contract.methods.registerCase(aadhaar, accused, details, location, officer)
+        .send({from: accounts[0]});
+        alert("✅ Case Registered!");
+    } catch(e){ console.error(e); alert("❌ Transaction Failed: " + e.message); }
+}
+
+async function searchPolice(){
+    const query = document.getElementById('trackPolice').value.trim();
+    let results = [];
+    try{
+        let res = await contract.methods.trackByEvidenceID(query).call();
+        results = [normalizeCase(res)];
+    } catch{
+        try{
+            let res2 = await contract.methods.trackByAccused(query).call();
+            results = res2.map(normalizeCase);
+        } catch{
+            try{
+                let res3 = await contract.methods.trackByAadhaar(query).call();
+                results = res3.map(normalizeCase);
+            } catch(e){ alert("⚠️ No case found"); }
+        }
+    }
+    document.getElementById('policeTrackResult').innerText = JSON.stringify(results,null,2);
 }
 
 // --- COURT ---
@@ -717,12 +794,14 @@ async function searchCourt(){
         let res = await contract.methods.trackByEvidenceID(query).call();
         results = [normalizeCase(res)];
     } catch{
-        try {
+        try{
             let res2 = await contract.methods.trackByAccused(query).call();
             results = res2.map(normalizeCase);
-        } catch(e) {
-            console.error(e);
-            alert("⚠️ No case found");
+        } catch{
+            try{
+                let res3 = await contract.methods.trackByAadhaar(query).call();
+                results = res3.map(normalizeCase);
+            } catch(e){ alert("⚠️ No case found"); }
         }
     }
     courtCases = results;
@@ -764,8 +843,29 @@ async function submitJudgment(){
     try{
         await contract.methods.submitJudgment(eid, judgment, closingDate, rejudgment)
         .send({from: accounts[0]});
-        alert("✅ Judgment Submitted On-Chain!");
+        alert("✅ Judgment Submitted!");
     } catch(e){ console.error(e); alert("❌ Transaction Failed"); }
+}
+
+// --- PUBLIC ---
+async function searchPublic(){
+    const query = document.getElementById('trackPublic').value.trim();
+    let results = [];
+    try{
+        let res = await contract.methods.trackByEvidenceID(query).call();
+        results = [normalizeCase(res)];
+    } catch{
+        try{
+            let res2 = await contract.methods.trackByAccused(query).call();
+            results = res2.map(normalizeCase);
+        } catch{
+            try{
+                let res3 = await contract.methods.trackByAadhaar(query).call();
+                results = res3.map(normalizeCase);
+            } catch(e){ alert("⚠️ No case found"); }
+        }
+    }
+    document.getElementById('publicTrackResult').innerText = JSON.stringify(results,null,2);
 }
 
 window.onload = loadWeb3;
