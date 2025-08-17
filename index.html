@@ -112,7 +112,7 @@ button:hover { opacity:0.9; }
 <script>
 let accounts;
 let contract;
-const contractAddress = "0x8571D00358933295096829E2219d22F7f98c025E";
+const contractAddress = "0x639F1a3f3aa882e92a35d1184876f6Cb8Bd3603E";
 const abi = [
 	{
 		"inputs": [
@@ -340,6 +340,7 @@ const abi = [
 		"type": "function"
 	}
 ];
+
 async function loadWeb3() {
     if(window.ethereum){
         window.web3 = new Web3(window.ethereum);
@@ -514,4 +515,4 @@ window.onload = loadWeb3;
 </script>
 
 </body>
-</html> 
+</html>  
