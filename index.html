@@ -112,97 +112,48 @@ button:hover { opacity:0.9; }
 <script>
 let accounts;
 let contract;
-const contractAddress = "0xcB6645fA36D1b294839c555348C10C644e3f1247";
+const contractAddress = "0x8571D00358933295096829E2219d22F7f98c025E";
 const abi = [
 	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": false,
-				"internalType": "string",
-				"name": "uniqueCaseID",
-				"type": "string"
-			},
-			{
-				"indexed": false,
-				"internalType": "string",
-				"name": "evidenceID",
-				"type": "string"
-			},
-			{
-				"indexed": false,
-				"internalType": "string",
-				"name": "aadhaar",
-				"type": "string"
-			}
-		],
-		"name": "CaseRegistered",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": false,
-				"internalType": "string",
-				"name": "evidenceID",
-				"type": "string"
-			}
-		],
-		"name": "JudgmentSubmitted",
-		"type": "event"
-	},
-	{
 		"inputs": [
 			{
 				"internalType": "string",
-				"name": "aadhaar",
+				"name": "aadhaarId",
 				"type": "string"
 			},
 			{
 				"internalType": "string",
-				"name": "accused",
+				"name": "accusedName",
 				"type": "string"
 			},
 			{
 				"internalType": "string",
-				"name": "details",
+				"name": "caseDescription",
 				"type": "string"
 			},
 			{
 				"internalType": "string",
-				"name": "location",
+				"name": "crimeLocation",
 				"type": "string"
 			},
 			{
 				"internalType": "string",
-				"name": "officer",
+				"name": "officerName",
 				"type": "string"
 			},
 			{
 				"internalType": "string",
-				"name": "crimeDate",
+				"name": "crimeDateTime",
 				"type": "string"
 			},
 			{
 				"internalType": "string",
-				"name": "regDate",
+				"name": "registrationDateTime",
 				"type": "string"
 			}
 		],
 		"name": "registerCase",
-		"outputs": [
-			{
-				"internalType": "string",
-				"name": "",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "",
-				"type": "string"
-			}
-		],
+		"outputs": [],
 		"stateMutability": "nonpayable",
 		"type": "function"
 	},
@@ -210,7 +161,7 @@ const abi = [
 		"inputs": [
 			{
 				"internalType": "string",
-				"name": "evidenceID",
+				"name": "evidenceId",
 				"type": "string"
 			},
 			{
@@ -221,11 +172,6 @@ const abi = [
 			{
 				"internalType": "string",
 				"name": "closingDate",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "rejudgment",
 				"type": "string"
 			}
 		],
@@ -238,250 +184,61 @@ const abi = [
 		"inputs": [
 			{
 				"internalType": "string",
-				"name": "",
-				"type": "string"
-			},
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"name": "aadhaarCases",
-		"outputs": [
-			{
-				"internalType": "string",
-				"name": "",
+				"name": "aadhaarId",
 				"type": "string"
 			}
 		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "string",
-				"name": "",
-				"type": "string"
-			}
-		],
-		"name": "aadhaarUniqueID",
-		"outputs": [
-			{
-				"internalType": "string",
-				"name": "",
-				"type": "string"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "caseCounter",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "string",
-				"name": "",
-				"type": "string"
-			}
-		],
-		"name": "cases",
-		"outputs": [
-			{
-				"internalType": "string",
-				"name": "uniqueCaseID",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "evidenceID",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "aadhaar",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "accused",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "details",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "location",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "officer",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "crimeDate",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "regDate",
-				"type": "string"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "evidenceCounter",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "string",
-				"name": "",
-				"type": "string"
-			}
-		],
-		"name": "judgments",
-		"outputs": [
-			{
-				"internalType": "string",
-				"name": "evidenceID",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "judgmentText",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "closingDate",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "rejudgment",
-				"type": "string"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "string",
-				"name": "aadhaar",
-				"type": "string"
-			}
-		],
-		"name": "trackByAadhaar",
+		"name": "trackByAccusedName",
 		"outputs": [
 			{
 				"components": [
 					{
 						"internalType": "string",
-						"name": "uniqueCaseID",
+						"name": "uniqueCaseId",
 						"type": "string"
 					},
 					{
 						"internalType": "string",
-						"name": "evidenceID",
+						"name": "evidenceId",
 						"type": "string"
 					},
 					{
 						"internalType": "string",
-						"name": "aadhaar",
+						"name": "aadhaarId",
 						"type": "string"
 					},
 					{
 						"internalType": "string",
-						"name": "accused",
+						"name": "accusedName",
 						"type": "string"
 					},
 					{
 						"internalType": "string",
-						"name": "details",
+						"name": "caseDescription",
 						"type": "string"
 					},
 					{
 						"internalType": "string",
-						"name": "location",
+						"name": "crimeLocation",
 						"type": "string"
 					},
 					{
 						"internalType": "string",
-						"name": "officer",
+						"name": "officerName",
 						"type": "string"
 					},
 					{
 						"internalType": "string",
-						"name": "crimeDate",
+						"name": "crimeDateTime",
 						"type": "string"
 					},
 					{
 						"internalType": "string",
-						"name": "regDate",
+						"name": "registrationDateTime",
 						"type": "string"
 					}
 				],
-				"internalType": "struct EvidenceTracking.Case[]",
-				"name": "",
-				"type": "tuple[]"
-			},
-			{
-				"components": [
-					{
-						"internalType": "string",
-						"name": "evidenceID",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "judgmentText",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "closingDate",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "rejudgment",
-						"type": "string"
-					}
-				],
-				"internalType": "struct EvidenceTracking.Judgment[]",
+				"internalType": "struct EvidenceTracking.CaseDetail[]",
 				"name": "",
 				"type": "tuple[]"
 			}
@@ -493,154 +250,61 @@ const abi = [
 		"inputs": [
 			{
 				"internalType": "string",
-				"name": "accusedName",
+				"name": "evidenceId",
 				"type": "string"
 			}
 		],
-		"name": "trackByAccused",
+		"name": "trackByEvidenceId",
 		"outputs": [
 			{
 				"components": [
 					{
 						"internalType": "string",
-						"name": "uniqueCaseID",
+						"name": "uniqueCaseId",
 						"type": "string"
 					},
 					{
 						"internalType": "string",
-						"name": "evidenceID",
+						"name": "evidenceId",
 						"type": "string"
 					},
 					{
 						"internalType": "string",
-						"name": "aadhaar",
+						"name": "aadhaarId",
 						"type": "string"
 					},
 					{
 						"internalType": "string",
-						"name": "accused",
+						"name": "accusedName",
 						"type": "string"
 					},
 					{
 						"internalType": "string",
-						"name": "details",
+						"name": "caseDescription",
 						"type": "string"
 					},
 					{
 						"internalType": "string",
-						"name": "location",
+						"name": "crimeLocation",
 						"type": "string"
 					},
 					{
 						"internalType": "string",
-						"name": "officer",
+						"name": "officerName",
 						"type": "string"
 					},
 					{
 						"internalType": "string",
-						"name": "crimeDate",
+						"name": "crimeDateTime",
 						"type": "string"
 					},
 					{
 						"internalType": "string",
-						"name": "regDate",
+						"name": "registrationDateTime",
 						"type": "string"
 					}
 				],
-				"internalType": "struct EvidenceTracking.Case[]",
-				"name": "",
-				"type": "tuple[]"
-			},
-			{
-				"components": [
-					{
-						"internalType": "string",
-						"name": "evidenceID",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "judgmentText",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "closingDate",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "rejudgment",
-						"type": "string"
-					}
-				],
-				"internalType": "struct EvidenceTracking.Judgment[]",
-				"name": "",
-				"type": "tuple[]"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "string",
-				"name": "evidenceID",
-				"type": "string"
-			}
-		],
-		"name": "trackByEvidenceID",
-		"outputs": [
-			{
-				"components": [
-					{
-						"internalType": "string",
-						"name": "uniqueCaseID",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "evidenceID",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "aadhaar",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "accused",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "details",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "location",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "officer",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "crimeDate",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "regDate",
-						"type": "string"
-					}
-				],
-				"internalType": "struct EvidenceTracking.Case",
+				"internalType": "struct EvidenceTracking.CaseDetail",
 				"name": "",
 				"type": "tuple"
 			},
@@ -648,7 +312,12 @@ const abi = [
 				"components": [
 					{
 						"internalType": "string",
-						"name": "evidenceID",
+						"name": "evidenceId",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "accusedName",
 						"type": "string"
 					},
 					{
@@ -659,11 +328,6 @@ const abi = [
 					{
 						"internalType": "string",
 						"name": "closingDate",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "rejudgment",
 						"type": "string"
 					}
 				],
@@ -676,7 +340,6 @@ const abi = [
 		"type": "function"
 	}
 ];
-
 async function loadWeb3() {
     if(window.ethereum){
         window.web3 = new Web3(window.ethereum);
@@ -717,7 +380,6 @@ function login(role){
     }
 }
 
-// --- LOGOUT FUNCTION ---
 function logout(){
     document.querySelectorAll('#policeLogin,#courtLogin,#policePortal,#courtPortal,#publicPortal')
     .forEach(el=>el.classList.add('hidden'));
@@ -746,12 +408,11 @@ async function registerCase(){
         const eid = tx.events.CaseRegistered.returnValues.evidenceID;
         document.getElementById('uniqueCaseID').value = uid;
         document.getElementById('evidenceID').value = eid;
-        alert("✅ Case Registered On-Chain!");
+        alert("✅ Case Registered (Aadhaar may already exist, linked under same IDs)");
         clearPoliceFields();
     } catch(e){ console.error(e); alert("❌ Transaction Failed"); }
 }
 
-// --- Auto-clear Police fields ---
 function clearPoliceFields(){
     document.querySelectorAll('#aadhaar,#accused,#caseDetails,#location,#officer,#crimeDate,#regDate')
     .forEach(el=>el.value="");
@@ -764,7 +425,7 @@ async function trackCase(role){
     const query = document.getElementById(inputId).value;
 
     const resultBox = document.getElementById(resultId);
-    resultBox.innerHTML = ""; // clear previous results
+    resultBox.innerHTML = "";
 
     try{
         let cases = await contract.methods.trackByEvidenceID(query).call();
@@ -775,7 +436,7 @@ async function trackCase(role){
         if(!Array.isArray(cases2)) cases2=[cases2];
         displayCases(cases2,resultBox);
     }
-    document.getElementById(inputId).value=""; // auto-clear search field
+    document.getElementById(inputId).value="";
 }
 
 function displayCases(cases,resultBox){
@@ -845,7 +506,6 @@ async function submitJudgment(){
     } catch(e){ console.error(e); alert("❌ Transaction Failed"); }
 }
 
-// --- Auto-clear Court fields ---
 function clearCourtFields(){
     document.querySelectorAll('#judgment,#closingDate,#rejudgment').forEach(el=>el.value="");
 }
@@ -854,4 +514,4 @@ window.onload = loadWeb3;
 </script>
 
 </body>
-</html>
+</html>  just answer above solidity matches these code 
