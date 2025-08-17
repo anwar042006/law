@@ -45,11 +45,29 @@ button:hover { opacity:0.9; }
 <!-- Police Portal -->
 <div id="policePortal" class="hidden">
 <h2><i class="fas fa-user-shield"></i> Police Portal</h2>
+
 <label>🆔 Aadhaar ID</label><input type="text" id="aadhaarID" placeholder="Enter Aadhaar">
+
 <label>👤 Accused Name</label><input type="text" id="accusedName" placeholder="Enter Accused">
+
 <label>📄 Case Details</label><textarea id="caseDetails" placeholder="Enter case details"></textarea>
+
 <label>📍 Location</label><input type="text" id="location" placeholder="Enter location">
+
 <label>👮 Officer Name</label><input type="text" id="officerName" placeholder="Enter officer name">
+
+<label>📅 Crime Date & Time</label>
+<input type="datetime-local" id="crimeDateTime">
+
+<label>📝 Case Registration Date & Time</label>
+<input type="text" id="registerDateTime" readonly class="readonly">
+
+<label>🔑 Evidence ID</label>
+<input type="text" id="evidenceID" readonly class="readonly">
+
+<label>📌 Unique Case ID</label>
+<input type="text" id="uniqueCaseID" readonly class="readonly">
+
 <button onclick="registerCase()">Register Case</button>
 
 <div class="track-section">
@@ -697,6 +715,15 @@ const abi = [
 	}
 ];
 
+// --- ID Counters ---
+let evidenceCounter = 0;
+let caseCounter = 0;
+
+// Generate sequential IDs like EV000001, UI000001
+function generateID(prefix, counter){
+    return prefix + String(counter).padStart(6,"0");
+}
+
 function normalizeCase(c){
     return {
         evidenceID: c.evidenceID || c[0] || "",
@@ -720,7 +747,16 @@ async function loadWeb3() {
 
 function showLogin(role){
     document.getElementById('roleSelect').classList.add('hidden');
-    if(role==='police') document.getElementById('policeLogin').classList.remove('hidden');
+    if(role==='police'){
+        document.getElementById('policeLogin').classList.remove('hidden');
+        // auto fill register date
+        document.getElementById('registerDateTime').value = new Date().toLocaleString();
+        // generate IDs
+        evidenceCounter++;
+        caseCounter++;
+        document.getElementById('evidenceID').value = generateID("EV", evidenceCounter);
+        document.getElementById('uniqueCaseID').value = generateID("UI", caseCounter);
+    }
     if(role==='court') document.getElementById('courtLogin').classList.remove('hidden');
 }
 function showPortal(role){
@@ -756,16 +792,21 @@ async function registerCase(){
     const details = document.getElementById('caseDetails').value.trim();
     const location = document.getElementById('location').value.trim();
     const officer = document.getElementById('officerName').value.trim();
+    const crimeDate = document.getElementById('crimeDateTime').value;
+    const registerDate = document.getElementById('registerDateTime').value;
+    const evidenceID = document.getElementById('evidenceID').value;
+    const uniqueCaseID = document.getElementById('uniqueCaseID').value;
 
     if(!aadhaar || !accused){ alert("⚠️ Aadhaar and Accused required"); return; }
 
     try{
-        await contract.methods.registerCase(aadhaar, accused, details, location, officer)
+        await contract.methods.registerCase(aadhaar, accused, details, location, officer, crimeDate, registerDate, evidenceID, uniqueCaseID)
         .send({from: accounts[0]});
         alert("✅ Case Registered!");
     } catch(e){ console.error(e); alert("❌ Transaction Failed: " + e.message); }
 }
 
+// --- POLICE SEARCH ---
 async function searchPolice(){
     const query = document.getElementById('trackPolice').value.trim();
     let results = [];
@@ -872,4 +913,4 @@ window.onload = loadWeb3;
 </script>
 
 </body>
-</html>
+</html> 
