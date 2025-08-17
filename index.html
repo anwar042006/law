@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">   
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <title>Blockchain Evidence Tracking</title>
@@ -37,16 +37,16 @@ button:hover { opacity:0.9; }
 <!-- Police Login -->
 <div id="policeLogin" class="hidden">
   <h2><i class="fas fa-user-shield"></i> Police Login</h2>
-  <input type="text" id="policeUser" placeholder="👤 Username">
-  <input type="password" id="policePass" placeholder="🔑 Password">
+  <input type="text" id="policeUser" placeholder="👤 Username" autocomplete="off">
+  <input type="password" id="policePass" placeholder="🔑 Password" autocomplete="new-password">
   <button onclick="login('police')">Login</button>
 </div>
 
 <!-- Court Login -->
 <div id="courtLogin" class="hidden">
   <h2><i class="fas fa-gavel"></i> Court Login</h2>
-  <input type="text" id="courtUser" placeholder="👤 Username">
-  <input type="password" id="courtPass" placeholder="🔑 Password">
+  <input type="text" id="courtUser" placeholder="👤 Username" autocomplete="off">
+  <input type="password" id="courtPass" placeholder="🔑 Password" autocomplete="new-password">
   <button onclick="login('court')">Login</button>
 </div>
 
@@ -111,7 +111,7 @@ button:hover { opacity:0.9; }
 <script>
 let accounts;
 let contract;
-const contractAddress = "0x4FaAD813cf08286D5BC2250eF2F037D27b5c4260";
+const contractAddress = "0xa9E9585e2B389ec648D9C0aea13868Ff6BDd2dFa";
 const abi = [
 	{
 		"anonymous": false,
@@ -701,18 +701,28 @@ function login(role){
         const password = document.getElementById('policePass').value;
         if(username==='police1' && password==='1234'){
             alert("✅ Police Login Successful");
+            document.getElementById('policeUser').value="";
+            document.getElementById('policePass').value="";
             document.getElementById('policeLogin').classList.add('hidden');
             document.getElementById('policePortal').classList.remove('hidden');
-        } else { alert("❌ Invalid Police credentials!"); }
+        } else { 
+            alert("❌ Invalid Police credentials!");
+            document.getElementById('policePass').value="";
+        }
     }
     if(role==='court'){
         const username = document.getElementById('courtUser').value;
         const password = document.getElementById('courtPass').value;
         if(username==='court1' && password==='1234'){
             alert("✅ Court Login Successful");
+            document.getElementById('courtUser').value="";
+            document.getElementById('courtPass').value="";
             document.getElementById('courtLogin').classList.add('hidden');
             document.getElementById('courtPortal').classList.remove('hidden');
-        } else { alert("❌ Invalid Court credentials!"); }
+        } else { 
+            alert("❌ Invalid Court credentials!");
+            document.getElementById('courtPass').value="";
+        }
     }
 }
 
@@ -759,6 +769,7 @@ function clearPoliceFields(){
     document.getElementById('officer').value="";
     document.getElementById('crimeDate').value="";
     document.getElementById('regDate').value="";
+    document.getElementById('trackPolice').value="";
 }
 
 // --- TRACK CASE ---
@@ -767,6 +778,8 @@ async function trackCase(role){
     const resultId = role==='police'?'policeTrackResult':role==='court'?'courtTrackResult':'publicTrackResult';
     const query = document.getElementById(inputId).value;
 
+    if(!query){ alert("Enter a search term"); return; }
+
     try{
         let res = await contract.methods.trackByEvidenceID(query).call();
         document.getElementById(resultId).innerText = JSON.stringify(res,null,2);
@@ -774,11 +787,13 @@ async function trackCase(role){
         let res2 = await contract.methods.trackByAccused(query).call();
         document.getElementById(resultId).innerText = JSON.stringify(res2,null,2);
     }
+    document.getElementById(inputId).value="";
 }
 
 // --- COURT: Search ---
 async function searchCourt(){
     const query = document.getElementById('trackCourt').value;
+    if(!query){ alert("Enter search term"); return; }
     try{
         let res = await contract.methods.trackByEvidenceID(query).call();
         populateEvidenceDropdown([res]);
@@ -788,6 +803,7 @@ async function searchCourt(){
         populateEvidenceDropdown(res2[0]);
         document.getElementById('courtTrackResult').innerText = JSON.stringify(res2,null,2);
     }
+    document.getElementById('trackCourt').value="";
 }
 
 function populateEvidenceDropdown(caseArray){
@@ -796,7 +812,7 @@ function populateEvidenceDropdown(caseArray){
     caseArray.forEach(c=>{
         let opt = document.createElement('option');
         opt.value = c.evidenceID;
-        opt.text = ${c.evidenceID} | ${c.accused} | ${c.uniqueCaseID};
+        opt.text = `${c.evidenceID} | ${c.accused} | ${c.uniqueCaseID}`;
         select.add(opt);
     });
 }
@@ -823,6 +839,7 @@ function clearCourtFields(){
     document.getElementById('judgment').value="";
     document.getElementById('closingDate').value="";
     document.getElementById('rejudgment').value="";
+    document.getElementById('trackCourt').value="";
 }
 
 window.onload = loadWeb3;
