@@ -118,12 +118,10 @@ pre { background:#111; padding:10px; border-radius:8px; color:#0f0; white-space:
 
 <script>
 let web3;
-let accounts = [0]; // MetaMask will set this
-
+let accounts = [0];
 let contract;
-
-const contractAddress = "0x84a6Cc1dD10b31d93eFa8531C498b32e528358eb"; // Replace with your deployed contract
-const abi =  [
+const contractAddress = "0x84a6Cc1dD10b31d93eFa8531C498b32e528358eb"; // Replace with deployed contract
+const abi = [
 	{
 		"inputs": [
 			{
@@ -412,116 +410,6 @@ const abi =  [
 		"stateMutability": "view",
 		"type": "function"
 	}
-]// omitted for brevity, keep as is
-// The full ABI is retained from your original file
-{
-  "inputs": [
-    {"internalType": "string","name": "aadhaar","type": "string"},
-    {"internalType": "string","name": "accused","type": "string"},
-    {"internalType": "string","name": "caseDetails","type": "string"},
-    {"internalType": "string","name": "location","type": "string"},
-    {"internalType": "string","name": "officer","type": "string"},
-    {"internalType": "string","name": "crimeDateTime","type": "string"},
-    {"internalType": "string","name": "registrationDateTime","type": "string"}
-  ],
-  "name": "registerCase",
-  "outputs": [],
-  "stateMutability": "nonpayable",
-  "type": "function"
-},
-{
-  "inputs": [
-    {"internalType": "string","name": "evidenceID","type": "string"},
-    {"internalType": "string","name": "judgmentText","type": "string"},
-    {"internalType": "string","name": "closingDate","type": "string"}
-  ],
-  "name": "submitJudgment",
-  "outputs": [],
-  "stateMutability": "nonpayable",
-  "type": "function"
-},
-{
-  "inputs": [],
-  "name": "getAllCases",
-  "outputs": [
-    {
-      "components": [
-        {"internalType": "string","name": "uniqueCaseID","type": "string"},
-        {"internalType": "string","name": "evidenceID","type": "string"},
-        {"internalType": "string","name": "aadhaar","type": "string"},
-        {"internalType": "string","name": "accused","type": "string"},
-        {"internalType": "string","name": "caseDetails","type": "string"},
-        {"internalType": "string","name": "location","type": "string"},
-        {"internalType": "string","name": "officer","type": "string"},
-        {"internalType": "string","name": "crimeDateTime","type": "string"},
-        {"internalType": "string","name": "registrationDateTime","type": "string"},
-        {"internalType": "string","name": "judgmentText","type": "string"},
-        {"internalType": "string","name": "closingDate","type": "string"}
-      ],
-      "internalType": "struct EvidenceTracking.Case[]",
-      "name": "",
-      "type": "tuple[]"
-    }
-  ],
-  "stateMutability": "view",
-  "type": "function"
-},
-{
-  "inputs": [
-    {"internalType": "string","name": "evidenceID","type": "string"}
-  ],
-  "name": "getCaseByEvidenceID",
-  "outputs": [
-    {
-      "components": [
-        {"internalType": "string","name": "uniqueCaseID","type": "string"},
-        {"internalType": "string","name": "evidenceID","type": "string"},
-        {"internalType": "string","name": "aadhaar","type": "string"},
-        {"internalType": "string","name": "accused","type": "string"},
-        {"internalType": "string","name": "caseDetails","type": "string"},
-        {"internalType": "string","name": "location","type": "string"},
-        {"internalType": "string","name": "officer","type": "string"},
-        {"internalType": "string","name": "crimeDateTime","type": "string"},
-        {"internalType": "string","name": "registrationDateTime","type": "string"},
-        {"internalType": "string","name": "judgmentText","type": "string"},
-        {"internalType": "string","name": "closingDate","type": "string"}
-      ],
-      "internalType": "struct EvidenceTracking.Case",
-      "name": "",
-      "type": "tuple"
-    }
-  ],
-  "stateMutability": "view",
-  "type": "function"
-},
-{
-  "inputs": [
-    {"internalType": "string","name": "aadhaar","type": "string"}
-  ],
-  "name": "getCasesByAadhaar",
-  "outputs": [
-    {
-      "components": [
-        {"internalType": "string","name": "uniqueCaseID","type": "string"},
-        {"internalType": "string","name": "evidenceID","type": "string"},
-        {"internalType": "string","name": "aadhaar","type": "string"},
-        {"internalType": "string","name": "accused","type": "string"},
-        {"internalType": "string","name": "caseDetails","type": "string"},
-        {"internalType": "string","name": "location","type": "string"},
-        {"internalType": "string","name": "officer","type": "string"},
-        {"internalType": "string","name": "crimeDateTime","type": "string"},
-        {"internalType": "string","name": "registrationDateTime","type": "string"},
-        {"internalType": "string","name": "judgmentText","type": "string"},
-        {"internalType": "string","name": "closingDate","type": "string"}
-      ],
-      "internalType": "struct EvidenceTracking.Case[]",
-      "name": "",
-      "type": "tuple[]"
-    }
-  ],
-  "stateMutability": "view",
-  "type": "function"
-}
 ];
 
 async function initWeb3() {
@@ -540,53 +428,17 @@ async function initWeb3() {
 window.onload = () => { initWeb3(); attachAadhaarListener(); populateAllEvidence(); };
 
 // Login / Logout
-function showLogin(role){
-  document.getElementById('roleSelect').classList.add('hidden');
-  if(role==='police') {
-    document.getElementById('policeLogin').classList.remove('hidden');
-  }
-  if(role==='court') {
-    document.getElementById('courtLogin').classList.remove('hidden');
-  }
-}
-function showPortal(role){
-  document.getElementById('roleSelect').classList.add('hidden');
-  if(role==='public') {
-    document.getElementById('publicPortal').classList.remove('hidden');
-  }
-}
+function showLogin(role){ document.getElementById('roleSelect').classList.add('hidden'); if(role==='police') document.getElementById('policeLogin').classList.remove('hidden'); if(role==='court') document.getElementById('courtLogin').classList.remove('hidden'); }
+function showPortal(role){ document.getElementById('roleSelect').classList.add('hidden'); if(role==='public') document.getElementById('publicPortal').classList.remove('hidden'); }
 function login(role){
-  if(role==='police'){
-    const u=document.getElementById('policeUser').value.trim();
-    const p=document.getElementById('policePass').value.trim();
-    if((u==='police1'&&p==='1234')||u.startsWith('police')){
-      alert('Police Login Successful');
-      document.getElementById('policeLogin').classList.add('hidden');
-      document.getElementById('policePortal').classList.remove('hidden');
-    } else {
-      alert('Invalid Police credentials');
-    }
-  }
-  if(role==='court'){
-    const u=document.getElementById('courtUser').value.trim();
-    const p=document.getElementById('courtPass').value.trim();
-    if((u==='court1'&&p==='1234')||u.startsWith('court')){
-      alert('Court Login Successful');
-      document.getElementById('courtLogin').classList.add('hidden');
-      document.getElementById('courtPortal').classList.remove('hidden');
-    } else {
-      alert('Invalid Court credentials');
-    }
-  }
+  if(role==='police'){ const u=document.getElementById('policeUser').value.trim(); const p=document.getElementById('policePass').value.trim();
+    if((u==='police1'&&p==='1234')||u.startsWith('police')){ alert('Police Login Successful'); document.getElementById('policeLogin').classList.add('hidden'); document.getElementById('policePortal').classList.remove('hidden'); } else alert('Invalid credentials'); }
+  if(role==='court'){ const u=document.getElementById('courtUser').value.trim(); const p=document.getElementById('courtPass').value.trim();
+    if((u==='court1'&&p==='1234')||u.startsWith('court')){ alert('Court Login Successful'); document.getElementById('courtLogin').classList.add('hidden'); document.getElementById('courtPortal').classList.remove('hidden'); populateAllEvidence(); } else alert('Invalid credentials'); }
 }
-function logout(){
-  ['policeLogin','courtLogin','policePortal','courtPortal','publicPortal'].forEach(id=>{
-    document.getElementById(id).classList.add('hidden');
-  });
-  document.getElementById('roleSelect').classList.remove('hidden');
-}
+function logout(){ ['policeLogin','courtLogin','policePortal','courtPortal','publicPortal'].forEach(id=>document.getElementById(id).classList.add('hidden')); document.getElementById('roleSelect').classList.remove('hidden'); alert("Logged out"); }
 
-// === Police Register Case ===
+// === Police Register Case with MetaMask confirmation ===
 async function registerCaseOnChain(){
   if(!accounts[0]){ alert("Connect MetaMask first"); return; }
   const aad=document.getElementById('aadhaar').value.trim();
@@ -596,17 +448,47 @@ async function registerCaseOnChain(){
   const officer=document.getElementById('officer').value.trim();
   const crimeDate=document.getElementById('crimeDate').value || new Date().toISOString();
   const regDate=document.getElementById('regDate').value || new Date().toISOString();
+
   if(!aad||!accused||!details){ alert("Fill Aadhaar, Accused, Case"); return; }
   if(!/^\d{12}$/.test(aad)&&!confirm("Aadhaar not 12 digits. Continue?")) return;
-  try{
-    const tx=await contract.methods.registerCase(aad,accused,details,location,officer,crimeDate,regDate).send({from:accounts[0]});
-    alert("Case registered on-chain! Tx: "+tx.transactionHash);
-    ['aadhaar','accused','caseDetails','location','officer','crimeDate','regDate'].forEach(id=>document.getElementById(id).value='');
-    populateAllEvidence();
-  }catch(err){ console.error(err); alert("Transaction failed"); }
+
+  try {
+    await contract.methods.registerCase(aad, accused, details, location, officer, crimeDate, regDate)
+      .send({ from: accounts[0] })
+      .on('transactionHash', hash => { alert("MetaMask confirmation sent! Tx Hash: " + hash); })
+      .on('receipt', receipt => { 
+        alert("Transaction confirmed! Block: " + receipt.blockNumber); 
+        ['aadhaar','accused','caseDetails','location','officer','crimeDate','regDate'].forEach(id => document.getElementById(id).value='');
+        populateAllEvidence();
+      })
+      .on('error', err => { alert("Transaction rejected or failed: "+err.message); });
+  } catch(err){ console.error(err); alert("Error: "+err.message);}
 }
 
-// === Track Cases ===
+// === Court Submit Judgment with MetaMask confirmation ===
+async function submitJudgmentOnChain(){
+  if(!accounts[0]){ alert("Connect MetaMask first"); return; }
+  const eid=document.getElementById('evidenceSelect').value;
+  const text=document.getElementById('judgment').value.trim();
+  const date=document.getElementById('closingDate').value;
+
+  if(!eid||!text||!date){ alert('Fill all fields'); return; }
+
+  try {
+    await contract.methods.submitJudgment(eid,text,date)
+      .send({ from: accounts[0] })
+      .on('transactionHash', hash => { alert("MetaMask confirmation sent! Tx Hash: " + hash); })
+      .on('receipt', receipt => { 
+        alert("Judgment confirmed on-chain! Block: " + receipt.blockNumber);
+        document.getElementById('judgment').value='';
+        document.getElementById('closingDate').value='';
+        populateAllEvidence();
+      })
+      .on('error', err => { alert("Transaction rejected or failed: "+err.message); });
+  } catch(err){ console.error(err); alert("Error: "+err.message);}
+}
+
+// === Tracking / Court Helpers ===
 async function getAllCases(){ return await contract.methods.getAllCases().call(); }
 async function trackCaseOnChain(q,role){
   if(!q){ alert("Enter a value"); return; }
@@ -615,13 +497,7 @@ async function trackCaseOnChain(q,role){
   const pre=(role==='police')?document.getElementById('policeTrackResult'):(role==='court')?document.getElementById('courtTrackResult'):document.getElementById('publicTrackResult');
   pre.textContent=res.length>0?JSON.stringify(res,null,2):"No cases found.";
 }
-function clearTrackResults(role){
-  if(role==='police') document.getElementById('policeTrackResult').textContent='{ }';
-  else if(role==='court') document.getElementById('courtTrackResult').textContent='{ }';
-  else document.getElementById('publicTrackResult').textContent='{ }';
-}
-
-// === Court Functions ===
+function clearTrackResults(role){ (role==='police')?document.getElementById('policeTrackResult').textContent='{ }':(role==='court')?document.getElementById('courtTrackResult').textContent='{ }':document.getElementById('publicTrackResult').textContent='{ }'; }
 async function populateAllEvidence(){
   const sel=document.getElementById('evidenceSelect'); if(!sel) return;
   const cs=await getAllCases();
@@ -631,21 +507,10 @@ async function populateAllEvidence(){
 async function searchCourtOnChain(){
   const input=document.getElementById('trackCourt').value.trim();
   if(!input){ alert('Enter value'); return; }
-  const cs=await getAllCases();
+  const cs=await getAllCases(); 
   const results=cs.filter(c=> c.evidenceID.toLowerCase()===input.toLowerCase() || c.accused.toLowerCase().includes(input.toLowerCase()) || c.aadhaar===input);
   document.getElementById('courtTrackResult').textContent=results.length>0?JSON.stringify(results,null,2):"No cases found.";
   if(results.length>0) document.getElementById('evidenceSelect').value=results[0].evidenceID;
-}
-async function submitJudgmentOnChain(){
-  const eid=document.getElementById('evidenceSelect').value;
-  const text=document.getElementById('judgment').value.trim();
-  const date=document.getElementById('closingDate').value;
-  if(!eid||!text||!date){ alert('Fill all fields'); return; }
-  try{
-    const tx=await contract.methods.submitJudgment(eid,text,date).send({from:accounts[0]});
-    alert("Judgment submitted! Tx:"+tx.transactionHash);
-    document.getElementById('judgment').value=''; document.getElementById('closingDate').value=''; populateAllEvidence();
-  }catch(err){ console.error(err); alert("Transaction failed"); }
 }
 
 // === Aadhaar Auto-fill ===
