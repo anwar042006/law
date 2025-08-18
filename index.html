@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Blockchain Evidence Tracking — Mandatory On-Chain</title>
+<title>Blockchain Evidence Tracking — Updated</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <script src="https://cdn.jsdelivr.net/npm/web3@1.8.2/dist/web3.min.js"></script>
 <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
@@ -89,7 +89,7 @@
     </div>
 
     <div class="flex">
-      <button onclick="registerCase()">Register Case (on-chain → local)</button>
+      <button onclick="registerCase()">Register Case (on-chain required)</button>
       <button onclick="downloadCases()" class="pill small">Export JSON</button>
       <button onclick="importCases()" class="pill small">Import JSON</button>
     </div>
@@ -105,7 +105,7 @@
       <pre id="policeTrackResult">{ }</pre>
     </div>
 
-    <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+    <button class="logout-btn" onclick="logout()">Logout</button>
   </div>
 
   <!-- Court Portal -->
@@ -126,7 +126,7 @@
     <label>📅 Closing Date</label><input type="date" id="closingDate">
     <label>🔄 Rejudgment (if any)</label><textarea id="rejudgment"></textarea>
     <div class="flex">
-      <button onclick="submitJudgment()">Submit Judgment (on-chain → local)</button>
+      <button onclick="submitJudgment()">Submit Judgment (on-chain required)</button>
       <button onclick="populateAllEvidence()" class="pill small">Load All Evidence</button>
     </div>
 
@@ -135,7 +135,7 @@
       <pre id="courtTrackResult">{ }</pre>
     </div>
 
-    <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+    <button class="logout-btn" onclick="logout()">Logout</button>
   </div>
 
   <!-- Public Portal -->
@@ -151,21 +151,22 @@
       </div>
       <pre id="publicTrackResult">{ }</pre>
     </div>
-    <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+    <button class="logout-btn" onclick="logout()">Logout</button>
   </div>
 </div>
 
 <script>
 /*
-  Updated frontend behavior:
-  - Demo / remember UI removed
-  - Login credentials are NOT stored
-  - registerCase() and submitJudgment() require a successful MetaMask on-chain tx first.
-  - Replace contractAddress & abi with your deployed contract
+ Single-file Evidence Tracking frontend
+ - localStorage fallback (ets_cases, ets_meta)
+ - prevents using same Aadhaar with different accused (auto-fill & lock)
+ - exact accused search (case-insensitive)
+ - NO demo fill, NO credential-saving
+ - on-chain tx REQUIRED for registerCase() and submitJudgment()
+ NOTE: set contractAddress and abi to your deployed contract and ABI
 */
 
-// ====== Config: set your contract address + ABI here ======
-const contractAddress = "0x61A0f25007B8a13fF1aD497EADd46895cFDA0048"; // <= set this
+const contractAddress = "0x61A0f25007B8a13fF1aD497EADd46895cFDA0048"; // <-- replace
 const abi = [
 	{
 		"inputs": [
@@ -464,40 +465,45 @@ const abi = [
 		"stateMutability": "view",
 		"type": "function"
 	}
-];
-// =========================================================
+]; // <-- set your ABI here
 
-let web3, accounts = [], contract = null;
+let web3; let accounts = []; let contract = null;
 
-// Connect to MetaMask & contract if configured
+// Auto-connect to MetaMask (attempt)
 async function loadWeb3(){
   try {
     if(window.ethereum){
       web3 = new Web3(window.ethereum);
-      await window.ethereum.request({ method: 'eth_requestAccounts' });
-      accounts = await web3.eth.getAccounts();
+      // request accounts automatically
+      accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
       if(abi && abi.length>0 && contractAddress && contractAddress !== "YOUR_CONTRACT_ADDRESS"){
         contract = new web3.eth.Contract(abi, contractAddress);
       } else {
-        contract = null; // explicit
+        contract = null;
       }
+
+      // listen for account/network changes - update accounts
+      window.ethereum.on('accountsChanged', (accs) => {
+        accounts = accs;
+        console.log('accountsChanged', accounts);
+      });
+      window.ethereum.on('chainChanged', (chainId) => {
+        console.log('chainChanged', chainId);
+      });
     } else {
       contract = null;
+      console.warn('MetaMask not detected');
     }
   } catch(e){
-    console.error("loadWeb3 error:", e);
+    console.warn('web3 load error', e);
     contract = null;
   }
 }
 
-window.onload = async () => {
-  await loadWeb3();
-  restoreSession();
-  attachAadhaarListener();
-  populateAllEvidence();
-};
+// init
+window.onload = async () => { await loadWeb3(); restoreSession(); attachAadhaarListener(); populateAllEvidence(); };
 
-// ---------- UI / Session (no credential storage) ----------
+// UI / session (no credential persistence)
 function showLogin(role){
   document.getElementById('roleSelect').classList.add('hidden');
   if(role==='police') document.getElementById('policeLogin').classList.remove('hidden');
@@ -506,69 +512,66 @@ function showLogin(role){
 function showPortal(role){
   document.getElementById('roleSelect').classList.add('hidden');
   if(role==='public') document.getElementById('publicPortal').classList.remove('hidden');
-  // lightweight session marker (not credentials)
-  localStorage.setItem('ets_session', JSON.stringify({ role:'public' }));
+  localStorage.setItem('ets_session', JSON.stringify({role:'public'}));
 }
 function login(role){
   const user = role==='police' ? document.getElementById('policeUser').value.trim() : document.getElementById('courtUser').value.trim();
   const pass = role==='police' ? document.getElementById('policePass').value.trim() : document.getElementById('courtPass').value.trim();
   if(!user || !pass){ alert('Fill username and password'); return; }
 
-  // Simple demo auth (replace with real auth in production)
+  // demo auth (replace with production auth)
   if(role==='police' && ((user==='police1' && pass==='1234') || user.startsWith('police'))){
-    alert('✅ Police Login Successful');
     document.getElementById('policeLogin').classList.add('hidden');
     document.getElementById('policePortal').classList.remove('hidden');
-    localStorage.setItem('ets_session', JSON.stringify({ role:'police' }));
+    localStorage.setItem('ets_session', JSON.stringify({role:'police'}));
     populateAllEvidence();
+    alert('Police login successful');
   } else if(role==='court' && ((user==='court1' && pass==='1234') || user.startsWith('court'))){
-    alert('✅ Court Login Successful');
     document.getElementById('courtLogin').classList.add('hidden');
     document.getElementById('courtPortal').classList.remove('hidden');
-    localStorage.setItem('ets_session', JSON.stringify({ role:'court' }));
+    localStorage.setItem('ets_session', JSON.stringify({role:'court'}));
     populateAllEvidence();
+    alert('Court login successful');
   } else {
-    alert('❌ Invalid credentials');
+    alert('Invalid credentials');
   }
 }
 
 function restoreSession(){
-  const s = localStorage.getItem('ets_session');
-  if(!s) return;
+  const s = localStorage.getItem('ets_session'); if(!s) return;
   const session = JSON.parse(s);
-  if(session.role === 'police') { document.getElementById('policePortal').classList.remove('hidden'); document.getElementById('roleSelect').classList.add('hidden'); }
-  if(session.role === 'court')  { document.getElementById('courtPortal').classList.remove('hidden'); document.getElementById('roleSelect').classList.add('hidden'); }
-  if(session.role === 'public') { document.getElementById('publicPortal').classList.remove('hidden'); document.getElementById('roleSelect').classList.add('hidden'); }
+  if(session.role === 'police'){ document.getElementById('roleSelect').classList.add('hidden'); document.getElementById('policePortal').classList.remove('hidden'); }
+  if(session.role === 'court'){ document.getElementById('roleSelect').classList.add('hidden'); document.getElementById('courtPortal').classList.remove('hidden'); }
+  if(session.role === 'public'){ document.getElementById('roleSelect').classList.add('hidden'); document.getElementById('publicPortal').classList.remove('hidden'); }
 }
 
 function logout(){
-  ['policeLogin','courtLogin','policePortal','courtPortal','publicPortal'].forEach(id => document.getElementById(id).classList.add('hidden'));
+  ['policeLogin','courtLogin','policePortal','courtPortal','publicPortal'].forEach(id=>document.getElementById(id).classList.add('hidden'));
   document.getElementById('roleSelect').classList.remove('hidden');
   localStorage.removeItem('ets_session');
   alert('Logged out');
 }
 
-// ---------- Local data helpers ----------
+// localStorage helpers
 function ensureData(){
   if(!localStorage.getItem('ets_cases')) localStorage.setItem('ets_cases', JSON.stringify([]));
-  if(!localStorage.getItem('ets_meta')) localStorage.setItem('ets_meta', JSON.stringify({ nextUI: 1, nextEV: 1 }));
+  if(!localStorage.getItem('ets_meta')) localStorage.setItem('ets_meta', JSON.stringify({nextUI:1,nextEV:1}));
 }
 ensureData();
-
-function getCases(){ ensureData(); return JSON.parse(localStorage.getItem('ets_cases')); }
+function getCases(){ ensureData(); return JSON.parse(localStorage.getItem('ets_cases')||'[]'); }
 function setCases(arr){ localStorage.setItem('ets_cases', JSON.stringify(arr)); }
-function getMeta(){ ensureData(); return JSON.parse(localStorage.getItem('ets_meta')); }
+function getMeta(){ ensureData(); return JSON.parse(localStorage.getItem('ets_meta')||'{"nextUI":1,"nextEV":1}'); }
 function setMeta(m){ localStorage.setItem('ets_meta', JSON.stringify(m)); }
 function formatUI(n){ return 'UI' + String(n).padStart(5,'0'); }
 function formatEV(n){ return 'EV' + String(n).padStart(5,'0'); }
-function nextIDs(){ const m = getMeta(); const ui = formatUI(m.nextUI); const ev = formatEV(m.nextEV); m.nextUI++; m.nextEV++; setMeta(m); return { ui, ev }; }
+function nextIDs(){ const m=getMeta(); const ui=formatUI(m.nextUI); const ev=formatEV(m.nextEV); m.nextUI++; m.nextEV++; setMeta(m); return {ui,ev}; }
 
-// ---------- Aadhaar: lock/auto-fill behavior ----------
+// Aadhaar behavior: lock/auto-fill
 function attachAadhaarListener(){
   const aad = document.getElementById('aadhaar');
   if(!aad) return;
   aad.addEventListener('blur', checkAadhaarAndFill);
-  aad.addEventListener('input', function(){ if(this.value.trim()===''){ document.getElementById('accused').readOnly = false; document.getElementById('accused').value = ''; }});
+  aad.addEventListener('input', function(){ if(this.value.trim()===''){ document.getElementById('accused').readOnly=false; document.getElementById('accused').value=''; }});
 }
 function checkAadhaarAndFill(){
   const aadhaar = document.getElementById('aadhaar').value.trim();
@@ -578,7 +581,7 @@ function checkAadhaarAndFill(){
   if(found){
     document.getElementById('accused').value = found.accused;
     document.getElementById('accused').readOnly = true;
-    console.log('Aadhaar exists: accused auto-filled and locked.');
+    console.log('Aadhaar exists — accused auto-filled and locked.');
   } else {
     document.getElementById('accused').readOnly = false;
   }
@@ -586,7 +589,6 @@ function checkAadhaarAndFill(){
 
 // ---------- Registration: MUST perform on-chain tx first ----------
 async function registerCase(){
-  // collect UI fields
   const aadhaar = document.getElementById('aadhaar').value.trim();
   const accused = document.getElementById('accused').value.trim();
   const details = document.getElementById('caseDetails').value.trim();
@@ -598,43 +600,42 @@ async function registerCase(){
   if(!aadhaar || !accused || !details){ alert('Please fill Aadhaar, Accused, and Case Details'); return; }
   if(!/^\d{12}$/.test(aadhaar)){ if(!confirm('Aadhaar does not look 12 digits. Continue?')) return; }
 
-  // local validation: aadhaar must not be registered to a different accused
-  const cs = getCases();
-  const existing = cs.filter(c => c.aadhaar === aadhaar);
-  if(existing.length > 0 && existing[0].accused.toLowerCase() !== accused.toLowerCase()){
+  // Check local aadhaar consistency (prevent different accused for same aadhaar)
+  const csLocal = getCases();
+  const existing = csLocal.filter(c => c.aadhaar === aadhaar);
+  if(existing.length>0 && existing[0].accused.toLowerCase() !== accused.toLowerCase()){
     alert('This Aadhaar is already registered to a different accused. Registration blocked.');
     return;
   }
 
-  // require MetaMask & contract configured
+  // Ensure MetaMask and contract configured
   if(!contract || !accounts || !accounts[0]){
-    alert('MetaMask and a configured contract are required. Set contract address + ABI and connect MetaMask.');
+    alert('MetaMask connection and a configured contract are required for on-chain registration. Set contractAddress + ABI and connect MetaMask.');
     return;
   }
 
-  // call on-chain registerCase(...) - params must match your contract
+  // Send on-chain transaction (call your contract's registerCase signature)
   let receipt;
   try {
-    // Adapt this call if your Solidity signature differs.
-    // The example below matches:
-    // registerCase(string aadhaar, string accused, string details, string location, string officer, string crimeDate, string regDate)
-    receipt = await contract.methods.registerCase(
-      aadhaar, accused, details, location, officer, crimeDate, regDate
-    ).send({ from: accounts[0] });
-  } catch (err) {
+    // adapt call parameters/order to match your Solidity contract signature exactly
+    receipt = await contract.methods.registerCase(aadhaar, accused, details, location, officer, crimeDate, regDate)
+      .send({ from: accounts[0] });
+  } catch (err){
     console.error('On-chain registration failed:', err);
     alert('On-chain transaction failed or was rejected. Registration aborted.');
     return;
   }
 
-  // On success: try to read uniqueCaseID + evidenceID from emitted event
+  // Try to extract uniqueCaseID and evidenceID from emitted event (if your contract emits one)
   let uid = '';
   let eid = '';
   try {
-    // Event name might be CaseRegistered; check presence
     if(receipt && receipt.events){
-      // try multiple possible event shapes
-      const ev = receipt.events.CaseRegistered || receipt.events.CaseRegisteredEvent || receipt.events[Object.keys(receipt.events)[0]];
+      // common event naming possibilities — adjust according to your contract
+      const ev =
+        receipt.events.CaseRegistered ||
+        receipt.events.CaseRegisteredEvent ||
+        receipt.events[Object.keys(receipt.events)[0]];
       if(ev && ev.returnValues){
         uid = ev.returnValues.uniqueCaseID || ev.returnValues._uniqueCaseID || ev.returnValues.uid || '';
         eid = ev.returnValues.evidenceID || ev.returnValues._evidenceID || ev.returnValues.eid || '';
@@ -642,7 +643,7 @@ async function registerCase(){
     }
   } catch(e){ console.warn('Could not parse event from receipt', e); }
 
-  // If events did not return IDs, fall back to locally generated IDs (still OK because on-chain is primary proof)
+  // fallback to local id generation if contract doesn't return IDs
   if(!uid || !eid){
     const ids = nextIDs();
     uid = ids.ui; eid = ids.ev;
@@ -654,14 +655,13 @@ async function registerCase(){
     crimeDate, regDate, uniqueCaseID: uid, evidenceID: eid,
     createdAt: new Date().toISOString(), judgments: []
   };
-  cs.push(caseObj);
-  setCases(cs);
+  csLocal.push(caseObj);
+  setCases(csLocal);
 
-  // update UI
   document.getElementById('uniqueCaseID').value = uid;
   document.getElementById('evidenceID').value = eid;
-  alert('✅ Registration successful (on-chain tx confirmed and saved locally).');
 
+  alert('✅ Registration successful (on-chain confirmed and saved locally).');
   clearPoliceFields();
   populateAllEvidence();
 }
@@ -677,25 +677,25 @@ async function submitJudgment(){
   if(!judgment){ alert('Enter judgment text'); return; }
 
   if(!contract || !accounts || !accounts[0]){
-    alert('MetaMask and a configured contract are required. Set contract address + ABI and connect MetaMask.');
+    alert('MetaMask connection and a configured contract are required for on-chain judgment submission.');
     return;
   }
 
-  // call on-chain submitJudgment(evidenceID, judgmentText, closingDate, rejudgment)
+  // send on-chain transaction (adjust params to match your contract's signature)
   try {
-    await contract.methods.submitJudgment(eid, judgment, closingDate, rejudgment)
+    await contract.methods.submitJudgment(eid, judgment, closingDate)
       .send({ from: accounts[0] });
-  } catch (err){
+  } catch(err){
     console.error('On-chain judgment tx failed:', err);
     alert('On-chain transaction failed or was rejected. Judgment not saved.');
     return;
   }
 
-  // Persist locally after on-chain success
+  // persist locally after on-chain success
   const cs = getCases();
   const idx = cs.findIndex(c => c.evidenceID === eid);
   if(idx === -1){
-    alert('Warning: evidence not found locally; but on-chain tx succeeded.');
+    alert('Warning: evidence not found locally, but on-chain tx succeeded. Refreshing local list.');
     populateAllEvidence();
     return;
   }
@@ -706,6 +706,8 @@ async function submitJudgment(){
     rejudgment,
     submittedAt: new Date().toISOString()
   });
+  // mark judgmentGiven if desired
+  cs[idx].judgmentGiven = true;
   setCases(cs);
 
   alert('✅ Judgment submitted on-chain and saved locally.');
@@ -720,7 +722,7 @@ async function trackCase(role){
   const inputId = role==='police'?'trackPolice':role==='court'?'trackCourt':'trackPublic';
   const resultId = role==='police'?'policeTrackResult':role==='court'?'courtTrackResult':'publicTrackResult';
   const q = document.getElementById(inputId).value.trim();
-  if(!q){ document.getElementById(resultId).innerText = JSON.stringify({ error: 'No query provided' }, null, 2); return; }
+  if(!q){ document.getElementById(resultId).innerText = JSON.stringify({error:'No query provided'},null,2); return; }
 
   const cs = getCases();
   const qLow = q.toLowerCase();
@@ -742,11 +744,11 @@ async function trackCase(role){
     found = cs.filter(c => c.aadhaar.includes(q));
   }
 
-  if(found.length === 0) document.getElementById(resultId).innerText = JSON.stringify({ message: 'No results' }, null, 2);
-  else document.getElementById(resultId).innerText = JSON.stringify(found, null, 2);
+  if(found.length === 0) document.getElementById(resultId).innerText = JSON.stringify({message:'No results'},null,2);
+  else document.getElementById(resultId).innerText = JSON.stringify(found,null,2);
 }
 
-// ---------- Court search populates dropdown with exact matches ----------
+// Court search
 async function searchCourt(){
   const q = document.getElementById('trackCourt').value.trim();
   if(!q){ alert('Enter a query'); return; }
@@ -755,64 +757,37 @@ async function searchCourt(){
   const cs = getCases();
   const qLow = q.toLowerCase();
   const matches = cs.filter(c => c.evidenceID.toLowerCase() === qLow || c.accused.toLowerCase() === qLow || c.aadhaar === q);
-  populateEvidenceDropdown(matches.length ? matches : []);
+  populateEvidenceDropdown(matches.length?matches:[]);
 }
 
 function populateEvidenceDropdown(caseArray){
   const select = document.getElementById('evidenceSelect');
   select.innerHTML = '';
-  if(!caseArray || caseArray.length === 0){
+  if(!caseArray || caseArray.length===0){
     const cs = getCases();
-    if(cs.length === 0){
-      const opt = document.createElement('option'); opt.value = ''; opt.text = '-- no evidence available --'; select.add(opt); return;
+    if(cs.length===0){
+      const opt = document.createElement('option'); opt.value=''; opt.text='-- no evidence available --'; select.add(opt);
+      return;
     }
     caseArray = cs;
   }
-  caseArray.forEach(c => {
+  caseArray.forEach(c=>{
     const opt = document.createElement('option');
     opt.value = c.evidenceID;
     opt.text = `${c.evidenceID} | ${c.accused} | ${c.uniqueCaseID}`;
     select.add(opt);
   });
-  // show first details
   const selected = caseArray[0];
-  if(selected) document.getElementById('courtTrackResult').innerText = JSON.stringify(selected, null, 2);
+  if(selected) document.getElementById('courtTrackResult').innerText = JSON.stringify(selected,null,2);
 }
 
-// ---------- Import / Export / Helpers ----------
-function populateAllEvidence(){
-  const cs = getCases();
-  populateEvidenceDropdown(cs);
-}
-function downloadCases(){
-  const data = JSON.stringify(getCases(), null, 2);
-  const blob = new Blob([data], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href = url; a.download = 'ets_cases.json'; a.click(); URL.revokeObjectURL(url);
-}
-function importCases(){
-  const txt = prompt('Paste JSON array of cases to import (this will append):');
-  if(!txt) return;
-  try {
-    const arr = JSON.parse(txt);
-    if(!Array.isArray(arr)){ alert('Invalid JSON: must be an array'); return; }
-    const cs = getCases(); arr.forEach(c => cs.push(c)); setCases(cs);
-    alert('Imported entries appended.');
-    populateAllEvidence();
-  } catch(e){ alert('JSON parse error: ' + e.message); }
-}
-function clearTrackResults(role){
-  if(role==='police') document.getElementById('policeTrackResult').innerText = '{ }';
-  if(role==='court') document.getElementById('courtTrackResult').innerText = '{ }';
-  if(role==='public') document.getElementById('publicTrackResult').innerText = '{ }';
-}
-function clearPoliceFields(){
-  ['aadhaar','accused','caseDetails','location','officer','crimeDate','regDate'].forEach(id => {
-    const el = document.getElementById(id);
-    if(el) el.value = '';
-  });
-  document.getElementById('accused').readOnly = false;
-}
+// import/export & helpers
+function populateAllEvidence(){ const cs = getCases(); populateEvidenceDropdown(cs); }
+function downloadCases(){ const data = JSON.stringify(getCases(), null, 2); const blob = new Blob([data], {type:'application/json'}); const url  = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'ets_cases.json'; a.click(); URL.revokeObjectURL(url); }
+function importCases(){ const txt = prompt('Paste JSON array of cases to import (this will append):'); if(!txt) return; try { const arr = JSON.parse(txt); if(!Array.isArray(arr)){ alert('Invalid JSON: must be an array'); return; } const cs = getCases(); arr.forEach(c => cs.push(c)); setCases(cs); alert('Imported entries appended.'); populateAllEvidence(); } catch(e){ alert('JSON parse error: ' + e.message); } }
+function clearTrackResults(role){ if(role==='police') document.getElementById('policeTrackResult').innerText = '{ }'; if(role==='court') document.getElementById('courtTrackResult').innerText = '{ }'; if(role==='public') document.getElementById('publicTrackResult').innerText = '{ }'; }
+function clearPoliceFields(){ ['aadhaar','accused','caseDetails','location','officer','crimeDate','regDate'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; }); document.getElementById('accused').readOnly = false; }
+
 </script>
 
 </body>
