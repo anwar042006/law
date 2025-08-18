@@ -118,11 +118,11 @@ pre { background:#111; padding:10px; border-radius:8px; color:#0f0; white-space:
 
 <script>
 let web3;
-let accounts = [];
+let accounts = [0xBcDe6CA21aa1841744013C4C54ce8cD56A65663f];
 let contract;
 
 const contractAddress = "0x84a6Cc1dD10b31d93eFa8531C498b32e528358eb"; // Replace with your deployed contract
-const abi = [ /* [
+const abi =  [
 	{
 		"inputs": [
 			{
@@ -411,7 +411,7 @@ const abi = [ /* [
 		"stateMutability": "view",
 		"type": "function"
 	}
-] */ ];
+] ;
 
 async function initWeb3() {
   if(window.ethereum){
