@@ -119,39 +119,74 @@ pre { background:#111; padding:10px; border-radius:8px; color:#0f0; white-space:
 let web3;
 let accounts = [0];
 let contract;
-// TODO: Replace with your deployed contract info
-const contractAddress = "0x96877bC1a7C191BEC759D389f1efa86c58F58097";
+
+// === PLACEHOLDERS ===
+const contractAddress = "0xB5C92990Ff5a44130a8f3CB34617B90E8316D8a9";
 const abi = [
 	{
 		"inputs": [
 			{
 				"internalType": "string",
-				"name": "",
+				"name": "_aadhaar",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "_accused",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "_caseDetails",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "_location",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "_officer",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "_crimeDate",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "_registrationDate",
 				"type": "string"
 			}
 		],
-		"name": "aadhaarCaseCount",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
+		"name": "registerCase",
+		"outputs": [],
+		"stateMutability": "nonpayable",
 		"type": "function"
 	},
 	{
-		"inputs": [],
-		"name": "caseCount",
-		"outputs": [
+		"inputs": [
 			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
+				"internalType": "string",
+				"name": "_evidenceID",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "_judgment",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "_closingDate",
+				"type": "string"
 			}
 		],
-		"stateMutability": "view",
+		"name": "submitJudgment",
+		"outputs": [],
+		"stateMutability": "nonpayable",
 		"type": "function"
 	},
 	{
@@ -206,7 +241,7 @@ const abi = [
 			},
 			{
 				"internalType": "string",
-				"name": "regDate",
+				"name": "registrationDate",
 				"type": "string"
 			},
 			{
@@ -224,8 +259,14 @@ const abi = [
 		"type": "function"
 	},
 	{
-		"inputs": [],
-		"name": "evidenceCount",
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "_aadhaar",
+				"type": "string"
+			}
+		],
+		"name": "getAadhaarCaseCount",
 		"outputs": [
 			{
 				"internalType": "uint256",
@@ -284,7 +325,7 @@ const abi = [
 					},
 					{
 						"internalType": "string",
-						"name": "regDate",
+						"name": "registrationDate",
 						"type": "string"
 					},
 					{
@@ -310,11 +351,11 @@ const abi = [
 		"inputs": [
 			{
 				"internalType": "string",
-				"name": "_aadhaar",
+				"name": "_evidenceID",
 				"type": "string"
 			}
 		],
-		"name": "getCasesByAadhaar",
+		"name": "getCaseByEvidence",
 		"outputs": [
 			{
 				"components": [
@@ -360,7 +401,83 @@ const abi = [
 					},
 					{
 						"internalType": "string",
-						"name": "regDate",
+						"name": "registrationDate",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "judgment",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "closingDate",
+						"type": "string"
+					}
+				],
+				"internalType": "struct EvidenceTracking.Case",
+				"name": "",
+				"type": "tuple"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "_accused",
+				"type": "string"
+			}
+		],
+		"name": "getCasesByAccused",
+		"outputs": [
+			{
+				"components": [
+					{
+						"internalType": "string",
+						"name": "uniqueID",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "evidenceID",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "aadhaar",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "accused",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "caseDetails",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "location",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "officer",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "crimeDate",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "registrationDate",
 						"type": "string"
 					},
 					{
@@ -381,72 +498,6 @@ const abi = [
 		],
 		"stateMutability": "view",
 		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "string",
-				"name": "_aadhaar",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "_accused",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "_caseDetails",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "_location",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "_officer",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "_crimeDate",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "_regDate",
-				"type": "string"
-			}
-		],
-		"name": "registerCase",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "string",
-				"name": "_evidenceID",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "_judgment",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "_closingDate",
-				"type": "string"
-			}
-		],
-		"name": "submitJudgment",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
 	}
 ];
 
@@ -458,8 +509,9 @@ async function connectMetaMask() {
       accounts = await ethereum.request({ method: 'eth_requestAccounts' });
       contract = new web3.eth.Contract(abi, contractAddress);
       console.log("Connected:", accounts[0]);
-    } catch(err){ alert("MetaMask access denied"); console.error(err);}
-  } else alert("Install MetaMask!");
+      return true;
+    } catch(err){ alert("MetaMask access denied"); console.error(err); return false; }
+  } else { alert("Install MetaMask!"); return false; }
 }
 
 // --- Login ---
@@ -500,8 +552,7 @@ function logout(){
 
 // --- Police Register Case ---
 async function registerCaseOnChain(){
-  await connectMetaMask(); 
-  if(!accounts[0]){ alert("MetaMask not connected"); return; }
+  if(!await connectMetaMask()){ return; }
 
   const aad=document.getElementById('aadhaar').value.trim();
   const accused=document.getElementById('accused').value.trim();
@@ -511,7 +562,7 @@ async function registerCaseOnChain(){
   const crimeDate=document.getElementById('crimeDate').value || new Date().toISOString();
   const regDate=document.getElementById('regDate').value || new Date().toISOString();
 
-  if(!aad||!accused||!details){ alert("Fill Aadhaar, Accused, Case"); return; }
+  if(!aad||!accused||!details){ alert("Fill Aadhaar, Accused, Case Details"); return; }
 
   try {
     await contract.methods.registerCase(aad, accused, details, location, officer, crimeDate, regDate)
@@ -525,8 +576,7 @@ async function registerCaseOnChain(){
 
 // --- Court Submit Judgment ---
 async function submitJudgmentOnChain(){
-  await connectMetaMask();
-  if(!accounts[0]){ alert("MetaMask not connected"); return; }
+  if(!await connectMetaMask()){ return; }
 
   const eid=document.getElementById('evidenceSelect').value;
   const text=document.getElementById('judgment').value.trim();
@@ -582,4 +632,3 @@ window.onload = () => { attachAadhaarListener(); };
 </script>
 </body>
 </html>
-
