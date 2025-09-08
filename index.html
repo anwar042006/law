@@ -502,7 +502,7 @@ async function populateAllEvidence(){
   const sel=document.getElementById('evidenceSelect'); if(!sel) return;
   const cs=await getAllCases();
   sel.innerHTML='<option value="">Select Evidence</option>';
-  cs.forEach(c=> sel.innerHTML+=`<option value="${c.evidenceID}">${c.evidenceID} - ${c.accused}</option>`);
+  cs.forEach(c=> sel.innerHTML+=<option value="${c.evidenceID}">${c.evidenceID} - ${c.accused}</option>);
 }
 async function searchCourtOnChain(){
   const input=document.getElementById('trackCourt').value.trim();
