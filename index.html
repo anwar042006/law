@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Blockchain Evidence Tracking — On-Chain</title>
+<title>Blockchain Evidence Tracking</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <script src="https://cdn.jsdelivr.net/npm/web3@1.8.2/dist/web3.min.js"></script>
 <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
@@ -57,18 +57,18 @@ pre { background:#111; padding:10px; border-radius:8px; color:#0f0; white-space:
 <!-- Police Portal -->
 <div id="policePortal" class="hidden">
 <h2><i class="fas fa-user-shield"></i> Police Portal</h2>
-<label>🆔 Aadhaar ID (12 digits)</label><input type="text" id="aadhaar" pattern="\d{12}" placeholder="123412341234">
-<label>👤 Accused Name</label><input type="text" id="accused">
-<label>📄 Case Details</label><textarea id="caseDetails"></textarea>
-<label>📍 Location</label><input type="text" id="location">
-<label>👮 Officer Name</label><input type="text" id="officer">
+<label>Aadhaar ID (12 digits)</label><input type="text" id="aadhaar" placeholder="123412341234">
+<label>Accused Name</label><input type="text" id="accused">
+<label>Case Details</label><textarea id="caseDetails"></textarea>
+<label>Location</label><input type="text" id="location">
+<label>Officer Name</label><input type="text" id="officer">
 <div class="flex">
-<div style="flex:1"><label>🕒 Crime Date/Time</label><input type="datetime-local" id="crimeDate"></div>
-<div style="flex:1"><label>📝 Registration Date/Time</label><input type="datetime-local" id="regDate"></div>
+<div style="flex:1"><label>Crime Date/Time</label><input type="datetime-local" id="crimeDate"></div>
+<div style="flex:1"><label>Registration Date/Time</label><input type="datetime-local" id="regDate"></div>
 </div>
 <button id="registerBtn" onclick="registerCaseOnChain()">Register Case</button>
 <div class="track-section">
-<h3>🔍 Track Case</h3>
+<h3>Track Case</h3>
 <p class="small">Search by Evidence ID, Accused Name, or Aadhaar</p>
 <div class="flex">
 <input type="text" id="trackPolice" placeholder="Enter Evidence / Accused / Aadhaar">
@@ -83,25 +83,26 @@ pre { background:#111; padding:10px; border-radius:8px; color:#0f0; white-space:
 <!-- Court Portal -->
 <div id="courtPortal" class="hidden">
 <h2><i class="fas fa-gavel"></i> Court Portal</h2>
-<label>🔍 Search by Evidence / Accused / Aadhaar</label>
+<label>Search by Evidence / Accused / Aadhaar</label>
 <div class="flex">
 <input type="text" id="trackCourt" placeholder="Enter Evidence / Accused / Aadhaar">
 <button onclick="searchCourtOnChain()">Search</button>
 <button onclick="clearTrackResults('court')" class="pill small">Clear</button>
 </div>
-<label>🔖 Select Evidence</label><select id="evidenceSelect"></select>
-<label>📝 Judgment Text</label><textarea id="judgment"></textarea>
-<label>📅 Closing Date</label><input type="date" id="closingDate">
-<div class="flex"><button onclick="submitJudgmentOnChain()">Submit Judgment</button><button onclick="populateAllEvidence()" class="pill small">Load Evidence</button></div>
-<div class="track-section"><h3>🔍 Track Case</h3><pre id="courtTrackResult">{ }</pre></div>
+<label>Select Evidence</label><select id="evidenceSelect"></select>
+<label>Judgment Text</label><textarea id="judgment"></textarea>
+<label>Closing Date</label><input type="date" id="closingDate">
+<div class="flex"><button onclick="submitJudgmentOnChain()">Submit Judgment</button>
+<button onclick="populateAllEvidence()" class="pill small">Load Evidence</button></div>
+<div class="track-section"><h3>Track Case</h3><pre id="courtTrackResult">{ }</pre></div>
 <button class="logout-btn" onclick="logout()">Logout</button>
 </div>
 
 <!-- Public Portal -->
 <div id="publicPortal" class="hidden">
-<h2><i class="fas fa-globe"></i> Public Portal</h2>
+<h2>Public Portal</h2>
 <div class="track-section">
-<h3>🔍 Track Case</h3>
+<h3>Track Case</h3>
 <p class="small">Search by Evidence ID, Accused Name, or Aadhaar</p>
 <div class="flex">
 <input type="text" id="trackPublic" placeholder="Enter Evidence / Accused / Aadhaar">
@@ -114,10 +115,9 @@ pre { background:#111; padding:10px; border-radius:8px; color:#0f0; white-space:
 </div>
 
 <script>
+// Web3 Setup
 let web3, accounts=[0], contract;
-
-// Replace with your deployed contract address and ABI
-const contractAddress = "0x35A3EED82b5806b1Da901ae8F9180351F6fEa702"; // test
+const contractAddress = "0x7404efDfA3962B96839dA0841820ceb81154DD48"; // replace
 const abi = [
 	{
 		"inputs": [
@@ -183,6 +183,88 @@ const abi = [
 		"name": "submitJudgment",
 		"outputs": [],
 		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "caseCount",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "cases",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "uniqueID",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "evidenceID",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "aadhaar",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "accused",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "details",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "location",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "officer",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "crimeDate",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "regDate",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "judgmentText",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "closingDate",
+				"type": "string"
+			}
+		],
+		"stateMutability": "view",
 		"type": "function"
 	},
 	{
@@ -324,21 +406,24 @@ const abi = [
 					}
 				],
 				"internalType": "struct EvidenceTracking.Case[]",
-				"name": "",
+				"name": "res",
 				"type": "tuple[]"
 			}
 		],
 		"stateMutability": "view",
 		"type": "function"
 	}
-]
-// Web3 connect
-async function connectMetaMask() {
+]; // copy ABI from Solidity compilation
+
+async function connectMetaMask(){
   if(window.ethereum){
     web3 = new Web3(window.ethereum);
-    try { accounts = await ethereum.request({ method:'eth_requestAccounts' }); contract = new web3.eth.Contract(abi, contractAddress); return true; }
-    catch(err){ alert("MetaMask access denied"); console.error(err); return false; }
-  } else { alert("Install MetaMask!"); return false; }
+    try{
+      accounts = await ethereum.request({ method:'eth_requestAccounts' });
+      contract = new web3.eth.Contract(abi, contractAddress);
+      return true;
+    }catch(err){ alert("MetaMask access denied"); console.error(err); return false;}
+  }else{ alert("Install MetaMask!"); return false;}
 }
 
 // Login & Logout
@@ -352,7 +437,7 @@ function login(role){
 }
 function logout(){ ['policeLogin','courtLogin','policePortal','courtPortal','publicPortal'].forEach(id=>document.getElementById(id).classList.add('hidden')); document.getElementById('roleSelect').classList.remove('hidden'); }
 
-// --- Police Register Case ---
+// Register Case
 async function registerCaseOnChain(){
   if(!await connectMetaMask()) return;
   const aad=document.getElementById('aadhaar').value.trim(); const accused=document.getElementById('accused').value.trim();
@@ -365,7 +450,7 @@ async function registerCaseOnChain(){
   catch(err){ alert("Error: "+err.message); console.error(err);}
 }
 
-// --- Court Submit Judgment ---
+// Submit Judgment
 async function submitJudgmentOnChain(){
   if(!await connectMetaMask()) return;
   const eid=document.getElementById('evidenceSelect').value; const text=document.getElementById('judgment').value.trim(); const date=document.getElementById('closingDate').value;
@@ -374,7 +459,7 @@ async function submitJudgmentOnChain(){
   catch(err){ alert("Error: "+err.message); console.error(err);}
 }
 
-// --- Tracking ---
+// Tracking
 async function getAllCases(){ return await contract.methods.getAllCases().call(); }
 async function trackCaseOnChain(q,role){
   if(!q){ alert("Enter a value"); return; }
@@ -393,7 +478,7 @@ async function searchCourtOnChain(){ const input=document.getElementById('trackC
   if(results.length>0) document.getElementById('evidenceSelect').value=results[0].evidenceID;
 }
 
-// --- Aadhaar auto-fill ---
+// Aadhaar auto-fill
 function attachAadhaarListener(){ const aad=document.getElementById('aadhaar'); if(!aad) return;
   aad.addEventListener('blur', async ()=>{ const aadVal=aad.value.trim(); if(!aadVal) return;
     try{ const cs=await getAllCases(); const found=cs.find(c=>c.aadhaar===aadVal);
