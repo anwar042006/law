@@ -722,7 +722,6 @@ async function initWeb3() {
       accounts = await ethereum.request({ method: 'eth_requestAccounts' });
       contract = new web3.eth.Contract(abi, contractAddress);
       console.log("Connected:", accounts[0]);
-      document.getElementById('registerBtn').disabled = false;
       ethereum.on('accountsChanged', newAccounts => {
         accounts = newAccounts;
         console.log("Account changed:", accounts[0]);
@@ -754,6 +753,14 @@ function login(role){
       alert('Police Login Successful');
       document.getElementById('policeLogin').classList.add('hidden');
       document.getElementById('policePortal').classList.remove('hidden');
+      // Enable register button only if MetaMask is connected
+      if (typeof accounts !== 'undefined' && accounts[0]) {
+        document.getElementById('registerBtn').disabled = false;
+        console.log("Register button enabled after police login and MetaMask connection.");
+      } else {
+        alert("Please connect MetaMask to register cases.");
+        document.getElementById('registerBtn').disabled = true;
+      }
     } else alert('Invalid credentials');
   }
   if(role==='court'){
@@ -824,7 +831,14 @@ async function submitJudgmentOnChain(){
 }
 
 // === Tracking / Court Helpers ===
-async function getAllCases(){ return await contract.methods.getAllCases().call(); }
+async function getAllCases(){ 
+  if (typeof contract !== "undefined" && contract.methods.getAllCases) {
+    return await contract.methods.getAllCases().call(); 
+  } else {
+    console.error("Contract or getAllCases method not found.");
+    return [];
+  }
+}
 async function trackCaseOnChain(q,role){
   if(!q){ alert("Enter a value"); return; }
   const cs=await getAllCases(); const qL=q.toLowerCase();
