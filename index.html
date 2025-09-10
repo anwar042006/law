@@ -1,230 +1,191 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Evidence Tracking — Tabbed Sidebar Dashboard (Wallet Top-Right)</title>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Evidence Tracking — Integrated with Contract</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
 <style>
   .wallet-btn { min-width: 170px; }
   .tooltip { position: relative; display: inline-block; }
-  .tooltip .tooltiptext {
-    visibility: hidden;
-    width: max-content;
-    background-color: #111827;
-    color: #fff;
-    text-align: center;
-    padding: 6px 8px;
-    border-radius: 6px;
-    position: absolute;
-    z-index: 50;
-    top: 140%;
-    right: 0;
-    white-space: nowrap;
-    font-size: 12px;
-  }
-  .tooltip:hover .tooltiptext { visibility: visible; }
+  .tooltip .tooltiptext { visibility: hidden; width: max-content; background:#111827;color:#fff;padding:6px 8px;border-radius:6px;position:absolute;z-index:50;top:140%;right:0;white-space:nowrap;font-size:12px;}
+  .tooltip:hover .tooltiptext{visibility:visible;}
 </style>
 </head>
-<body class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 font-sans text-gray-900">
+<body class="min-h-screen bg-gray-50 font-sans">
 
-<!-- LOGIN PAGE -->
+<!-- Simple login/role selection -->
 <div id="loginPage" class="flex items-center justify-center min-h-screen p-4">
-  <div class="w-full max-w-md bg-white rounded-2xl shadow-lg p-6">
-    <div class="text-center mb-4">
-      <h1 class="text-2xl font-bold">🔐 Evidence Tracking</h1>
-      <p class="text-sm text-gray-500 mt-1">Select your role to continue</p>
+  <div class="w-full max-w-md bg-white rounded-xl shadow p-6 text-center">
+    <h1 class="text-2xl font-bold mb-3">🔐 Evidence Tracking</h1>
+    <p class="text-sm text-gray-600 mb-4">Choose role</p>
+    <div class="space-y-2 mb-4">
+      <button type="button" onclick="selectRole('Police')" class="w-full py-2 bg-blue-600 text-white rounded">👮 Police</button>
+      <button type="button" onclick="selectRole('Court')" class="w-full py-2 bg-purple-600 text-white rounded">🏛️ Court</button>
+      <button type="button" onclick="selectRole('Public')" class="w-full py-2 bg-green-600 text-white rounded">👥 Public</button>
     </div>
 
-    <div class="grid gap-3 mb-4">
-      <button type="button" onclick="selectRole('Police')" class="w-full py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700">👮 Police</button>
-      <button type="button" onclick="selectRole('Court')" class="w-full py-2 rounded-lg bg-purple-600 text-white hover:bg-purple-700">🏛️ Court</button>
-      <button type="button" onclick="selectRole('Public')" class="w-full py-2 rounded-lg bg-green-600 text-white hover:bg-green-700">👥 Public</button>
+    <div id="loginForm" class="hidden space-y-2">
+      <input id="username" class="w-full border p-2 rounded" placeholder="Username" />
+      <input id="password" type="password" class="w-full border p-2 rounded" placeholder="Password" />
+      <button type="button" onclick="login()" class="w-full bg-indigo-600 text-white py-2 rounded">Login & Connect</button>
     </div>
 
-    <div id="loginForm" class="hidden space-y-3">
-      <input id="username" placeholder="Username" class="w-full border p-2 rounded" />
-      <input id="password" placeholder="Password" type="password" class="w-full border p-2 rounded" />
-      <button id="loginBtn" type="button" onclick="login()" class="w-full bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700">Login & Connect Wallet</button>
-    </div>
-
-    <div id="walletConnectLogin" class="hidden space-y-3">
-      <button id="connectWalletBtnInitial" type="button" onclick="connectWallet()" class="w-full bg-yellow-400 text-black py-2 rounded hover:brightness-95">Connect Wallet 🦊</button>
-      <button id="publicProceedBtn" type="button" onclick="showDashboardPublic()" class="w-full bg-gray-100 text-black py-2 rounded">Proceed as Public (Read-only)</button>
-      <p id="walletAddressInitial" class="text-xs text-gray-500 break-words"></p>
-      <p class="text-xs text-gray-400 mt-2">Note: Public users can view cases (read-only). For on-chain writes, connect MetaMask.</p>
+    <div id="walletConnectLogin" class="hidden space-y-2">
+      <button id="connectWalletBtnInitial" type="button" onclick="connectWallet()" class="w-full bg-yellow-400 py-2 rounded">Connect Wallet 🦊</button>
+      <button id="publicProceedBtn" type="button" onclick="showDashboardPublic()" class="w-full bg-gray-100 py-2 rounded">Proceed as Public (read-only)</button>
+      <p class="text-xs text-gray-500">Public can search without wallet (read-only). For register/judgment, connect MetaMask & be assigned police/court role on-chain.</p>
     </div>
   </div>
 </div>
 
-<!-- DASHBOARD -->
+<!-- Dashboard layout -->
 <div id="dashboard" class="hidden flex h-screen">
-
-  <!-- SIDEBAR -->
   <aside class="w-72 bg-gray-900 text-white flex flex-col">
-    <div class="px-6 py-4 border-b border-gray-800 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <div class="text-xl font-bold">📁 Evidence Dashboard</div>
-      </div>
-    </div>
-
+    <div class="px-6 py-4 border-b border-gray-800"><div class="text-lg font-bold">📁 Evidence Dashboard</div></div>
     <nav class="flex-1 px-2 py-4 space-y-1">
-      <button type="button" onclick="showTab('dashboardTab')" class="w-full text-left px-4 py-2 rounded hover:bg-gray-800">🏠 Home</button>
-      <button id="registerBtn" type="button" onclick="showTab('registerTab')" class="w-full text-left px-4 py-2 rounded hover:bg-gray-800">📝 Register Case</button>
-      <button id="judgmentBtn" type="button" onclick="showTab('judgmentTab')" class="w-full text-left px-4 py-2 rounded hover:bg-gray-800">🏛️ Submit Judgment</button>
-      <button type="button" onclick="showTab('trackingTab')" class="w-full text-left px-4 py-2 rounded hover:bg-gray-800">🔍 Case Tracking</button>
+      <button type="button" onclick="showTab('dashboardTab')" class="w-full text-left px-4 py-2 hover:bg-gray-800">🏠 Home</button>
+      <button id="registerBtn" type="button" onclick="showTab('registerTab')" class="w-full text-left px-4 py-2 hover:bg-gray-800">📝 Register Case</button>
+      <button id="judgmentBtn" type="button" onclick="showTab('judgmentTab')" class="w-full text-left px-4 py-2 hover:bg-gray-800">🏛️ Submit Judgment</button>
+      <button type="button" onclick="showTab('trackingTab')" class="w-full text-left px-4 py-2 hover:bg-gray-800">🔍 Case Tracking</button>
     </nav>
-
     <div class="p-4 border-t border-gray-800">
-      <div id="connectedAddressSidebar" class="text-xs text-gray-300 break-words mb-2"></div>
-      <button id="logoutBtn" type="button" onclick="logout()" class="w-full bg-gray-700 py-2 rounded hover:bg-gray-600">🔑 Logout</button>
+      <div id="connectedAddressSidebar" class="text-xs text-gray-300 mb-2"></div>
+      <button type="button" onclick="logout()" class="w-full bg-gray-700 py-2 rounded">🔑 Logout</button>
     </div>
   </aside>
 
-  <!-- MAIN AREA -->
   <div class="flex-1 flex flex-col">
-
-    <!-- TOP BAR -->
-    <header class="flex items-center justify-between px-6 py-3 bg-white border-b border-gray-200">
+    <!-- topbar -->
+    <header class="flex items-center justify-between px-6 py-3 bg-white border-b">
       <div>
         <h2 id="pageTitle" class="text-lg font-semibold">Dashboard</h2>
-        <p id="pageSubtitle" class="text-xs text-gray-500">Sidebar → Select a tab</p>
+        <p id="pageSubtitle" class="text-xs text-gray-500">Overview</p>
       </div>
 
       <div class="flex items-center gap-3">
-        <div id="walletArea" class="tooltip relative">
-          <button id="walletConnectTopBtn" type="button" class="wallet-btn inline-flex items-center gap-2 border border-gray-300 rounded px-3 py-2 text-sm bg-white hover:bg-gray-50" onclick="toggleWalletDropdown()">
-            <span id="walletIcon" class="text-base">🦊</span>
-            <span id="walletLabel" class="font-mono text-sm">Connect Wallet</span>
-            <svg id="chev" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+        <div class="tooltip relative">
+          <button id="walletConnectTopBtn" type="button" class="wallet-btn inline-flex items-center gap-2 border px-3 py-2 rounded bg-white" onclick="toggleWalletDropdown()">
+            <span>🦊</span><span id="walletLabel" class="font-mono text-sm">Connect Wallet</span>
           </button>
-
           <div class="tooltiptext" id="walletTooltip">Not connected</div>
         </div>
 
-        <div id="walletDropdown" class="hidden absolute right-6 top-14 bg-white border rounded shadow-lg w-56 z-50">
+        <div id="walletDropdown" class="hidden absolute right-6 top-14 bg-white border rounded shadow w-64 z-50">
           <div class="p-3 text-sm text-gray-700" id="walletFullAddr">Not connected</div>
           <div class="border-t"></div>
-          <button type="button" id="disconnectBtn" onclick="disconnectWallet()" class="w-full text-left px-3 py-2 text-sm hover:bg-gray-100">Disconnect</button>
+          <button type="button" onclick="disconnectWallet()" class="w-full text-left px-3 py-2 hover:bg-gray-100">Disconnect</button>
         </div>
       </div>
     </header>
 
-    <!-- CONTENT -->
     <main class="p-6 overflow-auto">
-
       <!-- HOME -->
       <section id="dashboardTab">
-        <div class="grid gap-4">
-          <div class="bg-white rounded shadow p-4">
-            <div class="flex items-center justify-between">
-              <div>
-                <h3 class="font-semibold">Welcome</h3>
-                <p class="text-sm text-gray-500 mt-1">Use the sidebar to navigate. Connect a wallet (top-right) to perform on-chain actions.</p>
-              </div>
-              <div class="text-sm text-gray-600 font-mono" id="homeWallet">Not connected</div>
+        <div class="bg-white rounded shadow p-4">
+          <div class="flex justify-between">
+            <div>
+              <h3 class="font-semibold">Welcome</h3>
+              <p class="text-sm text-gray-600">Use sidebar. Connect wallet to register/submit.</p>
             </div>
+            <div id="homeWallet" class="font-mono text-sm text-gray-700">Not connected</div>
           </div>
         </div>
       </section>
 
-      <!-- REGISTER CASE -->
+      <!-- REGISTER -->
       <section id="registerTab" class="hidden">
         <h3 class="text-xl font-semibold mb-3">📝 Register Case</h3>
-        <div class="bg-white rounded shadow p-6 max-w-3xl">
-          <div class="grid grid-cols-1 gap-3">
-            <label class="text-sm">Aadhaar 🆔</label>
-            <input id="aadhaar" maxlength="12" class="w-full border p-2 rounded" />
+        <div class="bg-white p-6 rounded shadow max-w-3xl">
+          <label class="text-sm">Aadhaar</label>
+          <input id="aadhaar" class="w-full border p-2 rounded mb-2"/>
 
-            <label class="text-sm">Accused Name 👤</label>
-            <input id="accusedName" class="w-full border p-2 rounded" />
+          <label class="text-sm">Accused Name</label>
+          <input id="accusedName" class="w-full border p-2 rounded mb-2"/>
 
-            <label class="text-sm">Case Detail 📝</label>
-            <textarea id="caseDetail" class="w-full border p-2 rounded"></textarea>
+          <label class="text-sm">Case Detail</label>
+          <textarea id="caseDetail" class="w-full border p-2 rounded mb-2"></textarea>
 
-            <label class="text-sm">Crime Location 📍</label>
-            <input id="crimeLocation" class="w-full border p-2 rounded" />
+          <label class="text-sm">Crime Location</label>
+          <input id="crimeLocation" class="w-full border p-2 rounded mb-2"/>
 
-            <div class="grid grid-cols-2 gap-3">
-              <div>
-                <label class="text-sm">Crime Date & Time 🕒</label>
-                <input id="crimeDateTime" type="datetime-local" class="w-full border p-2 rounded" />
-              </div>
-              <div>
-                <label class="text-sm">Registration Date & Time 🗓️</label>
-                <input id="registrationDateTime" type="datetime-local" class="w-full border p-2 rounded" readonly />
-              </div>
+          <div class="grid grid-cols-2 gap-3 mb-3">
+            <div>
+              <label class="text-sm">Crime Date & Time</label>
+              <input id="crimeDateTime" type="datetime-local" class="w-full border p-2 rounded"/>
             </div>
-
-            <!-- Auto-generated visible IDs -->
-            <div class="grid grid-cols-2 gap-3">
-              <div>
-                <label class="text-sm">Evidence ID 💼</label>
-                <input id="evidenceID" class="w-full border p-2 rounded font-mono" readonly />
-              </div>
-              <div>
-                <label class="text-sm">Unique ID 🔑</label>
-                <input id="uniqueID" class="w-full border p-2 rounded font-mono" readonly />
-              </div>
-            </div>
-
-            <div class="flex gap-3 mt-2">
-              <button id="btnRegisterCase" type="button" onclick="registerCase()" class="flex-1 bg-blue-600 text-white py-2 rounded disabled:opacity-60" disabled>Register Case (on-chain)</button>
-              <button type="button" onclick="clearRegisterForm()" class="flex-1 bg-gray-100 py-2 rounded">Clear</button>
+            <div>
+              <label class="text-sm">Registration Date & Time</label>
+              <input id="registrationDateTime" type="datetime-local" class="w-full border p-2 rounded" readonly/>
             </div>
           </div>
-        </div>
-      </section>
 
-      <!-- SUBMIT JUDGMENT -->
-      <section id="judgmentTab" class="hidden">
-        <h3 class="text-xl font-semibold mb-3">🏛️ Submit Judgment</h3>
-        <div class="bg-white rounded shadow p-6 max-w-3xl">
-          <label class="text-sm">Search Evidence / Accused / Aadhaar</label>
-          <div class="flex gap-2 mb-3">
-            <input id="searchJudgment" placeholder="Type evidence ID, accused name, or aadhaar" class="flex-1 border p-2 rounded" oninput="filterCourtList()" list="casesList"/>
-            <button id="btnFindCase" type="button" onclick="applySelectedCase()" class="bg-indigo-600 text-white px-3 py-2 rounded">Apply</button>
+          <div class="grid grid-cols-2 gap-3 mb-3">
+            <div>
+              <label class="text-sm">Evidence ID (local preview)</label>
+              <input id="evidenceID" class="w-full border p-2 rounded font-mono" readonly/>
+            </div>
+            <div>
+              <label class="text-sm">Unique ID (local preview)</label>
+              <input id="uniqueID" class="w-full border p-2 rounded font-mono" readonly/>
+            </div>
           </div>
-
-          <!-- datalist for browser auto-complete -->
-          <datalist id="casesList"></datalist>
-
-          <!-- select for auto-picker -->
-          <label class="text-sm">Select matching case (auto picker)</label>
-          <select id="casesSelect" class="w-full border p-2 rounded mb-3" onchange="onCourtSelectionChange()">
-            <option value="">-- select a case --</option>
-          </select>
-
-          <label class="text-sm">Evidence ID</label>
-          <input id="evidenceID_j" class="w-full border p-2 rounded mb-3" readonly />
-
-          <label class="text-sm">Judgment 🏛️</label>
-          <textarea id="judgmentText" class="w-full border p-2 rounded mb-3"></textarea>
-
-          <label class="text-sm">Closing Date 🗓️</label>
-          <input id="closingDate" type="date" class="w-full border p-2 rounded mb-3" />
 
           <div class="flex gap-3">
-            <button id="btnSubmitJudgment" type="button" onclick="submitJudgment()" class="flex-1 bg-purple-600 text-white py-2 rounded disabled:opacity-60" disabled>Submit Judgment (on-chain)</button>
-            <button type="button" onclick="clearJudgmentForm()" class="flex-1 bg-gray-100 py-2 rounded">Clear</button>
+            <button id="btnRegisterCase" type="button" onclick="registerCase()" class="flex-1 bg-blue-600 text-white p-2 rounded disabled:opacity-60" disabled>Register Case (on-chain)</button>
+            <button type="button" onclick="clearRegisterForm()" class="flex-1 bg-gray-100 p-2 rounded">Clear</button>
+          </div>
+
+          <p id="registerNote" class="text-xs text-gray-500 mt-3">Preview IDs are local until transaction confirms; after confirmation the actual on-chain IDs are fetched and shown.</p>
+        </div>
+      </section>
+
+      <!-- JUDGMENT -->
+      <section id="judgmentTab" class="hidden">
+        <h3 class="text-xl font-semibold mb-3">🏛️ Submit Judgment</h3>
+        <div class="bg-white p-6 rounded shadow max-w-3xl">
+          <label class="text-sm">Search by Evidence ID / Unique ID / Aadhaar</label>
+          <div class="flex gap-2 mb-3">
+            <input id="searchJudgment" list="casesList" placeholder="EV00001 or UI00001 or Aadhaar" class="flex-1 border p-2 rounded" />
+            <button type="button" onclick="applySearchToJudgment()" class="bg-indigo-600 text-white px-3 py-2 rounded">Find</button>
+          </div>
+
+          <datalist id="casesList"></datalist>
+
+          <label class="text-sm">Evidence ID</label>
+          <input id="evidenceID_j" class="w-full border p-2 rounded mb-2" readonly />
+
+          <label class="text-sm">Judgment</label>
+          <textarea id="judgmentText" class="w-full border p-2 rounded mb-2"></textarea>
+
+          <label class="text-sm">Closing Date</label>
+          <input id="closingDate" type="date" class="w-full border p-2 rounded mb-3"/>
+
+          <div class="flex gap-3">
+            <button id="btnSubmitJudgment" type="button" onclick="submitJudgment()" class="flex-1 bg-purple-600 text-white p-2 rounded disabled:opacity-60" disabled>Submit Judgment (on-chain)</button>
+            <button type="button" onclick="clearJudgmentForm()" class="flex-1 bg-gray-100 p-2 rounded">Clear</button>
           </div>
         </div>
       </section>
 
-      <!-- CASE TRACKING -->
+      <!-- TRACKING -->
       <section id="trackingTab" class="hidden">
         <h3 class="text-xl font-semibold mb-3">🔍 Case Tracking</h3>
-
-        <div class="bg-white rounded shadow p-4 mb-4 max-w-5xl">
+        <div class="bg-white p-4 rounded shadow mb-4 max-w-4xl">
           <div class="flex gap-2">
-            <input id="searchTracking" placeholder="Search Evidence ID / Aadhaar / Accused" class="flex-1 border p-2 rounded" />
-            <button type="button" onclick="searchCase()" class="bg-green-600 text-white px-3 py-2 rounded">Search</button>
-            <button type="button" onclick="fetchAllCases()" class="bg-gray-200 px-3 py-2 rounded">Refresh</button>
+            <select id="trackingMode" class="border p-2 rounded">
+              <option value="evidence">Evidence ID</option>
+              <option value="unique">Unique ID</option>
+              <option value="aadhaar">Aadhaar</option>
+            </select>
+            <input id="searchTracking" class="flex-1 border p-2 rounded" placeholder="Search term" />
+            <button type="button" onclick="trackingSearch()" class="bg-green-600 text-white px-3 py-2 rounded">Search</button>
+            <button type="button" onclick="fetchAllForDatalist()" class="bg-gray-200 px-3 py-2 rounded">Refresh</button>
           </div>
         </div>
 
-        <div class="overflow-auto bg-white rounded shadow max-w-5xl">
+        <div class="bg-white p-4 rounded shadow max-w-5xl overflow-auto">
           <table id="trackingResultsTable" class="min-w-full table-auto border-collapse hidden">
             <thead class="bg-gray-100">
               <tr>
@@ -235,7 +196,9 @@
                 <th class="border p-2 text-left">Case Detail</th>
                 <th class="border p-2 text-left">Location</th>
                 <th class="border p-2 text-left">Crime DateTime</th>
-                <th class="border p-2 text-left">Registration DateTime</th>
+                <th class="border p-2 text-left">RegistrationDateTime</th>
+                <th class="border p-2 text-left">Judgment</th>
+                <th class="border p-2 text-left">ClosingDate</th>
               </tr>
             </thead>
             <tbody id="trackingResults"></tbody>
@@ -243,77 +206,13 @@
           <div id="noCases" class="p-4 text-center text-gray-500 hidden">No cases found.</div>
         </div>
       </section>
-
     </main>
   </div>
 </div>
 
 <script>
-/* -------------------------
-   CONFIG — REPLACE WITH YOUR CONTRACT DETAILS
-   ------------------------- */
+/* ABI matching your Solidity contract (functions used by frontend) */
 const contractABI = [ [
-	{
-		"inputs": [
-			{
-				"internalType": "string",
-				"name": "aadhaar",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "accused",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "caseDetail",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "location",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "crimeDateTime",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "registrationDateTime",
-				"type": "string"
-			}
-		],
-		"name": "registerCase",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "string",
-				"name": "evidenceID",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "judgment",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "closingDate",
-				"type": "string"
-			}
-		],
-		"name": "submitJudgment",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
 	{
 		"inputs": [
 			{
@@ -513,45 +412,103 @@ const contractABI = [ [
 		],
 		"stateMutability": "view",
 		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "aadhaar",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "accused",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "caseDetail",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "location",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "crimeDateTime",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "registrationDateTime",
+				"type": "string"
+			}
+		],
+		"name": "registerCase",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "evidenceID",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "judgment",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "closingDate",
+				"type": "string"
+			}
+		],
+		"name": "submitJudgment",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
 	}
-]
+] 
 ];
-const contractAddress = "0x0985acE981cf4BC4387459a0F2d0f0710E54b48F"; // <-- REPLACE
 
-/* -------------------------
-   Runtime state
-   ------------------------- */
+const contractAddress = "0xeBb87579Ed94636F23A20D6A685577d1DfDca825"; // <<-- replace with deployed contract address
+
+/* runtime state */
 let provider = null;
 let signer = null;
 let contract = null;
 let userAddress = null;
-let role = '';
-/* local counters fallback (persisted) */
+let role = ''; // 'Police' | 'Court' | 'Public'
+
+/* LOCAL counters for preview IDs */
 const LOCAL_EVIDENCE_KEY = 'local_ev_counter_v1';
 const LOCAL_UNIQUE_KEY = 'local_ui_counter_v1';
+function getLocalCounter(k, start=1){ const v = localStorage.getItem(k); return v ? parseInt(v,10) : start; }
+function setLocalCounter(k,v){ localStorage.setItem(k,String(v)); }
 
-/* -------------------------
-   UI Utilities
-   ------------------------- */
-function setWalletUI(address) {
-  const label = address ? truncateAddress(address) : 'Connect Wallet';
+/* UI helpers */
+function setWalletUI(addr){
+  const label = addr ? (addr.slice(0,6) + '...' + addr.slice(-4)) : 'Connect Wallet';
   document.getElementById('walletLabel').innerText = label;
-  document.getElementById('walletTooltip').innerText = address ? address : 'Not connected';
-  document.getElementById('walletFullAddr').innerText = address ? address : 'Not connected';
-  document.getElementById('homeWallet').innerText = address ? address : 'Not connected';
-  document.getElementById('connectedAddressSidebar').innerText = address ? 'Addr: ' + address : '';
-  const able = !!address;
-  document.getElementById('btnRegisterCase').disabled = !able;
-  document.getElementById('btnSubmitJudgment').disabled = !able;
+  document.getElementById('walletTooltip').innerText = addr || 'Not connected';
+  document.getElementById('walletFullAddr').innerText = addr || 'Not connected';
+  document.getElementById('connectedAddressSidebar').innerText = addr ? 'Addr: ' + addr : '';
+  document.getElementById('homeWallet').innerText = addr || 'Not connected';
+  // enable/disable register/submit based on role checks will be done after connect
 }
-function truncateAddress(a){ if(!a) return ''; return a.slice(0,6) + '...' + a.slice(-4); }
-function toggleWalletDropdown(){ const dd = document.getElementById('walletDropdown'); dd.classList.toggle('hidden'); }
 
-/* -------------------------
-   Wallet connect / disconnect
-   ------------------------- */
+/* wallet dropdown toggle */
+function toggleWalletDropdown(){ document.getElementById('walletDropdown').classList.toggle('hidden'); }
+
+/* connect wallet */
 async function connectWallet(){
-  if(!window.ethereum){ alert('MetaMask not found. Install MetaMask and try again.'); return; }
+  if(!window.ethereum){ alert('MetaMask not found'); return; }
   try{
     await window.ethereum.request({ method: 'eth_requestAccounts' });
     provider = new ethers.providers.Web3Provider(window.ethereum);
@@ -561,423 +518,323 @@ async function connectWallet(){
     setWalletUI(userAddress);
     document.getElementById('connectWalletBtnInitial').style.display = 'none';
     document.getElementById('walletConnectTopBtn').classList.add('ring','ring-gray-200');
+    // check roles
+    const isPolice = await contract.policeAccounts(userAddress);
+    const isCourt = await contract.courtAccounts(userAddress);
+    // enable UI based on roles
+    document.getElementById('btnRegisterCase').disabled = !isPolice;
+    document.getElementById('btnSubmitJudgment').disabled = !isCourt;
+    // show role hint
+    if(isPolice) alert('Connected as Police account');
+    if(isCourt) alert('Connected as Court account');
+    if(!isPolice && !isCourt) alert('Connected address has no Police/Court role (writes disabled).');
+    // show dashboard if login done
     showDashboard();
   }catch(err){
-    console.error('connectWallet err', err);
-    alert('Wallet connection failed: ' + (err.message || err));
+    console.error(err); alert('Wallet connect failed: ' + (err.message || err));
   }
 }
-function disconnectWallet(){
-  provider = null; signer = null; contract = null; userAddress = null;
-  setWalletUI(null);
-  document.getElementById('walletDropdown').classList.add('hidden');
-  document.getElementById('walletConnectTopBtn').classList.remove('ring','ring-gray-200');
-}
 
-/* -------------------------
-   Role selection / login
-   ------------------------- */
-function selectRole(selectedRole){
-  role = selectedRole;
+/* disconnect (UI only) */
+function disconnectWallet(){ provider=null; signer=null; contract=null; userAddress=null; setWalletUI(null); document.getElementById('walletDropdown').classList.add('hidden'); document.getElementById('walletConnectTopBtn').classList.remove('ring','ring-gray-200'); }
+
+/* role selection & login */
+function selectRole(r){
+  role = r;
   document.getElementById('loginForm').classList.add('hidden');
   document.getElementById('walletConnectLogin').classList.add('hidden');
-
-  if(role === 'Public'){
-    // public: show proceed (no wallet required)
+  if(r === 'Public'){
     document.getElementById('walletConnectLogin').classList.remove('hidden');
     document.getElementById('registerBtn').style.display = 'none';
     document.getElementById('judgmentBtn').style.display = 'none';
   } else {
     document.getElementById('loginForm').classList.remove('hidden');
-    document.getElementById('registerBtn').style.display = role === 'Police' ? 'block' : 'none';
-    document.getElementById('judgmentBtn').style.display = role === 'Court' ? 'block' : 'none';
+    document.getElementById('registerBtn').style.display = r==='Police' ? 'block' : 'none';
+    document.getElementById('judgmentBtn').style.display = r==='Court' ? 'block' : 'none';
   }
 }
-function login(){
-  const u = document.getElementById('username').value;
-  const p = document.getElementById('password').value;
-  if(!u || !p){ alert('Enter username and password'); return; }
-  connectWallet();
-}
+function login(){ const u=document.getElementById('username').value, p=document.getElementById('password').value; if(!u||!p){ alert('Enter username/password'); return; } connectWallet(); }
+function showDashboardPublic(){ role='Public'; showDashboard(); }
 
-/* Public proceed */
-function showDashboardPublic(){
-  role = 'Public';
-  showDashboard();
-}
+/* show main dashboard */
+function showDashboard(){ document.getElementById('loginPage').style.display='none'; document.getElementById('dashboard').style.display='flex'; showTab('dashboardTab'); const now=new Date().toISOString().slice(0,16); document.getElementById('registrationDateTime').value = now; fetchAllForDatalist(); generatePreviewIDs(); }
 
-/* Show dashboard and initial load */
-function showDashboard(){
-  document.getElementById('loginPage').style.display = 'none';
-  document.getElementById('dashboard').style.display = 'flex';
-  showTab('dashboardTab');
-  const now = new Date().toISOString().slice(0,16);
-  document.getElementById('registrationDateTime').value = now;
-  fetchAllCases().then(()=> {
-    // populate register IDs if police tab is shown later
-    // nothing else
-  });
-}
+/* logout */
+function logout(){ role=''; disconnectWallet(); document.getElementById('dashboard').style.display='none'; document.getElementById('loginPage').style.display='flex'; clearRegisterForm(); clearJudgmentForm(); }
 
-/* Logout */
-function logout(){
-  role = '';
-  disconnectWallet();
-  document.getElementById('dashboard').style.display = 'none';
-  document.getElementById('loginPage').style.display = 'flex';
-  clearRegisterForm(); clearJudgmentForm();
-}
+/* tabs */
+function showTab(tabId){ ['dashboardTab','registerTab','judgmentTab','trackingTab'].forEach(id=>document.getElementById(id).classList.add('hidden')); document.getElementById(tabId).classList.remove('hidden'); const map={dashboardTab:['Dashboard','Overview'], registerTab:['Register Case','Police'], judgmentTab:['Submit Judgment','Court'], trackingTab:['Case Tracking','Search']}; document.getElementById('pageTitle').innerText = map[tabId][0]; document.getElementById('pageSubtitle').innerText = map[tabId][1]; if(tabId==='registerTab') generatePreviewIDs(); if(tabId==='trackingTab') fetchAllForDatalist(); if(tabId==='judgmentTab') fetchAllForDatalist(); }
 
-/* Tabs */
-function showTab(tabId){
-  ['dashboardTab','registerTab','judgmentTab','trackingTab'].forEach(id=>{
-    document.getElementById(id).classList.add('hidden');
-  });
-  document.getElementById(tabId).classList.remove('hidden');
-
-  const titleMap = {
-    dashboardTab: ['Dashboard','Overview'],
-    registerTab: ['Register Case','Police → Register new case'],
-    judgmentTab: ['Submit Judgment','Court → Submit judgment'],
-    trackingTab: ['Case Tracking','Search and view cases']
-  };
-  const t = titleMap[tabId] || ['Dashboard',''];
-  document.getElementById('pageTitle').innerText = t[0];
-  document.getElementById('pageSubtitle').innerText = t[1];
-
-  // When register tab opened, generate next IDs (using on-chain if available)
-  if(tabId === 'registerTab'){
-    generateNextIDs().catch(e=>console.warn(e));
-  }
-  if(tabId === 'trackingTab'){
-    fetchAllCases();
-  }
-  if(tabId === 'judgmentTab'){
-    populateCourtLists();
-  }
-}
-
-/* Clear forms */
+/* clear forms */
 function clearRegisterForm(){ ['aadhaar','accusedName','caseDetail','crimeLocation','crimeDateTime'].forEach(id=>document.getElementById(id).value=''); }
 function clearJudgmentForm(){ ['searchJudgment','evidenceID_j','judgmentText','closingDate'].forEach(id=>document.getElementById(id).value=''); }
 
-/* -------------------------
-   Helpers: parsing & local counters
-   ------------------------- */
+/* normalize case object */
 function normalizeCase(c){
   return {
-    evidenceID: c.evidenceID ?? c[0] ?? '',
-    uniqueID:  c.uniqueID  ?? c[1] ?? '',
-    aadhaar:   c.aadhaar   ?? c[2] ?? '',
-    accused:   c.accused   ?? c[3] ?? '',
-    caseDetail:c.caseDetail?? c[4] ?? '',
-    location:  c.location  ?? c[5] ?? '',
-    crimeDateTime: c.crimeDateTime ?? c[6] ?? '',
-    registrationDateTime: c.registrationDateTime ?? c[7] ?? ''
+    aadhaar: c.aadhaar ?? c[0] ?? '',
+    accusedName: c.accusedName ?? c[1] ?? '',
+    caseDetail: c.caseDetail ?? c[2] ?? '',
+    location: c.location ?? c[3] ?? '',
+    crimeDateTime: c.crimeDateTime ?? c[4] ?? '',
+    registrationDateTime: c.registrationDateTime ?? c[5] ?? '',
+    evidenceId: c.evidenceId ?? c[6] ?? '',
+    uniqueId: c.uniqueId ?? c[7] ?? '',
+    judgment: c.judgment ?? c[8] ?? '',
+    closingDate: c.closingDate ?? c[9] ?? '',
+    isClosed: c.isClosed ?? c[10] ?? false
   };
 }
-function parseCounterFromID(idStr, prefix){
-  if(!idStr || typeof idStr !== 'string') return 0;
-  if(!idStr.startsWith(prefix)) return 0;
-  const num = parseInt(idStr.slice(prefix.length), 10);
-  return isNaN(num) ? 0 : num;
-}
-function getLocalCounter(key, start=1){
-  const v = localStorage.getItem(key);
-  return v ? parseInt(v,10) : start;
-}
-function setLocalCounter(key, val){
-  localStorage.setItem(key, String(val));
+
+/* generate preview IDs locally (fallback) */
+function generatePreviewIDs(){
+  // attempt to compute next from local counters
+  const ev = getLocalCounter(LOCAL_EVIDENCE_KEY,1);
+  const ui = getLocalCounter(LOCAL_UNIQUE_KEY,1);
+  document.getElementById('evidenceID').value = 'EV' + String(ev).padStart(5,'0');
+  document.getElementById('uniqueID').value = 'UI' + String(ui).padStart(5,'0');
 }
 
-/* -------------------------
-   ID generation logic
-   - Attempt to derive next IDs from on-chain cases
-   - Fallback to localStorage counters
-   ------------------------- */
-async function generateNextIDs(){
-  try{
-    const all = await fetchAllCases(); // returns parsed array
-    // compute max EV and UI numbers
-    let maxEV = 0, maxUI = 0;
-    all.forEach(c=>{
-      maxEV = Math.max(maxEV, parseCounterFromID(c.evidenceID,'EV'));
-      maxUI = Math.max(maxUI, parseCounterFromID(c.uniqueID,'UI'));
-    });
-    // compare with local counters
-    const localEv = getLocalCounter(LOCAL_EVIDENCE_KEY, 0);
-    const localUi = getLocalCounter(LOCAL_UNIQUE_KEY, 0);
-    if(localEv > maxEV) maxEV = localEv;
-    if(localUi > maxUI) maxUI = localUi;
-    const nextEv = maxEV + 1;
-    const nextUi = maxUI + 1;
-    // persist fallback counters
-    setLocalCounter(LOCAL_EVIDENCE_KEY, nextEv);
-    setLocalCounter(LOCAL_UNIQUE_KEY, nextUi);
-    // set inputs
-    document.getElementById('evidenceID').value = 'EV' + String(nextEv).padStart(5,'0');
-    document.getElementById('uniqueID').value = 'UI' + String(nextUi).padStart(5,'0');
-    return { nextEv, nextUi };
-  }catch(err){
-    // fallback-only: use local counters
-    const localEv = getLocalCounter(LOCAL_EVIDENCE_KEY,1);
-    const localUi = getLocalCounter(LOCAL_UNIQUE_KEY,1);
-    document.getElementById('evidenceID').value = 'EV' + String(localEv).padStart(5,'0');
-    document.getElementById('uniqueID').value = 'UI' + String(localUi).padStart(5,'0');
-    return { nextEv: localEv, nextUi: localUi };
-  }
-}
-
-/* Increment local counters after a successful register (called after tx confirmed) */
-function incrementLocalCounters(){
-  const currEv = getLocalCounter(LOCAL_EVIDENCE_KEY,1);
-  const currUi = getLocalCounter(LOCAL_UNIQUE_KEY,1);
-  setLocalCounter(LOCAL_EVIDENCE_KEY, currEv + 1);
-  setLocalCounter(LOCAL_UNIQUE_KEY, currUi + 1);
-}
-
-/* -------------------------
-   Blockchain interactions
-   ------------------------- */
-
-/* Register Case (on-chain) */
-async function registerCase(){
-  if(!contract || !signer || !userAddress){ alert('Connect wallet first'); return; }
-
-  const aadhaar = document.getElementById('aadhaar').value.trim();
-  const accused = document.getElementById('accusedName').value.trim();
-  const caseDetail = document.getElementById('caseDetail').value.trim();
-  const location = document.getElementById('crimeLocation').value.trim();
-  const crimeDateTime = document.getElementById('crimeDateTime').value;
-
-  if(!aadhaar || !accused || !caseDetail || !location || !crimeDateTime){
-    alert('Please fill all required fields.');
-    return;
-  }
-
-  try{
-    const tx = await contract.registerCase(aadhaar, accused, caseDetail, location, crimeDateTime);
-    alert(`Transaction sent: ${tx.hash}`);
-    await tx.wait();
-    alert('Case registered on-chain.');
-    // bump local counters
-    incrementLocalCounters();
-    clearRegisterForm();
-    // refresh cases + re-generate next ids
-    await fetchAllCases();
-    await generateNextIDs();
-  }catch(err){
-    console.error(err);
-    alert('Error registering case: ' + (err?.message || err));
-  }
-}
-
-/* Submit Judgment (on-chain) */
-async function submitJudgment(){
-  if(!contract || !signer || !userAddress){ alert('Connect wallet first'); return; }
-
-  const evidenceID = document.getElementById('evidenceID_j').value.trim();
-  const judgment = document.getElementById('judgmentText').value.trim();
-  const closingDate = document.getElementById('closingDate').value;
-
-  if(!evidenceID || !judgment || !closingDate){
-    alert('Fill evidence ID, judgment text and closing date.');
-    return;
-  }
-
-  try{
-    const tx = await contract.submitJudgment(evidenceID, judgment, closingDate);
-    alert(`Transaction sent: ${tx.hash}`);
-    await tx.wait();
-    alert('Judgment submitted on-chain.');
-    clearJudgmentForm();
-    await fetchAllCases();
-    populateCourtLists();
-  }catch(err){
-    console.error(err);
-    alert('Error submitting judgment: ' + (err?.message || err));
-  }
-}
-
-/* Fetch all cases (view) — returns parsed array for other code to use */
-async function fetchAllCases(){
-  try{
-    let raw;
-    if(contract){
-      raw = await contract.getAllCases();
-    } else if(window.ethereum){
-      const readProvider = new ethers.providers.Web3Provider(window.ethereum);
-      const readContract = new ethers.Contract(contractAddress, contractABI, readProvider);
-      raw = await readContract.getAllCases();
-    } else {
-      // no provider, return empty array (public without provider)
-      renderCases([]);
-      return [];
-    }
-    const parsed = (raw || []).map(normalizeCase);
-    renderCases(parsed);
-    populateCourtListsFromArray(parsed);
-    return parsed;
-  }catch(err){
-    console.error('fetchAllCases error', err);
-    renderCases([]);
-    return [];
-  }
-}
-
-/* Search (filter client-side) */
-async function searchCase(){
-  const q = document.getElementById('searchTracking').value.trim().toLowerCase();
-  const all = await fetchAllCases();
-  if(!q){ renderCases(all); return; }
-  const filtered = (all || []).filter(c =>
-    (c.evidenceID||'').toLowerCase().includes(q) ||
-    (c.aadhaar||'').toLowerCase().includes(q) ||
-    (c.accused||'').toLowerCase().includes(q)
-  );
-  renderCases(filtered);
-}
-
-/* Fill judgment form by selected case (apply) */
-function applySelectedCase(){
-  const rawVal = document.getElementById('searchJudgment').value.trim();
-  if(!rawVal){
-    // if select is used
-    const sel = document.getElementById('casesSelect').value;
-    if(sel){
-      const ev = sel.split('|')[0].trim();
-      document.getElementById('evidenceID_j').value = ev;
-    }
-    return;
-  }
-  // rawVal could be "EV00001 | Name | Aadhaar" or just EV...
-  const parts = rawVal.split('|').map(s=>s.trim());
-  if(parts.length>0 && parts[0].startsWith('EV')) {
-    document.getElementById('evidenceID_j').value = parts[0];
-    return;
-  }
-  // attempt to interpret as evidence id if contains EV...
-  const matchEv = rawVal.match(/EV[0-9]+/i);
-  if(matchEv){ document.getElementById('evidenceID_j').value = matchEv[0].toUpperCase(); return; }
-  // fallback: try to find case in current list
-  const sel = document.getElementById('casesSelect');
-  const foundOpt = Array.from(sel.options).find(o => o.text.toLowerCase().includes(rawVal.toLowerCase()));
-  if(foundOpt){ sel.value = foundOpt.value; onCourtSelectionChange(); }
-}
-
-/* Populate court datalist & select */
-async function populateCourtLists(){
-  const all = await fetchAllCases();
-  populateCourtListsFromArray(all);
-}
-function populateCourtListsFromArray(parsed){
-  // datalist
-  const datalist = document.getElementById('casesList');
-  datalist.innerHTML = '';
-  const select = document.getElementById('casesSelect');
-  select.innerHTML = '<option value="">-- select a case --</option>';
-  parsed.forEach(c=>{
-    const display = `${c.evidenceID} | ${c.accused} | ${c.aadhaar}`;
-    const opt = document.createElement('option');
-    opt.value = display;
-    opt.text = display;
-    datalist.appendChild(opt);
-    const selOpt = document.createElement('option');
-    selOpt.value = display;
-    selOpt.text = display;
-    select.appendChild(selOpt);
-  });
-}
-
-/* Filter court list while typing (basic) */
-function filterCourtList(){
-  const q = document.getElementById('searchJudgment').value.trim().toLowerCase();
-  const select = document.getElementById('casesSelect');
-  for(let i=0;i<select.options.length;i++){
-    const opt = select.options[i];
-    opt.style.display = (q === '' || opt.text.toLowerCase().includes(q)) ? 'block' : 'none';
-  }
-}
-
-/* When a case is selected in the select element */
-function onCourtSelectionChange(){
-  const val = document.getElementById('casesSelect').value;
-  if(!val) return;
-  const ev = val.split('|')[0].trim();
-  document.getElementById('evidenceID_j').value = ev;
-}
-
-/* When Aadhaar is blurred in register, try to auto-fill accused and regenerate IDs */
-document.addEventListener('DOMContentLoaded', ()=>{
-  const aadhaarInput = document.getElementById('aadhaar');
-  if(aadhaarInput){
-    aadhaarInput.addEventListener('blur', async ()=>{
-      const aad = aadhaarInput.value.trim();
-      if(!aad) return;
-      const all = await fetchAllCases();
-      const found = (all || []).find(c => (c.aadhaar||'') === aad);
-      if(found){
-        document.getElementById('accusedName').value = found.accused || '';
-      }
-      // regenerate IDs (in case on-chain changed)
-      await generateNextIDs();
-    });
-  }
-});
-
-/* Render cases into table */
-function renderCases(rows){
-  const tbody = document.getElementById('trackingResults');
-  tbody.innerHTML = '';
-  if(!rows || rows.length === 0){
-    document.getElementById('trackingResultsTable').classList.add('hidden');
-    document.getElementById('noCases').classList.remove('hidden');
-    return;
-  }
-  rows.forEach(c=>{
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td class="border p-2 font-mono">${escapeHtml(c.evidenceID)}</td>
-      <td class="border p-2 font-mono">${escapeHtml(c.uniqueID)}</td>
-      <td class="border p-2">${escapeHtml(c.aadhaar)}</td>
-      <td class="border p-2">${escapeHtml(c.accused)}</td>
-      <td class="border p-2">${escapeHtml(c.caseDetail)}</td>
-      <td class="border p-2">${escapeHtml(c.location)}</td>
-      <td class="border p-2">${escapeHtml(c.crimeDateTime)}</td>
-      <td class="border p-2">${escapeHtml(c.registrationDateTime)}</td>
-    `;
-    tbody.appendChild(tr);
-  });
-  document.getElementById('trackingResultsTable').classList.remove('hidden');
-  document.getElementById('noCases').classList.add('hidden');
-}
-
-/* Simple escaping */
-function escapeHtml(s){ if(s === null || s === undefined) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;'); }
-
-/* Increment local counters after successful register */
-function incrementLocalCounters(){
+/* increment local counters after register tx succeeds (so next preview changes) */
+function bumpLocalCounters(){
   const ev = getLocalCounter(LOCAL_EVIDENCE_KEY,1);
   const ui = getLocalCounter(LOCAL_UNIQUE_KEY,1);
   setLocalCounter(LOCAL_EVIDENCE_KEY, ev+1);
   setLocalCounter(LOCAL_UNIQUE_KEY, ui+1);
 }
 
-/* Init UI on load */
-window.onload = function(){
-  document.getElementById('loginPage').style.display = 'flex';
-  document.getElementById('dashboard').style.display = 'none';
-  setWalletUI(null);
-  // hide wallet dropdown on outside click
-  document.addEventListener('click', function(e){
-    const dropdown = document.getElementById('walletDropdown');
-    const btn = document.getElementById('walletConnectTopBtn');
-    if(!btn.contains(e.target) && !dropdown.contains(e.target)){
-      dropdown.classList.add('hidden');
+/* register case on-chain (police only) */
+async function registerCase(){
+  if(!contract || !signer || !userAddress){ alert('Connect wallet first'); return; }
+  // check role on-chain
+  const isPolice = await contract.policeAccounts(userAddress);
+  if(!isPolice){ alert('Connected account is not a registered police account.'); return; }
+
+  const aadhaar = document.getElementById('aadhaar').value.trim();
+  const accusedName = document.getElementById('accusedName').value.trim();
+  const caseDetail = document.getElementById('caseDetail').value.trim();
+  const location = document.getElementById('crimeLocation').value.trim();
+  const crimeDateTime = document.getElementById('crimeDateTime').value;
+  const registrationDateTime = document.getElementById('registrationDateTime').value || new Date().toISOString();
+
+  if(!aadhaar || !accusedName || !caseDetail || !location || !crimeDateTime){ alert('Fill all fields'); return; }
+
+  try{
+    const tx = await contract.registerCase(aadhaar, accusedName, caseDetail, location, crimeDateTime, registrationDateTime);
+    alert('Transaction sent: ' + tx.hash);
+    await tx.wait();
+    alert('Registered on-chain. Fetching fresh data...');
+    // bump local preview counters
+    bumpLocalCounters();
+    // fetch cases for this aadhaar and display newest
+    const arr = await contract.getCasesByAadhaar(aadhaar);
+    const parsed = arr.map(normalizeCase);
+    if(parsed.length>0){
+      const newest = parsed[parsed.length-1];
+      // show on UI
+      document.getElementById('evidenceID').value = newest.evidenceId;
+      document.getElementById('uniqueID').value = newest.uniqueId;
+      // refresh listing
+      renderCases(parsed);
+      populateDatalistFromArray(parsed);
     }
+  }catch(err){
+    console.error(err);
+    alert('Register error: ' + (err?.message || err));
+  }
+}
+
+/* submit judgment on-chain (court only) */
+async function submitJudgment(){
+  if(!contract || !signer || !userAddress){ alert('Connect wallet first'); return; }
+  const isCourt = await contract.courtAccounts(userAddress);
+  if(!isCourt){ alert('Connected account is not a registered court account.'); return; }
+
+  const evidenceId = document.getElementById('evidenceID_j').value.trim();
+  const judgment = document.getElementById('judgmentText').value.trim();
+  const closingDate = document.getElementById('closingDate').value;
+  if(!evidenceId || !judgment || !closingDate){ alert('Fill evidenceId, judgment and closing date'); return; }
+
+  try{
+    const tx = await contract.submitJudgment(evidenceId, judgment, closingDate);
+    alert('Transaction sent: ' + tx.hash);
+    await tx.wait();
+    alert('Judgment submitted. Refreshing...');
+    // fetch and refresh lists
+    fetchAllForDatalist();
+  }catch(err){
+    console.error(err);
+    alert('Submit error: ' + (err?.message || err));
+  }
+}
+
+/* Tracking helpers:
+   - fetchAllForDatalist(): fetch some cases by scanning probable sources for populating datalist/select.
+   Note: contract does not expose getAllCases; frontend will attempt to populate datalist partially by reading nothing else.
+   We'll rely on user searches: for Aadhaar, getCasesByAadhaar; evidence & unique do single fetches.
+*/
+async function fetchAllForDatalist(){
+  // There's no getAllCases in contract. We'll just clear datalist and rely on searches.
+  // But we can keep the datalist empty until user does searches.
+  document.getElementById('casesList').innerHTML = '';
+  // no further action
+}
+
+/* tracking search dispatcher */
+async function trackingSearch(){
+  const mode = document.getElementById('trackingMode').value;
+  const q = document.getElementById('searchTracking').value.trim();
+  if(!q){ alert('Enter search term'); return; }
+  if(mode === 'aadhaar'){
+    // returns array
+    try{
+      const arr = await readCallGetCasesByAadhaar(q);
+      renderCases(arr);
+    }catch(err){ console.error(err); alert('Read error: ' + (err?.message || err)); }
+  } else if(mode === 'evidence'){
+    try{
+      const c = await readCallGetCaseByEvidenceId(q);
+      renderCases(c ? [c] : []);
+    }catch(err){ console.error(err); alert('Read error: ' + (err?.message || err)); }
+  } else if(mode === 'unique'){
+    try{
+      const c = await readCallGetCaseByUniqueId(q);
+      renderCases(c ? [c] : []);
+    }catch(err){ console.error(err); alert('Read error: ' + (err?.message || err)); }
+  }
+}
+
+/* apply search to judgment input (set evidence ID) */
+async function applySearchToJudgment(){
+  const raw = document.getElementById('searchJudgment').value.trim();
+  if(!raw){ alert('Type a value to find'); return; }
+  // try as evidence
+  try{
+    const caseObj = await readCallGetCaseByEvidenceId(raw).catch(()=>null);
+    if(caseObj){ document.getElementById('evidenceID_j').value = caseObj.evidenceId; return; }
+  }catch(e){}
+  // try as unique
+  try{
+    const caseObj = await readCallGetCaseByUniqueId(raw).catch(()=>null);
+    if(caseObj){ document.getElementById('evidenceID_j').value = caseObj.evidenceId; return; }
+  }catch(e){}
+  // try as aadhaar (fill select if multiple)
+  try{
+    const arr = await readCallGetCasesByAadhaar(raw).catch(()=>[]);
+    if(arr && arr.length>0){
+      // fill datalist options and choose first
+      populateDatalistFromArray(arr);
+      document.getElementById('evidenceID_j').value = arr[0].evidenceId;
+      return;
+    }
+  }catch(e){}
+  alert('No matching case found for the input.');
+}
+
+/* read wrappers using either write contract or readonly provider */
+async function readCallGetCasesByAadhaar(aadhaar){
+  if(contract){
+    const raw = await contract.getCasesByAadhaar(aadhaar);
+    return (raw || []).map(normalizeCase);
+  } else if(window.ethereum){
+    const rP = new ethers.providers.Web3Provider(window.ethereum);
+    const rC = new ethers.Contract(contractAddress, contractABI, rP);
+    const raw = await rC.getCasesByAadhaar(aadhaar);
+    return (raw || []).map(normalizeCase);
+  } else { throw new Error('No provider'); }
+}
+async function readCallGetCaseByEvidenceId(eid){
+  if(contract){
+    const raw = await contract.getCaseByEvidenceId(eid);
+    if(raw && raw.evidenceId) return normalizeCase(raw);
+    return null;
+  } else if(window.ethereum){
+    const rP = new ethers.providers.Web3Provider(window.ethereum);
+    const rC = new ethers.Contract(contractAddress, contractABI, rP);
+    const raw = await rC.getCaseByEvidenceId(eid);
+    return raw && raw.evidenceId ? normalizeCase(raw) : null;
+  } else { throw new Error('No provider'); }
+}
+async function readCallGetCaseByUniqueId(uid){
+  if(contract){
+    const raw = await contract.getCaseByUniqueId(uid);
+    if(raw && raw.uniqueId) return normalizeCase(raw);
+    return null;
+  } else if(window.ethereum){
+    const rP = new ethers.providers.Web3Provider(window.ethereum);
+    const rC = new ethers.Contract(contractAddress, contractABI, rP);
+    const raw = await rC.getCaseByUniqueId(uid);
+    return raw && raw.uniqueId ? normalizeCase(raw) : null;
+  } else { throw new Error('No provider'); }
+}
+
+/* populate datalist from array (for court/quick search convenience) */
+function populateDatalistFromArray(arr){
+  const dl = document.getElementById('casesList');
+  dl.innerHTML = '';
+  arr.forEach(c=>{
+    const v = `${c.evidenceId} | ${c.uniqueId} | ${c.accusedName} | ${c.aadhaar}`;
+    const opt = document.createElement('option'); opt.value = v; dl.appendChild(opt);
+  });
+}
+
+/* render cases */
+function renderCases(arr){
+  const tbody = document.getElementById('trackingResults');
+  tbody.innerHTML = '';
+  if(!arr || arr.length===0){ document.getElementById('trackingResultsTable').classList.add('hidden'); document.getElementById('noCases').classList.remove('hidden'); return; }
+  arr.forEach(c=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td class="border p-2 font-mono">${escapeHtml(c.evidenceId)}</td>
+      <td class="border p-2 font-mono">${escapeHtml(c.uniqueId)}</td>
+      <td class="border p-2">${escapeHtml(c.aadhaar)}</td>
+      <td class="border p-2">${escapeHtml(c.accusedName)}</td>
+      <td class="border p-2">${escapeHtml(c.caseDetail)}</td>
+      <td class="border p-2">${escapeHtml(c.location)}</td>
+      <td class="border p-2">${escapeHtml(c.crimeDateTime)}</td>
+      <td class="border p-2">${escapeHtml(c.registrationDateTime)}</td>
+      <td class="border p-2">${escapeHtml(c.judgment)}</td>
+      <td class="border p-2">${escapeHtml(c.closingDate)}</td>`;
+    tbody.appendChild(tr);
+  });
+  document.getElementById('trackingResultsTable').classList.remove('hidden');
+  document.getElementById('noCases').classList.add('hidden');
+}
+
+/* escape */
+function escapeHtml(s){ if(s===null||s===undefined) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,"&#039;"); }
+
+/* local counter helpers */
+function getLocalCounter(k, start=1){ const v = localStorage.getItem(k); return v ? parseInt(v,10) : start; }
+function setLocalCounter(k,v){ localStorage.setItem(k,String(v)); }
+
+/* when page loads, init UI */
+window.onload = function(){
+  document.getElementById('loginPage').style.display='flex';
+  document.getElementById('dashboard').style.display='none';
+  setWalletUI(null);
+  // attach blur listener for aadhaar to attempt auto-fill
+  const aad = document.getElementById('aadhaar');
+  if(aad){
+    aad.addEventListener('blur', async ()=>{
+      const v = aad.value.trim();
+      if(!v) return;
+      try{
+        const arr = await readCallGetCasesByAadhaar(v).catch(()=>[]);
+        if(arr && arr.length>0){ document.getElementById('accusedName').value = arr[arr.length-1].accusedName || ''; populateDatalistFromArray(arr); }
+      }catch(e){ /* ignore */ }
+      // regenerate preview ids
+      generatePreviewIDs();
+    });
+  }
+
+  // hide wallet dropdown clicking outside
+  document.addEventListener('click', function(e){
+    const dd = document.getElementById('walletDropdown');
+    const btn = document.getElementById('walletConnectTopBtn');
+    if(!btn.contains(e.target) && !dd.contains(e.target)) dd.classList.add('hidden');
   });
 };
 </script>
-
 </body>
 </html>
