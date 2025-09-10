@@ -6,6 +6,7 @@
     <title>🔐 Blockchain Evidence Tracking System</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
     <style>
         .gradient-bg {
             background: linear-gradient(135deg, #f0f9ff 0%, #e0e7ff 100%);
@@ -234,7 +235,7 @@
 
                         <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold btn-primary hover:bg-blue-700 flex items-center justify-center">
                             <i data-lucide="check-circle" class="w-5 h-5 mr-2"></i>
-                            📝 Register Case & Connect MetaMask
+                            📝 Register Case & Submit to Blockchain
                         </button>
                     </form>
                 </div>
@@ -286,6 +287,9 @@
                         <i data-lucide="search" class="absolute left-4 top-4 w-5 h-5 text-gray-400"></i>
                         <input type="text" id="publicSearch" placeholder="🔍 Enter Evidence ID, Aadhaar Number, or Accused Name..." class="w-full pl-12 pr-4 py-4 border border-gray-300 rounded-lg text-lg form-input focus:ring-2 focus:ring-green-500 focus:border-transparent">
                     </div>
+                    <button onclick="searchFromBlockchain()" class="mt-4 w-full bg-green-600 text-white py-3 rounded-lg font-semibold btn-primary hover:bg-green-700">
+                        🔍 Search on Blockchain
+                    </button>
                 </div>
 
                 <div id="publicSearchResults" class="space-y-6">
@@ -409,7 +413,7 @@
 
                         <button type="submit" id="courtSubmitBtn" disabled class="w-full bg-orange-600 text-white py-3 rounded-lg font-semibold btn-primary hover:bg-orange-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center">
                             <i data-lucide="check-circle" class="w-5 h-5 mr-2"></i>
-                            ⚖️ Submit Judgment & Connect MetaMask
+                            ⚖️ Submit Judgment to Blockchain
                         </button>
                     </form>
                 </div>
@@ -436,7 +440,493 @@
     </div>
 
     <script>
-        // Global variables
+        // ==============================
+        // BLOCKCHAIN CONFIGURATION
+        // ==============================
+        
+        // 🔧 REPLACE THESE WITH YOUR ACTUAL CONTRACT DETAILS
+        const CONTRACT_ADDRESS = "0xB8bbfC476Ce4BCc208aecB5Ac235581dd304fC02"; // Your deployed contract address
+        
+        // 🔧 REPLACE THIS WITH YOUR ACTUAL CONTRACT ABI
+        const CONTRACT = [ [
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "uint256",
+				"name": "index",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "evidenceId",
+				"type": "string"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "uniqueId",
+				"type": "string"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "aadhar",
+				"type": "string"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "accusedName",
+				"type": "string"
+			}
+		],
+		"name": "CaseRegistered",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "uint256",
+				"name": "index",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "evidenceId",
+				"type": "string"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "judgment",
+				"type": "string"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "closingDate",
+				"type": "string"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "reJudgment",
+				"type": "string"
+			}
+		],
+		"name": "JudgmentSubmitted",
+		"type": "event"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "_aadhar",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "_accusedName",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "_caseDetail",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "_crimeLocation",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "_crimeDateTime",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "_registerDateTime",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "_evidenceId",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "_uniqueId",
+				"type": "string"
+			}
+		],
+		"name": "registerCase",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "_evidenceId",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "_judgment",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "_closingDate",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "_reJudgment",
+				"type": "string"
+			}
+		],
+		"name": "submitJudgment",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "cases",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "aadhar",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "accusedName",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "caseDetail",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "crimeLocation",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "crimeDateTime",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "registerDateTime",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "evidenceId",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "uniqueId",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "judgment",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "closingDate",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "reJudgment",
+				"type": "string"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "_evidenceId",
+				"type": "string"
+			}
+		],
+		"name": "getCaseByEvidence",
+		"outputs": [
+			{
+				"components": [
+					{
+						"internalType": "string",
+						"name": "aadhar",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "accusedName",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "caseDetail",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "crimeLocation",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "crimeDateTime",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "registerDateTime",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "evidenceId",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "uniqueId",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "judgment",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "closingDate",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "reJudgment",
+						"type": "string"
+					}
+				],
+				"internalType": "struct EvidenceTracking.CaseData",
+				"name": "",
+				"type": "tuple"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "_aadhar",
+				"type": "string"
+			}
+		],
+		"name": "getCasesByAadhar",
+		"outputs": [
+			{
+				"components": [
+					{
+						"internalType": "string",
+						"name": "aadhar",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "accusedName",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "caseDetail",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "crimeLocation",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "crimeDateTime",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "registerDateTime",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "evidenceId",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "uniqueId",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "judgment",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "closingDate",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "reJudgment",
+						"type": "string"
+					}
+				],
+				"internalType": "struct EvidenceTracking.CaseData[]",
+				"name": "",
+				"type": "tuple[]"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "_accusedName",
+				"type": "string"
+			}
+		],
+		"name": "getCasesByAccused",
+		"outputs": [
+			{
+				"components": [
+					{
+						"internalType": "string",
+						"name": "aadhar",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "accusedName",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "caseDetail",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "crimeLocation",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "crimeDateTime",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "registerDateTime",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "evidenceId",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "uniqueId",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "judgment",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "closingDate",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "reJudgment",
+						"type": "string"
+					}
+				],
+				"internalType": "struct EvidenceTracking.CaseData[]",
+				"name": "",
+				"type": "tuple[]"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getTotalCases",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	}
+]
+        ];
+
+        // Network configuration (change to your target network)
+        const TARGET_NETWORK = {
+            chainId: '0xaa36a7', // Sepolia Testnet
+            chainName: 'Sepolia Testnet',
+            rpcUrls: ['https://sepolia.infura.io/v3/YOUR-PROJECT-ID'],
+            blockExplorerUrls: ['https://sepolia.etherscan.io/']
+        };
+
+        // ==============================
+        // GLOBAL VARIABLES
+        // ==============================
+        
+        let web3 = null;
+        let contract = null;
+        let account = null;
         let cases = [];
         let evidenceCounter = 1;
         let selectedCase = null;
@@ -447,6 +937,160 @@
             court: { username: 'court_admin', password: 'court123' }
         };
 
+        // ==============================
+        // BLOCKCHAIN FUNCTIONS
+        // ==============================
+        
+        async function connectWallet() {
+            if (typeof window.ethereum === 'undefined') {
+                alert('🦊 Please install MetaMask to interact with the blockchain.');
+                return false;
+            }
+
+            try {
+                // Request account access
+                const accounts = await window.ethereum.request({
+                    method: 'eth_requestAccounts'
+                });
+
+                // Check if connected to correct network
+                const chainId = await window.ethereum.request({
+                    method: 'eth_chainId'
+                });
+
+                if (chainId !== TARGET_NETWORK.chainId) {
+                    try {
+                        await window.ethereum.request({
+                            method: 'wallet_switchEthereumChain',
+                            params: [{ chainId: TARGET_NETWORK.chainId }],
+                        });
+                    } catch (switchError) {
+                        if (switchError.code === 4902) {
+                            await window.ethereum.request({
+                                method: 'wallet_addEthereumChain',
+                                params: [TARGET_NETWORK],
+                            });
+                        } else {
+                            throw switchError;
+                        }
+                    }
+                }
+
+                // Initialize Web3
+                web3 = new Web3(window.ethereum);
+                account = accounts[0];
+                
+                // Initialize contract
+                contract = new web3.eth.Contract(CONTRACT_ABI, CONTRACT_ADDRESS);
+                
+                console.log('✅ Connected to wallet:', account);
+                console.log('🔗 Contract Address:', CONTRACT_ADDRESS);
+                
+                return true;
+            } catch (error) {
+                console.error('❌ Error connecting to wallet:', error);
+                alert('❌ Failed to connect to MetaMask. Please try again.');
+                return false;
+            }
+        }
+
+        async function registerCaseOnBlockchain(caseData) {
+            try {
+                if (!contract || !account) {
+                    const connected = await connectWallet();
+                    if (!connected) return false;
+                }
+
+                const crimeTimestamp = Math.floor(new Date(caseData.crimeDateTime).getTime() / 1000);
+                const registerTimestamp = Math.floor(new Date(caseData.registerDateTime).getTime() / 1000);
+
+                console.log('📝 Registering case on blockchain...', caseData);
+
+                const tx = await contract.methods.registerCase(
+                    caseData.evidenceId,
+                    caseData.aadhaar,
+                    caseData.accusedName,
+                    caseData.caseDetails,
+                    caseData.crimeLocation,
+                    crimeTimestamp,
+                    registerTimestamp
+                ).send({ from: account });
+
+                console.log('✅ Transaction successful:', tx.transactionHash);
+                alert(`✅ Case registered successfully on blockchain!\n🔗 Transaction Hash: ${tx.transactionHash}`);
+                return true;
+            } catch (error) {
+                console.error('❌ Error registering case:', error);
+                alert('❌ Failed to register case on blockchain. Please check your connection and try again.');
+                return false;
+            }
+        }
+
+        async function submitJudgmentOnBlockchain(evidenceId, judgment, closingDate, rejudgment = '') {
+            try {
+                if (!contract || !account) {
+                    const connected = await connectWallet();
+                    if (!connected) return false;
+                }
+
+                const closingTimestamp = Math.floor(new Date(closingDate).getTime() / 1000);
+
+                console.log('⚖️ Submitting judgment on blockchain...');
+
+                const tx = await contract.methods.submitJudgment(
+                    evidenceId,
+                    judgment,
+                    closingTimestamp,
+                    rejudgment
+                ).send({ from: account });
+
+                console.log('✅ Judgment transaction successful:', tx.transactionHash);
+                alert(`✅ Court judgment submitted successfully on blockchain!\n🔗 Transaction Hash: ${tx.transactionHash}`);
+                return true;
+            } catch (error) {
+                console.error('❌ Error submitting judgment:', error);
+                alert('❌ Failed to submit judgment on blockchain. Please check your connection and try again.');
+                return false;
+            }
+        }
+
+        async function getCaseFromBlockchain(evidenceId) {
+            try {
+                if (!contract) {
+                    const connected = await connectWallet();
+                    if (!connected) return null;
+                }
+
+                console.log('🔍 Searching case on blockchain:', evidenceId);
+
+                const result = await contract.methods.getCase(evidenceId).call();
+                
+                if (result.exists) {
+                    return {
+                        evidenceId: result.evidenceId,
+                        aadhaar: result.aadhaar,
+                        accusedName: result.accusedName,
+                        caseDetails: result.caseDetails,
+                        crimeLocation: result.crimeLocation,
+                        crimeDateTime: new Date(result.crimeDateTime * 1000).toISOString().slice(0, 16),
+                        registerDateTime: new Date(result.registerDateTime * 1000).toISOString().slice(0, 16),
+                        judgment: result.judgment,
+                        closingDate: result.closingDate > 0 ? new Date(result.closingDate * 1000).toISOString().slice(0, 10) : '',
+                        rejudgment: result.rejudgment
+                    };
+                } else {
+                    return null;
+                }
+            } catch (error) {
+                console.error('❌ Error getting case from blockchain:', error);
+                return null;
+            }
+        }
+
+        // ==============================
+        // UI FUNCTIONS
+        // ==============================
+        
         // Initialize Lucide icons
         lucide.createIcons();
 
@@ -516,23 +1160,6 @@
             return `EV${evidenceCounter.toString().padStart(6, '0')}`;
         }
 
-        // MetaMask connection
-        async function connectMetaMask() {
-            if (typeof window.ethereum !== 'undefined') {
-                try {
-                    await window.ethereum.request({ method: 'eth_requestAccounts' });
-                    alert('🔗 MetaMask connected successfully! Data stored on blockchain.');
-                    return true;
-                } catch (error) {
-                    alert('❌ MetaMask connection failed. Please try again.');
-                    return false;
-                }
-            } else {
-                alert('🦊 Please install MetaMask to store data on blockchain.');
-                return false;
-            }
-        }
-
         // Search functionality
         function searchCases(searchTerm) {
             if (!searchTerm.trim()) {
@@ -543,6 +1170,52 @@
                 caseData.aadhaar.includes(searchTerm) ||
                 caseData.accusedName.toLowerCase().includes(searchTerm.toLowerCase())
             );
+        }
+
+        async function searchFromBlockchain() {
+            const searchTerm = document.getElementById('publicSearch').value.trim();
+            if (!searchTerm) {
+                alert('❌ Please enter a search term');
+                return;
+            }
+
+            // Show loading
+            document.getElementById('publicSearchResults').innerHTML = `
+                <div class="text-center py-12">
+                    <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-green-600 mx-auto mb-4"></div>
+                    <h3 class="text-xl font-medium mb-2">🔍 Searching Blockchain...</h3>
+                    <p>Please wait while we search for your case.</p>
+                </div>
+            `;
+
+            try {
+                // Try to get case directly by evidence ID
+                const caseData = await getCaseFromBlockchain(searchTerm);
+                
+                if (caseData) {
+                    updateSearchResults('publicSearchResults', [caseData]);
+                } else {
+                    document.getElementById('publicSearchResults').innerHTML = `
+                        <div class="text-center text-red-500 py-12">
+                            <i data-lucide="search" class="w-16 h-16 text-red-300 mx-auto mb-4"></i>
+                            <h3 class="text-xl font-medium mb-2">❌ No Case Found</h3>
+                            <p>No case found with Evidence ID: <strong>${searchTerm}</strong></p>
+                            <p class="mt-2 text-gray-600">Please verify the Evidence ID and try again.</p>
+                        </div>
+                    `;
+                    lucide.createIcons();
+                }
+            } catch (error) {
+                console.error('Search error:', error);
+                document.getElementById('publicSearchResults').innerHTML = `
+                    <div class="text-center text-red-500 py-12">
+                        <i data-lucide="alert-circle" class="w-16 h-16 text-red-300 mx-auto mb-4"></i>
+                        <h3 class="text-xl font-medium mb-2">❌ Search Failed</h3>
+                        <p>Unable to search blockchain. Please check your connection and try again.</p>
+                    </div>
+                `;
+                lucide.createIcons();
+            }
         }
 
         function updateSearchResults(containerId, results) {
@@ -602,7 +1275,12 @@
                                                 <i data-lucide="scale" class="w-5 h-5 text-green-600 mr-2"></i>
                                                 <span><strong>⚖️ Status:</strong> Judgment Given</span>
                                             </div>
-                                        ` : ''}
+                                        ` : `
+                                            <div class="flex items-center">
+                                                <i data-lucide="clock" class="w-5 h-5 text-orange-600 mr-2"></i>
+                                                <span><strong>⏳ Status:</strong> Pending Judgment</span>
+                                            </div>
+                                        `}
                                         ${caseData.closingDate ? `
                                             <div class="flex items-center">
                                                 <i data-lucide="check-circle" class="w-5 h-5 text-green-600 mr-2"></i>
@@ -615,6 +1293,12 @@
                                     <p><strong>📋 Case Details:</strong> ${caseData.caseDetails}</p>
                                     ${caseData.judgment ? `<p class="mt-2"><strong>⚖️ Court Judgment:</strong> ${caseData.judgment}</p>` : ''}
                                     ${caseData.rejudgment ? `<p class="mt-2"><strong>🔄 Re-judgment:</strong> ${caseData.rejudgment}</p>` : ''}
+                                </div>
+                                <div class="mt-4 pt-4 border-t border-gray-200">
+                                    <div class="flex items-center text-sm text-blue-600">
+                                        <i data-lucide="check-circle-2" class="w-4 h-4 mr-2"></i>
+                                        <span>✅ Verified on Blockchain</span>
+                                    </div>
                                 </div>
                             </div>
                         `;
@@ -641,6 +1325,10 @@
             // Reinitialize Lucide icons for new content
             lucide.createIcons();
         }
+
+        // ==============================
+        // EVENT LISTENERS
+        // ==============================
 
         // Police login
         document.getElementById('policeLoginForm').addEventListener('submit', function(e) {
@@ -697,16 +1385,15 @@
                 registerDateTime: document.getElementById('registerDateTime').value
             };
 
-            const connected = await connectMetaMask();
-            if (connected) {
+            // Submit to blockchain
+            const success = await registerCaseOnBlockchain(newCase);
+            if (success) {
                 cases.push(newCase);
                 evidenceCounter++;
                 
                 // Clear form and set new evidence ID
                 document.getElementById('policeForm').reset();
                 document.getElementById('evidenceId').value = generateEvidenceId();
-                
-                alert('✅ Case registered successfully!');
             }
         });
 
@@ -719,15 +1406,26 @@
                 return;
             }
 
-            const updatedCase = {
-                ...selectedCase,
-                judgment: document.getElementById('judgment').value,
-                closingDate: document.getElementById('closingDate').value,
-                rejudgment: document.getElementById('rejudgment').value
-            };
+            const judgment = document.getElementById('judgment').value;
+            const closingDate = document.getElementById('closingDate').value;
+            const rejudgment = document.getElementById('rejudgment').value;
 
-            const connected = await connectMetaMask();
-            if (connected) {
+            // Submit judgment to blockchain
+            const success = await submitJudgmentOnBlockchain(
+                selectedCase.evidenceId,
+                judgment,
+                closingDate,
+                rejudgment
+            );
+
+            if (success) {
+                const updatedCase = {
+                    ...selectedCase,
+                    judgment: judgment,
+                    closingDate: closingDate,
+                    rejudgment: rejudgment
+                };
+
                 const index = cases.findIndex(c => c.evidenceId === selectedCase.evidenceId);
                 if (index !== -1) {
                     cases[index] = updatedCase;
@@ -739,8 +1437,6 @@
                 document.getElementById('courtSearchDropdown').classList.add('hidden');
                 document.getElementById('courtSubmitBtn').disabled = true;
                 selectedCase = null;
-
-                alert('✅ Court judgment submitted successfully!');
             }
         });
 
@@ -757,11 +1453,6 @@
         document.getElementById('policeSearch').addEventListener('input', function(e) {
             const results = searchCases(e.target.value);
             updateSearchResults('policeSearchResults', results);
-        });
-
-        document.getElementById('publicSearch').addEventListener('input', function(e) {
-            const results = searchCases(e.target.value);
-            updateSearchResults('publicSearchResults', results);
         });
 
         document.getElementById('courtTrackingSearch').addEventListener('input', function(e) {
@@ -809,7 +1500,10 @@
         document.addEventListener('DOMContentLoaded', function() {
             showHome();
             lucide.createIcons();
+            
+            // Try to connect wallet on page load (optional)
+            // connectWallet();
         });
     </script>
 </body>
-</html>
+</html> give perfect solidity that matches html
