@@ -707,8 +707,600 @@
         let cases = {}; // Temporary storage for demo (will be replaced by blockchain)
 
         // Contract configuration (to be updated with deployed contract)
-        const contractAddress = "YOUR_DEPLOYED_CONTRACT_ADDRESS_HERE";
-        const contractABI = []; // Will be filled with actual ABI after deployment
+        const contractAddress = "0xA80f5Efb648e358D6fd9339700bCE086E6ba6dD3";
+        const contractABI = [
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "uniqueCaseID",
+				"type": "string"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "evidenceID",
+				"type": "string"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "aadhaar",
+				"type": "string"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "accused",
+				"type": "string"
+			}
+		],
+		"name": "CaseRegistered",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "evidenceID",
+				"type": "string"
+			}
+		],
+		"name": "JudgmentSubmitted",
+		"type": "event"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "aadhaar",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "accused",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "details",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "location",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "officer",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "crimeDate",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "regDate",
+				"type": "string"
+			}
+		],
+		"name": "registerCase",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "evidenceID",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "judgmentText",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "closingDate",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "rejudgment",
+				"type": "string"
+			}
+		],
+		"name": "submitJudgment",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			},
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "aadhaarCases",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"name": "aadhaarUniqueID",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			},
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "accusedCases",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "caseCounter",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"name": "cases",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "uniqueCaseID",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "evidenceID",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "aadhaar",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "accused",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "details",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "location",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "officer",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "crimeDate",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "regDate",
+				"type": "string"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "evidenceCounter",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"name": "judgments",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "evidenceID",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "judgmentText",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "closingDate",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "rejudgment",
+				"type": "string"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "aadhaar",
+				"type": "string"
+			}
+		],
+		"name": "trackByAadhaar",
+		"outputs": [
+			{
+				"components": [
+					{
+						"internalType": "string",
+						"name": "uniqueCaseID",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "evidenceID",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "aadhaar",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "accused",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "details",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "location",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "officer",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "crimeDate",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "regDate",
+						"type": "string"
+					}
+				],
+				"internalType": "struct EvidenceTracking.Case[]",
+				"name": "",
+				"type": "tuple[]"
+			},
+			{
+				"components": [
+					{
+						"internalType": "string",
+						"name": "evidenceID",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "judgmentText",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "closingDate",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "rejudgment",
+						"type": "string"
+					}
+				],
+				"internalType": "struct EvidenceTracking.Judgment[]",
+				"name": "",
+				"type": "tuple[]"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "accusedName",
+				"type": "string"
+			}
+		],
+		"name": "trackByAccused",
+		"outputs": [
+			{
+				"components": [
+					{
+						"internalType": "string",
+						"name": "uniqueCaseID",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "evidenceID",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "aadhaar",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "accused",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "details",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "location",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "officer",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "crimeDate",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "regDate",
+						"type": "string"
+					}
+				],
+				"internalType": "struct EvidenceTracking.Case[]",
+				"name": "",
+				"type": "tuple[]"
+			},
+			{
+				"components": [
+					{
+						"internalType": "string",
+						"name": "evidenceID",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "judgmentText",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "closingDate",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "rejudgment",
+						"type": "string"
+					}
+				],
+				"internalType": "struct EvidenceTracking.Judgment[]",
+				"name": "",
+				"type": "tuple[]"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "evidenceID",
+				"type": "string"
+			}
+		],
+		"name": "trackByEvidenceID",
+		"outputs": [
+			{
+				"components": [
+					{
+						"internalType": "string",
+						"name": "uniqueCaseID",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "evidenceID",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "aadhaar",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "accused",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "details",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "location",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "officer",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "crimeDate",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "regDate",
+						"type": "string"
+					}
+				],
+				"internalType": "struct EvidenceTracking.Case",
+				"name": "",
+				"type": "tuple"
+			},
+			{
+				"components": [
+					{
+						"internalType": "string",
+						"name": "evidenceID",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "judgmentText",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "closingDate",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "rejudgment",
+						"type": "string"
+					}
+				],
+				"internalType": "struct EvidenceTracking.Judgment",
+				"name": "",
+				"type": "tuple"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	}
+]; // Will be filled with actual ABI after deployment
 
         // Initialize the application
         document.addEventListener('DOMContentLoaded', function() {
