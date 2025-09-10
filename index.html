@@ -5,194 +5,278 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>🔐 Blockchain Evidence Tracking System</title>
 <script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+<style>
+    /* Gradient backgrounds and UI styling */
+    .gradient-bg {background: linear-gradient(135deg, #f0f9ff 0%, #e0e7ff 100%);}
+    .police-bg {background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);}
+    .public-bg {background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);}
+    .court-bg {background: linear-gradient(135deg, #fff7ed 0%, #fed7aa 100%);}
+    .card-hover {transition: all 0.3s ease;}
+    .card-hover:hover {transform: translateY(-4px);box-shadow:0 20px 25px -5px rgba(0,0,0,.1),0 10px 10px -5px rgba(0,0,0,.04);}
+    .btn-primary {transition: all 0.2s ease;}
+    .btn-primary:hover {transform: translateY(-1px);}
+    .form-input {transition: all 0.2s ease;}
+    .form-input:focus {transform: translateY(-1px);}
+    .hidden {display: none !important;}
+    .search-result {cursor: pointer;transition: background-color 0.2s ease;}
+    .search-result:hover {background-color: #f9fafb;}
+</style>
 </head>
-<body class="bg-gray-50 min-h-screen font-sans">
+<body class="min-h-screen gradient-bg">
 
-<!-- LOGIN PAGE -->
-<div id="loginPage" class="flex items-center justify-center min-h-screen p-4">
-  <div class="w-full max-w-md bg-white rounded-2xl shadow-lg p-6">
-    <div class="text-center mb-4">
-      <h1 class="text-2xl font-bold">🔐 Evidence Tracking</h1>
-      <p class="text-sm text-gray-500 mt-1">Select your role to continue</p>
+<!-- Home Page -->
+<div id="homePage" class="min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <div class="text-center mb-12">
+            <div class="flex items-center justify-center mb-4">
+                <i data-lucide="shield" class="w-16 h-16 text-blue-600 mr-4"></i>
+                <h1 class="text-4xl font-bold text-gray-900">🔐 Evidence Tracking System</h1>
+            </div>
+            <p class="text-xl text-gray-600 max-w-2xl mx-auto">
+                Secure blockchain-based evidence management for law enforcement and judicial processes
+            </p>
+        </div>
+        <div class="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            <!-- Police Portal -->
+            <div class="bg-white rounded-xl shadow-lg p-8 card-hover">
+                <div class="text-center">
+                    <i data-lucide="shield" class="w-16 h-16 text-blue-600 mx-auto mb-4"></i>
+                    <h2 class="text-2xl font-bold text-gray-900 mb-4">👮‍♂️ Police Portal</h2>
+                    <p class="text-gray-600 mb-6">Register and manage evidence cases with secure blockchain storage.</p>
+                    <button onclick="showPoliceLogin()" class="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold btn-primary hover:bg-blue-700">
+                        Access Portal
+                    </button>
+                </div>
+            </div>
+            <!-- Public Portal -->
+            <div class="bg-white rounded-xl shadow-lg p-8 card-hover">
+                <div class="text-center">
+                    <i data-lucide="eye" class="w-16 h-16 text-green-600 mx-auto mb-4"></i>
+                    <h2 class="text-2xl font-bold text-gray-900 mb-4">👥 Public Portal</h2>
+                    <p class="text-gray-600 mb-6">Track case status using Evidence ID, Aadhaar, or Accused name.</p>
+                    <button onclick="showPublicPortal()" class="w-full bg-green-600 text-white py-3 px-6 rounded-lg font-semibold btn-primary hover:bg-green-700">
+                        Track Cases
+                    </button>
+                </div>
+            </div>
+            <!-- Court Portal -->
+            <div class="bg-white rounded-xl shadow-lg p-8 card-hover">
+                <div class="text-center">
+                    <i data-lucide="gavel" class="w-16 h-16 text-orange-600 mx-auto mb-4"></i>
+                    <h2 class="text-2xl font-bold text-gray-900 mb-4">⚖️ Court Portal</h2>
+                    <p class="text-gray-600 mb-6">Review cases and submit judicial decisions with blockchain verification.</p>
+                    <button onclick="showCourtLogin()" class="w-full bg-orange-600 text-white py-3 px-6 rounded-lg font-semibold btn-primary hover:bg-orange-700">
+                        Access Portal
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="text-center mt-12">
+            <div class="inline-flex items-center bg-white rounded-lg px-6 py-3 shadow-md">
+                <i data-lucide="hash" class="w-5 h-5 text-blue-600 mr-2"></i>
+                <span class="text-gray-700 font-medium">🔗 Powered by Blockchain Technology</span>
+            </div>
+        </div>
     </div>
-    <div class="grid gap-3 mb-4">
-      <button onclick="selectRole('Police')" class="w-full py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700">👮 Police</button>
-      <button onclick="selectRole('Court')" class="w-full py-2 rounded-lg bg-purple-600 text-white hover:bg-purple-700">🏛️ Court</button>
-      <button onclick="selectRole('Public')" class="w-full py-2 rounded-lg bg-green-600 text-white hover:bg-green-700">👥 Public</button>
-    </div>
-    <div id="loginForm" class="hidden space-y-3">
-      <input id="username" placeholder="Username" class="w-full border p-2 rounded" />
-      <input id="password" placeholder="Password" type="password" class="w-full border p-2 rounded" />
-      <button onclick="login()" class="w-full bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700">Login & Connect Wallet</button>
-    </div>
-    <div id="walletConnectLogin" class="hidden space-y-3">
-      <button onclick="connectWallet()" class="w-full bg-yellow-400 text-black py-2 rounded hover:brightness-95">Connect Wallet 🦊</button>
-      <p class="text-xs text-gray-500 break-words">Public users can view cases (read-only).</p>
-    </div>
-  </div>
 </div>
 
-<!-- DASHBOARD -->
-<div id="dashboard" class="hidden flex h-screen">
-  <!-- SIDEBAR -->
-  <aside class="w-72 bg-gray-900 text-white flex flex-col">
-    <div class="px-6 py-4 border-b border-gray-800 flex flex-col gap-1">
-      <div class="text-xl font-bold">📁 Evidence Dashboard</div>
-      <div id="userRoleDisplay" class="text-sm text-gray-400"></div>
-      <div id="connectedAddressSidebar" class="text-xs text-gray-300 break-words"></div>
-    </div>
-    <nav class="flex-1 px-2 py-4 space-y-1">
-      <button onclick="showTab('dashboardTab')" class="w-full text-left px-4 py-2 rounded hover:bg-gray-800">🏠 Home</button>
-      <button id="registerBtn" onclick="showTab('registerTab')" class="w-full text-left px-4 py-2 rounded hover:bg-gray-800">📝 Register Case</button>
-      <button id="judgmentBtn" onclick="showTab('judgmentTab')" class="w-full text-left px-4 py-2 rounded hover:bg-gray-800">🏛️ Submit Judgment</button>
-      <button onclick="showTab('trackingTab')" class="w-full text-left px-4 py-2 rounded hover:bg-gray-800">🔍 Case Tracking</button>
-    </nav>
-    <div class="p-4 border-t border-gray-800">
-      <button onclick="logout()" class="w-full bg-gray-700 py-2 rounded hover:bg-gray-600">🔑 Logout</button>
-    </div>
-  </aside>
-
-  <!-- MAIN AREA -->
-  <div class="flex-1 flex flex-col">
-    <!-- TOP BAR -->
-    <header class="flex items-center justify-between px-6 py-3 bg-white border-b border-gray-200">
-      <div>
-        <h2 id="pageTitle" class="text-lg font-semibold">Dashboard</h2>
-        <p id="pageSubtitle" class="text-xs text-gray-500">Sidebar → Select a tab</p>
-      </div>
-      <div class="flex items-center gap-3">
-        <div id="walletArea" class="text-sm font-mono text-gray-700">Not connected</div>
-      </div>
-    </header>
-
-    <!-- CONTENT -->
-    <main class="p-6 overflow-auto">
-
-      <!-- HOME -->
-      <section id="dashboardTab">
-        <div class="bg-white rounded shadow p-4">
-          <h3 class="font-semibold">Welcome</h3>
-          <p class="text-sm text-gray-500 mt-1">Use the sidebar to navigate. Connect a wallet to perform on-chain actions.</p>
-        </div>
-      </section>
-
-      <!-- REGISTER CASE -->
-      <section id="registerTab" class="hidden">
-        <h3 class="text-xl font-semibold mb-3">📝 Register Case</h3>
-        <div class="bg-white rounded shadow p-6 max-w-3xl grid gap-3">
-          <label>Aadhaar 🆔</label>
-          <input id="aadhaar" maxlength="12" class="w-full border p-2 rounded" onblur="autoFillAccused()" />
-          <label>Accused Name 👤</label>
-          <input id="accusedName" class="w-full border p-2 rounded" />
-          <label>Case Detail 📝</label>
-          <textarea id="caseDetail" class="w-full border p-2 rounded"></textarea>
-          <label>Crime Location 📍</label>
-          <input id="crimeLocation" class="w-full border p-2 rounded" />
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label>Crime Date & Time 🕒</label>
-              <input id="crimeDateTime" type="datetime-local" class="w-full border p-2 rounded" />
+<!-- Police Login Page -->
+<div id="policeLoginPage" class="min-h-screen police-bg hidden">
+    <div class="flex items-center justify-center min-h-screen">
+        <div class="bg-white rounded-xl shadow-lg p-8 w-full max-w-md">
+            <div class="text-center mb-8">
+                <i data-lucide="shield" class="w-16 h-16 text-blue-600 mx-auto mb-4"></i>
+                <h2 class="text-2xl font-bold text-gray-900">👮‍♂️ Police Login</h2>
+                <p class="text-gray-600">Secure access to evidence management</p>
             </div>
-            <div>
-              <label>Registration Date & Time 🗓️</label>
-              <input id="registrationDateTime" type="datetime-local" class="w-full border p-2 rounded" readonly />
+            <form id="policeLoginForm" class="space-y-6">
+                <div>
+                    <label class="flex items-center text-sm font-medium text-gray-700 mb-2">
+                        <i data-lucide="user" class="w-4 h-4 mr-2"></i> Username
+                    </label>
+                    <input type="text" id="policeUsername" class="w-full px-4 py-3 border rounded-lg form-input" required>
+                </div>
+                <div>
+                    <label class="flex items-center text-sm font-medium text-gray-700 mb-2">
+                        <i data-lucide="lock" class="w-4 h-4 mr-2"></i> Password
+                    </label>
+                    <input type="password" id="policePassword" class="w-full px-4 py-3 border rounded-lg form-input" required>
+                </div>
+                <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-lg btn-primary hover:bg-blue-700">🔐 Login</button>
+            </form>
+            <div class="mt-6 text-center">
+                <button onclick="showHome()" class="text-blue-600 hover:text-blue-700 font-medium">← Back to Home</button>
             </div>
-          </div>
-          <div class="flex gap-3 mt-2">
-            <button onclick="registerCase()" id="btnRegisterCase" class="flex-1 bg-blue-600 text-white py-2 rounded disabled:opacity-60">Register Case</button>
-            <button onclick="clearRegisterForm()" class="flex-1 bg-gray-100 py-2 rounded">Clear</button>
-          </div>
         </div>
-      </section>
+    </div>
+</div>
 
-      <!-- JUDGMENT -->
-      <section id="judgmentTab" class="hidden">
-        <h3 class="text-xl font-semibold mb-3">🏛️ Submit Judgment</h3>
-        <div class="bg-white rounded shadow p-6 max-w-3xl grid gap-3">
-          <label>Search Evidence / Aadhaar / Accused</label>
-          <select id="evidenceSelect" class="w-full border p-2 rounded" onchange="fillCaseFromSelect()">
-            <option value="">-- Select Case --</option>
-          </select>
-          <label>Evidence ID</label>
-          <input id="evidenceID_j" class="w-full border p-2 rounded" readonly />
-          <label>Judgment 🏛️</label>
-          <textarea id="judgmentText" class="w-full border p-2 rounded"></textarea>
-          <label>Closing Date 🗓️</label>
-          <input id="closingDate" type="date" class="w-full border p-2 rounded" />
-          <div class="flex gap-3">
-            <button onclick="submitJudgment()" id="btnSubmitJudgment" class="flex-1 bg-purple-600 text-white py-2 rounded">Submit Judgment</button>
-            <button onclick="clearJudgmentForm()" class="flex-1 bg-gray-100 py-2 rounded">Clear</button>
-          </div>
+<!-- Police Portal -->
+<div id="policePortal" class="min-h-screen police-bg hidden">
+    <div class="bg-white shadow-sm border-b">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center">
+                <i data-lucide="shield" class="w-8 h-8 text-blue-600 mr-3"></i>
+                <h1 class="text-xl font-bold text-gray-900">👮‍♂️ Police Portal</h1>
+            </div>
+            <button onclick="logout()" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600">🚪 Logout</button>
         </div>
-      </section>
-
-      <!-- CASE TRACKING -->
-      <section id="trackingTab" class="hidden">
-        <h3 class="text-xl font-semibold mb-3">🔍 Case Tracking</h3>
-        <div class="bg-white rounded shadow p-4 mb-4 max-w-5xl flex gap-2">
-          <input id="searchTracking" placeholder="Search Evidence / Aadhaar / Accused" class="flex-1 border p-2 rounded" />
-          <button onclick="searchCase()" class="bg-green-600 text-white px-3 py-2 rounded">Search</button>
-          <button onclick="fetchAllCases()" class="bg-gray-200 px-3 py-2 rounded">Refresh</button>
+    </div>
+    <div class="container mx-auto px-4 py-8">
+        <div class="grid lg:grid-cols-2 gap-8">
+            <!-- Case Registration Form -->
+            <div class="bg-white rounded-xl shadow-lg p-8">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+                    <i data-lucide="file-text" class="w-6 h-6 mr-2 text-blue-600"></i> 📝 Register New Case
+                </h2>
+                <form id="policeForm" class="space-y-6">
+                    <div>
+                        <label class="flex items-center text-sm font-medium text-gray-700 mb-2">
+                            <i data-lucide="user-check" class="w-4 h-4 mr-2"></i> 🆔 Aadhaar Number (12 digits)
+                        </label>
+                        <input type="text" id="aadhaar" maxlength="12" pattern="\d{12}" class="w-full px-4 py-3 border rounded-lg form-input" placeholder="Enter 12-digit Aadhaar number" required>
+                    </div>
+                    <div>
+                        <label class="flex items-center text-sm font-medium text-gray-700 mb-2">
+                            <i data-lucide="user" class="w-4 h-4 mr-2"></i> 👤 Accused Name
+                        </label>
+                        <input type="text" id="accusedName" class="w-full px-4 py-3 border rounded-lg form-input" placeholder="Enter accused person's name" required>
+                    </div>
+                    <div>
+                        <label class="flex items-center text-sm font-medium text-gray-700 mb-2">
+                            <i data-lucide="file-text" class="w-4 h-4 mr-2"></i> 📋 Case Details
+                        </label>
+                        <textarea id="caseDetails" rows="3" class="w-full px-4 py-3 border rounded-lg form-input" placeholder="Enter detailed case description" required></textarea>
+                    </div>
+                    <div>
+                        <label class="flex items-center text-sm font-medium text-gray-700 mb-2">
+                            <i data-lucide="map-pin" class="w-4 h-4 mr-2"></i> 📍 Crime Location
+                        </label>
+                        <input type="text" id="crimeLocation" class="w-full px-4 py-3 border rounded-lg form-input" placeholder="Enter crime location" required>
+                    </div>
+                    <div>
+                        <label class="flex items-center text-sm font-medium text-gray-700 mb-2">
+                            <i data-lucide="calendar" class="w-4 h-4 mr-2"></i> 🕐 Crime Date & Time
+                        </label>
+                        <input type="datetime-local" id="crimeDateTime" class="w-full px-4 py-3 border rounded-lg form-input" required>
+                    </div>
+                    <div>
+                        <label class="flex items-center text-sm font-medium text-gray-700 mb-2">
+                            <i data-lucide="clock" class="w-4 h-4 mr-2"></i> 📅 Case Register Date & Time
+                        </label>
+                        <input type="datetime-local" id="registerDateTime" class="w-full px-4 py-3 border rounded-lg form-input" required>
+                    </div>
+                    <div>
+                        <label class="flex items-center text-sm font-medium text-gray-700 mb-2">
+                            <i data-lucide="hash" class="w-4 h-4 mr-2"></i> 🏷️ Evidence ID
+                        </label>
+                        <input type="text" id="evidenceId" readonly class="w-full px-4 py-3 border bg-gray-50 cursor-not-allowed" placeholder="Auto-generated Evidence ID">
+                    </div>
+                    <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-lg btn-primary hover:bg-blue-700 flex items-center justify-center">
+                        <i data-lucide="check-circle" class="w-5 h-5 mr-2"></i> 📝 Register Case & Connect MetaMask
+                    </button>
+                </form>
+            </div>
         </div>
-        <div class="overflow-auto bg-white rounded shadow max-w-5xl">
-          <table id="trackingResultsTable" class="min-w-full table-auto border-collapse hidden">
-            <thead class="bg-gray-100">
-              <tr>
-                <th class="border p-2 text-left">Evidence ID</th>
-                <th class="border p-2 text-left">Unique ID</th>
-                <th class="border p-2 text-left">Aadhaar</th>
-                <th class="border p-2 text-left">Accused</th>
-                <th class="border p-2 text-left">Case Detail</th>
-                <th class="border p-2 text-left">Location</th>
-                <th class="border p-2 text-left">Crime DateTime</th>
-                <th class="border p-2 text-left">Registration DateTime</th>
-                <th class="border p-2 text-left">Judgment</th>
-                <th class="border p-2 text-left">Closing Date</th>
-              </tr>
-            </thead>
-            <tbody id="trackingResults"></tbody>
-          </table>
-          <div id="noCases" class="p-4 text-center text-gray-500 hidden">No cases found.</div>
-        </div>
-      </section>
-
-    </main>
-  </div>
+    </div>
 </div>
 
 <script>
-const contractABI = [ [
+// --- Blockchain Setup ---
+const contractAddress = "0xFF5DB4dB28FdfD9affBaBb6CD29cB419De2f1a46";
+const contractABI = [
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "uniqueCaseId",
+				"type": "string"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "evidenceId",
+				"type": "string"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "accusedName",
+				"type": "string"
+			}
+		],
+		"name": "CaseRegistered",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "evidenceId",
+				"type": "string"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "judgmentText",
+				"type": "string"
+			}
+		],
+		"name": "JudgmentSubmitted",
+		"type": "event"
+	},
 	{
 		"inputs": [
 			{
 				"internalType": "string",
-				"name": "aadhaar",
+				"name": "_aadhaar",
 				"type": "string"
 			},
 			{
 				"internalType": "string",
-				"name": "accused",
+				"name": "_accusedName",
 				"type": "string"
 			},
 			{
 				"internalType": "string",
-				"name": "caseDetail",
+				"name": "_caseDetails",
 				"type": "string"
 			},
 			{
 				"internalType": "string",
-				"name": "location",
+				"name": "_crimeLocation",
 				"type": "string"
 			},
 			{
 				"internalType": "string",
-				"name": "crimeDateTime",
+				"name": "_crimeDateTime",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "_registerDateTime",
 				"type": "string"
 			}
 		],
 		"name": "registerCase",
-		"outputs": [],
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
 		"stateMutability": "nonpayable",
 		"type": "function"
 	},
@@ -200,17 +284,17 @@ const contractABI = [ [
 		"inputs": [
 			{
 				"internalType": "string",
-				"name": "evidenceID",
+				"name": "_evidenceId",
 				"type": "string"
 			},
 			{
 				"internalType": "string",
-				"name": "judgmentText",
+				"name": "_judgmentText",
 				"type": "string"
 			},
 			{
 				"internalType": "string",
-				"name": "closingDate",
+				"name": "_closingDate",
 				"type": "string"
 			}
 		],
@@ -222,81 +306,23 @@ const contractABI = [ [
 	{
 		"inputs": [
 			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"name": "allCases",
-		"outputs": [
-			{
 				"internalType": "string",
-				"name": "evidenceID",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "uniqueID",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "aadhaar",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "accused",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "caseDetail",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "location",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "crimeDateTime",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "registrationDateTime",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "judgment",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "closingDate",
+				"name": "_evidenceId",
 				"type": "string"
 			}
 		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "getAllCases",
+		"name": "getCaseByEvidenceId",
 		"outputs": [
 			{
 				"components": [
 					{
 						"internalType": "string",
-						"name": "evidenceID",
+						"name": "uniqueCaseId",
 						"type": "string"
 					},
 					{
 						"internalType": "string",
-						"name": "uniqueID",
+						"name": "evidenceId",
 						"type": "string"
 					},
 					{
@@ -306,88 +332,17 @@ const contractABI = [ [
 					},
 					{
 						"internalType": "string",
-						"name": "accused",
+						"name": "accusedName",
 						"type": "string"
 					},
 					{
 						"internalType": "string",
-						"name": "caseDetail",
+						"name": "caseDetails",
 						"type": "string"
 					},
 					{
 						"internalType": "string",
-						"name": "location",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "crimeDateTime",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "registrationDateTime",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "judgment",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "closingDate",
-						"type": "string"
-					}
-				],
-				"internalType": "struct EvidenceTracking.Case[]",
-				"name": "",
-				"type": "tuple[]"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "string",
-				"name": "evidenceID",
-				"type": "string"
-			}
-		],
-		"name": "getCaseByEvidenceID",
-		"outputs": [
-			{
-				"components": [
-					{
-						"internalType": "string",
-						"name": "evidenceID",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "uniqueID",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "aadhaar",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "accused",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "caseDetail",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "location",
+						"name": "crimeLocation",
 						"type": "string"
 					},
 					{
@@ -397,18 +352,13 @@ const contractABI = [ [
 					},
 					{
 						"internalType": "string",
-						"name": "registrationDateTime",
+						"name": "registerDateTime",
 						"type": "string"
 					},
 					{
-						"internalType": "string",
-						"name": "judgment",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "closingDate",
-						"type": "string"
+						"internalType": "bool",
+						"name": "exists",
+						"type": "bool"
 					}
 				],
 				"internalType": "struct EvidenceTracking.Case",
@@ -423,162 +373,134 @@ const contractABI = [ [
 		"inputs": [
 			{
 				"internalType": "string",
-				"name": "aadhaar",
+				"name": "_aadhaar",
 				"type": "string"
 			}
 		],
-		"name": "getCasesByAadhaar",
+		"name": "getEvidenceIdsByAadhaar",
+		"outputs": [
+			{
+				"internalType": "string[]",
+				"name": "",
+				"type": "string[]"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "_evidenceId",
+				"type": "string"
+			}
+		],
+		"name": "getJudgmentByEvidenceId",
 		"outputs": [
 			{
 				"components": [
 					{
 						"internalType": "string",
-						"name": "evidenceID",
+						"name": "evidenceId",
 						"type": "string"
 					},
 					{
 						"internalType": "string",
-						"name": "uniqueID",
+						"name": "accusedName",
 						"type": "string"
 					},
 					{
 						"internalType": "string",
-						"name": "aadhaar",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "accused",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "caseDetail",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "location",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "crimeDateTime",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "registrationDateTime",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "judgment",
+						"name": "judgmentText",
 						"type": "string"
 					},
 					{
 						"internalType": "string",
 						"name": "closingDate",
 						"type": "string"
+					},
+					{
+						"internalType": "bool",
+						"name": "exists",
+						"type": "bool"
 					}
 				],
-				"internalType": "struct EvidenceTracking.Case[]",
+				"internalType": "struct EvidenceTracking.Judgment",
 				"name": "",
-				"type": "tuple[]"
+				"type": "tuple"
 			}
 		],
 		"stateMutability": "view",
 		"type": "function"
 	}
-]
-];
-const contractAddress = "0xc3B3095504B859a668e73b4108820633b640493f";
+]; // paste your ABI array here
 
-let provider, signer, contract, userAddress;
-let role = '';
+let provider, signer, contract;
 
-// Hardcoded credentials
-const credentials = {
-  "police1": "pass123",
-  "police2": "pass456",
-  "court1": "court123",
-  "court2": "court456"
-};
-
-function truncateAddress(a){return a.slice(0,6)+'...'+a.slice(-4);}
-
-function selectRole(r){
-  role = r;
-  document.getElementById('loginPage').style.display = 'flex';
-  if(r === 'Public'){
-    document.getElementById('loginForm').style.display = 'none';
-    document.getElementById('walletConnectLogin').style.display = 'block';
-  } else {
-    document.getElementById('loginForm').style.display = 'block';
-    document.getElementById('walletConnectLogin').style.display = 'none';
-  }
-}
-
-async function login(){
-  const username = document.getElementById('username').value.trim();
-  const password = document.getElementById('password').value.trim();
-  if(!role || role === 'Public') {
-    alert("Please select Police or Court role");
-    return;
-  }
-  if(credentials[username] && credentials[username] === password){
-    if(window.ethereum){
-      await connectWallet();
-    } else {
-      alert("Install MetaMask to connect wallet!");
-      return;
-    }
-    showDashboard();
-  } else {
-    alert("Invalid username or password");
-  }
-}
-
-async function connectWallet(){
-  if(window.ethereum){
+// Initialize wallet connection
+async function connectWallet() {
+    if (!window.ethereum) return alert("🦊 Please install MetaMask!");
     provider = new ethers.providers.Web3Provider(window.ethereum);
     await provider.send("eth_requestAccounts", []);
     signer = provider.getSigner();
-    userAddress = await signer.getAddress();
     contract = new ethers.Contract(contractAddress, contractABI, signer);
-    document.getElementById('walletArea').innerText = truncateAddress(userAddress);
-    document.getElementById('connectedAddressSidebar').innerText = truncateAddress(userAddress);
-    showDashboard();
-  } else alert('Install MetaMask!');
+    alert("🔗 MetaMask connected!");
+    return true;
 }
 
-function showDashboard(){
-  document.getElementById('loginPage').style.display='none';
-  document.getElementById('dashboard').style.display='flex';
-  document.getElementById('userRoleDisplay').innerText = "Role: " + role;
+// --- Core Logic ---
+let cases = [];
+let evidenceCounter = 1;
 
-  if(role === 'Public'){
-    document.getElementById('registerBtn').style.display='none';
-    document.getElementById('judgmentBtn').style.display='none';
-  } else if(role === 'Police'){
-    document.getElementById('judgmentBtn').style.display='none';
-  } else if(role === 'Court'){
-    document.getElementById('registerBtn').style.display='none';
-  }
-
-  fetchAllCases();
+function generateEvidenceId() {
+    return `EV${String(evidenceCounter).padStart(6, '0')}`;
 }
 
-function showTab(tab){
-  document.querySelectorAll('main section').forEach(s=>s.classList.add('hidden'));
-  document.getElementById(tab).classList.remove('hidden');
-  document.getElementById('pageTitle').innerText = tab.replace('Tab','');
-}
+// Aadhaar auto-fill for accused name
+document.getElementById('aadhaar').addEventListener('input', function(e){
+    const aadhaar = e.target.value;
+    const oldCases = cases.filter(c=>c.aadhaar===aadhaar);
+    if(oldCases.length) {
+        document.getElementById('accusedName').value = oldCases[0].accusedName;
+    }
+});
 
-function logout(){ location.reload(); }
+// Police form submission
+document.getElementById('policeForm').addEventListener('submit', async function(e){
+    e.preventDefault();
+    const aadhaar = document.getElementById('aadhaar').value;
+    if(aadhaar.length !== 12 || !/^\d{12}$/.test(aadhaar)){
+        return alert("❌ Aadhaar number must be exactly 12 digits.");
+    }
+    const newCase = {
+        evidenceId: document.getElementById('evidenceId').value,
+        aadhaar: aadhaar,
+        accusedName: document.getElementById('accusedName').value,
+        caseDetails: document.getElementById('caseDetails').value,
+        crimeLocation: document.getElementById('crimeLocation').value,
+        crimeDateTime: document.getElementById('crimeDateTime').value,
+        registerDateTime: document.getElementById('registerDateTime').value
+    };
+    const connected = await connectWallet();
+    if(connected){
+        cases.push(newCase);
+        evidenceCounter++;
+        document.getElementById('policeForm').reset();
+        document.getElementById('evidenceId').value = generateEvidenceId();
+        alert("✅ Case registered successfully!");
+        // Optional: store on blockchain
+        // await contract.registerCase(newCase.evidenceId, newCase.accusedName, ...);
+    }
+});
 
-// ---------------- Register / Judgment / Tracking functions remain same ----------------
+// Initialize
+document.addEventListener('DOMContentLoaded', ()=>{
+    lucide.createIcons();
+    document.getElementById('evidenceId').value = generateEvidenceId();
+});
 </script>
 </body>
 </html>
+
 
