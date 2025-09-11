@@ -1107,9 +1107,9 @@
 		"stateMutability": "view",
 		"type": "function"
 	}
-]:
-
-        // Save data to localStorage for permanent storage
+];
+		
+ // Save data to localStorage for permanent storage
         function saveData() {
             localStorage.setItem('evidenceCases', JSON.stringify(cases));
             localStorage.setItem('evidenceCounter', evidenceCounter.toString());
@@ -1247,6 +1247,7 @@
                 text.textContent = normalText;
             }
         }
+
         // Initialize Lucide icons
         lucide.createIcons();
 
@@ -1420,17 +1421,19 @@
                         
                         return `
                             <div class="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors">
-                                <div class="space-y-2 text-sm">
-                                    <p><strong>🏷️ Evidence ID:</strong> ${caseData.evidenceId}</p>
-                                    <p><strong>🆔 Aadhaar:</strong> ${caseData.aadhaar}</p>
-                                    <p><strong>👤 Accused:</strong> ${caseData.accusedName}</p>
-                                    <p><strong>👮 Officer:</strong> ${caseData.officerName || 'N/A'}</p>
-                                    <p><strong>📍 Location:</strong> ${caseData.crimeLocation}</p>
-                                    <p><strong>🕐 Crime Date:</strong> ${new Date(caseData.crimeDateTime).toLocaleString()}</p>
-                                    <p><strong>📅 Registered:</strong> ${new Date(caseData.registerDateTime).toLocaleString()}</p>
-                                    ${caseData.closingDate ? `<p><strong>📅 Closed:</strong> ${new Date(caseData.closingDate).toLocaleDateString()}</p>` : ''}
-                                    <p><strong>📋 Details:</strong> ${caseData.caseDetails}</p>
-                                    <p class="${statusColor}"><strong>Status:</strong> ${statusText}</p>
+                                <div class="grid grid-cols-2 gap-2 text-sm">
+                                    <div><strong>🏷️ Evidence ID:</strong> ${caseData.evidenceId}</div>
+                                    <div><strong>🆔 Aadhaar:</strong> ${caseData.aadhaar}</div>
+                                    <div><strong>👤 Accused:</strong> ${caseData.accusedName}</div>
+                                    <div><strong>👮 Officer:</strong> ${caseData.officerName || 'N/A'}</div>
+                                    <div><strong>📍 Location:</strong> ${caseData.crimeLocation}</div>
+                                    <div><strong>🕐 Crime Date:</strong> ${new Date(caseData.crimeDateTime).toLocaleString()}</div>
+                                    <div><strong>📅 Registered:</strong> ${new Date(caseData.registerDateTime).toLocaleString()}</div>
+                                    ${caseData.closingDate ? `
+                                        <div><strong>📅 Closed:</strong> ${new Date(caseData.closingDate).toLocaleDateString()}</div>
+                                    ` : '<div></div>'}
+                                    <div class="col-span-2"><strong>📋 Details:</strong> ${caseData.caseDetails}</div>
+                                    <div class="col-span-2 ${statusColor}"><strong>Status:</strong> ${statusText}</div>
                                 </div>
                             </div>
                         `;
@@ -1665,7 +1668,6 @@
                     <div><strong>📋 Details:</strong> ${selectedCase.caseDetails}</div>
                     <div><strong>📍 Location:</strong> ${selectedCase.crimeLocation}</div>
                     <div><strong>🕐 Crime Date:</strong> ${new Date(selectedCase.crimeDateTime).toLocaleString()}</div>
-                    <div><strong>📅 Registered:</strong> ${new Date(selectedCase.registerDateTime).toLocaleString()}</div>
                 `;
                 document.getElementById('selectedCaseInfo').classList.remove('hidden');
                 document.getElementById('courtSubmitBtn').disabled = false;
