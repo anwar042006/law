@@ -1108,8 +1108,7 @@
 		"type": "function"
 	}
 ];
-		
- // Save data to localStorage for permanent storage
+        // Save data to localStorage for permanent storage
         function saveData() {
             localStorage.setItem('evidenceCases', JSON.stringify(cases));
             localStorage.setItem('evidenceCounter', evidenceCounter.toString());
@@ -1247,7 +1246,6 @@
                 text.textContent = normalText;
             }
         }
-
         // Initialize Lucide icons
         lucide.createIcons();
 
@@ -1427,11 +1425,6 @@
                                     <div><strong>👤 Accused:</strong> ${caseData.accusedName}</div>
                                     <div><strong>👮 Officer:</strong> ${caseData.officerName || 'N/A'}</div>
                                     <div><strong>📍 Location:</strong> ${caseData.crimeLocation}</div>
-                                    <div><strong>🕐 Crime Date:</strong> ${new Date(caseData.crimeDateTime).toLocaleString()}</div>
-                                    <div><strong>📅 Registered:</strong> ${new Date(caseData.registerDateTime).toLocaleString()}</div>
-                                    ${caseData.closingDate ? `
-                                        <div><strong>📅 Closed:</strong> ${new Date(caseData.closingDate).toLocaleDateString()}</div>
-                                    ` : '<div></div>'}
                                     <div class="col-span-2"><strong>📋 Details:</strong> ${caseData.caseDetails}</div>
                                     <div class="col-span-2 ${statusColor}"><strong>Status:</strong> ${statusText}</div>
                                 </div>
