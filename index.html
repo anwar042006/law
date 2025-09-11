@@ -249,6 +249,14 @@
 
                         <div>
                             <label class="flex items-center text-sm font-medium text-gray-700 mb-2">
+                                <i data-lucide="user" class="w-4 h-4 mr-2"></i>
+                                👮 Officer Name
+                            </label>
+                            <input type="text" id="officerName" class="w-full px-4 py-3 border border-gray-300 rounded-lg form-input focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Enter officer's name" required>
+                        </div>
+
+                        <div>
+                            <label class="flex items-center text-sm font-medium text-gray-700 mb-2">
                                 <i data-lucide="file-text" class="w-4 h-4 mr-2"></i>
                                 📋 Case Details
                             </label>
@@ -1311,23 +1319,6 @@
             return `EV${evidenceCounter.toString().padStart(6, '0')}`;
         }
 
-        // MetaMask connection
-        async function connectMetaMask() {
-            if (typeof window.ethereum !== 'undefined') {
-                try {
-                    await window.ethereum.request({ method: 'eth_requestAccounts' });
-                    alert('🔗 MetaMask connected successfully! Data stored on blockchain.');
-                    return true;
-                } catch (error) {
-                    alert('❌ MetaMask connection failed. Please try again.');
-                    return false;
-                }
-            } else {
-                alert('🦊 Please install MetaMask to store data on blockchain.');
-                return false;
-            }
-        }
-
         // Search functionality
         function searchCases(searchTerm) {
             if (!searchTerm.trim()) {
@@ -1379,6 +1370,10 @@
                                             <span><strong>👤 Accused:</strong> ${caseData.accusedName}</span>
                                         </div>
                                         <div class="flex items-center">
+                                            <i data-lucide="user" class="w-5 h-5 text-green-600 mr-2"></i>
+                                            <span><strong>👮 Officer:</strong> ${caseData.officerName || 'N/A'}</span>
+                                        </div>
+                                        <div class="flex items-center">
                                             <i data-lucide="map-pin" class="w-5 h-5 text-green-600 mr-2"></i>
                                             <span><strong>📍 Location:</strong> ${caseData.crimeLocation}</span>
                                         </div>
@@ -1428,6 +1423,7 @@
                                     <div><strong>🏷️ Evidence ID:</strong> ${caseData.evidenceId}</div>
                                     <div><strong>🆔 Aadhaar:</strong> ${caseData.aadhaar}</div>
                                     <div><strong>👤 Accused:</strong> ${caseData.accusedName}</div>
+                                    <div><strong>👮 Officer:</strong> ${caseData.officerName || 'N/A'}</div>
                                     <div><strong>📍 Location:</strong> ${caseData.crimeLocation}</div>
                                     <div class="col-span-2"><strong>📋 Details:</strong> ${caseData.caseDetails}</div>
                                     <div class="col-span-2 ${statusColor}"><strong>Status:</strong> ${statusText}</div>
@@ -1496,6 +1492,7 @@
                 evidenceId: document.getElementById('evidenceId').value,
                 aadhaar: aadhaar,
                 accusedName: document.getElementById('accusedName').value,
+                officerName: document.getElementById('officerName').value,
                 caseDetails: document.getElementById('caseDetails').value,
                 crimeLocation: document.getElementById('crimeLocation').value,
                 crimeDateTime: document.getElementById('crimeDateTime').value,
@@ -1659,6 +1656,7 @@
                 document.getElementById('selectedCaseDetails').innerHTML = `
                     <div><strong>🏷️ Evidence ID:</strong> ${selectedCase.evidenceId}</div>
                     <div><strong>👤 Accused:</strong> ${selectedCase.accusedName}</div>
+                    <div><strong>👮 Officer:</strong> ${selectedCase.officerName || 'N/A'}</div>
                     <div><strong>🆔 Aadhaar:</strong> ${selectedCase.aadhaar}</div>
                     <div><strong>📋 Details:</strong> ${selectedCase.caseDetails}</div>
                     <div><strong>📍 Location:</strong> ${selectedCase.crimeLocation}</div>
