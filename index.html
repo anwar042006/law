@@ -3,712 +3,511 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🏛️ Blockchain Evidence Tracking System</title>
+    <title>🔐 Blockchain Evidence Tracking System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        .gradient-bg {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0e7ff 100%);
         }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
+        .police-bg {
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
         }
-
-        .header {
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(20px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-            padding: 1.5rem 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        .public-bg {
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
         }
-
-        .logo {
-            font-size: 1.8rem;
-            font-weight: bold;
-            color: white;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        .court-bg {
+            background: linear-gradient(135deg, #fff7ed 0%, #fed7aa 100%);
         }
-
-        .nav-buttons {
-            display: flex;
-            gap: 1rem;
-        }
-
-        .nav-btn {
-            padding: 0.8rem 1.5rem;
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-            border: none;
-            border-radius: 25px;
-            cursor: pointer;
+        .card-hover {
             transition: all 0.3s ease;
-            font-size: 1rem;
-            font-weight: 500;
-            backdrop-filter: blur(10px);
         }
-
-        .nav-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
         }
-
-        .nav-btn.active {
-            background: rgba(255, 255, 255, 0.9);
-            color: #333;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        .btn-primary {
+            transition: all 0.2s ease;
         }
-
-        .metamask-status {
+        .btn-primary:hover {
+            transform: translateY(-1px);
+        }
+        .form-input {
+            transition: all 0.2s ease;
+        }
+        .form-input:focus {
+            transform: translateY(-1px);
+        }
+        .hidden {
+            display: none !important;
+        }
+        .search-result {
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        .search-result:hover {
+            background-color: #f9fafb;
+        }
+        .wallet-status {
             position: fixed;
-            top: 1rem;
-            right: 1rem;
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(10px);
-            color: white;
-            padding: 0.8rem 1.2rem;
-            border-radius: 25px;
-            font-size: 0.9rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
+            top: 20px;
+            left: 20px;
             z-index: 1000;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-        }
-
-        .metamask-status:hover {
-            background: rgba(255, 255, 255, 0.25);
-            transform: scale(1.05);
-        }
-
-        .metamask-status.connected {
-            background: rgba(46, 204, 113, 0.8);
-            cursor: default;
-        }
-
-        .logout-btn {
-            position: fixed;
-            top: 4rem;
-            right: 1rem;
-            background: rgba(231, 76, 60, 0.8);
-            color: white;
-            border: none;
-            padding: 0.6rem 1rem;
-            border-radius: 20px;
-            cursor: pointer;
-            display: none;
-            font-size: 0.9rem;
-            backdrop-filter: blur(10px);
-            transition: all 0.3s ease;
-        }
-
-        .logout-btn.show {
-            display: block;
-        }
-
-        .logout-btn:hover {
-            background: rgba(231, 76, 60, 1);
-            transform: scale(1.05);
-        }
-
-        .container {
-            flex: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 2rem;
-            min-height: calc(100vh - 120px);
-        }
-
-        .panel {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            border-radius: 25px;
-            padding: 2.5rem;
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
-            width: 100%;
-            max-width: 800px;
-            max-height: 90vh;
-            overflow-y: auto;
-            display: none;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-        }
-
-        .panel.active {
-            display: block;
-            animation: slideIn 0.6s ease-out;
-        }
-
-        @keyframes slideIn {
-            from { 
-                opacity: 0; 
-                transform: translateY(30px) scale(0.95); 
-            }
-            to { 
-                opacity: 1; 
-                transform: translateY(0) scale(1); 
-            }
-        }
-
-        .panel h2 {
-            color: #333;
-            margin-bottom: 2rem;
-            text-align: center;
-            font-size: 2.2rem;
-            font-weight: 600;
-        }
-
-        .form-section {
-            margin-bottom: 2rem;
-            padding: 1.5rem;
-            background: rgba(102, 126, 234, 0.05);
-            border-radius: 15px;
-            border: 1px solid rgba(102, 126, 234, 0.1);
-        }
-
-        .section-title {
-            font-size: 1.3rem;
-            color: #667eea;
-            margin-bottom: 1rem;
-            font-weight: 600;
-        }
-
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 0.8rem;
-            color: #555;
-            font-weight: 600;
-            font-size: 1rem;
-        }
-
-        .form-group input,
-        .form-group textarea,
-        .form-group select {
-            width: 100%;
-            padding: 1rem 1.2rem;
-            border: 2px solid #e1e1e1;
-            border-radius: 12px;
-            font-size: 1rem;
-            transition: all 0.3s ease;
             background: white;
-        }
-
-        .form-group input:focus,
-        .form-group textarea:focus,
-        .form-group select:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
-            transform: translateY(-1px);
-        }
-
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1.5rem;
-        }
-
-        .btn {
-            width: 100%;
-            padding: 1.2rem;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
             border-radius: 12px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 1rem;
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
-        }
-
-        .btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 15px 35px rgba(102, 126, 234, 0.4);
-        }
-
-        .btn:active {
-            transform: translateY(-1px);
-        }
-
-        .btn-secondary {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            box-shadow: 0 8px 25px rgba(245, 87, 108, 0.3);
-        }
-
-        .btn-secondary:hover {
-            box-shadow: 0 15px 35px rgba(245, 87, 108, 0.4);
-        }
-
-        .btn-search {
-            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-            box-shadow: 0 8px 25px rgba(17, 153, 142, 0.3);
-            margin-top: 0.5rem;
-            padding: 0.8rem;
-            font-size: 1rem;
-        }
-
-        .btn-search:hover {
-            box-shadow: 0 15px 35px rgba(17, 153, 142, 0.4);
-        }
-
-        .tracking-result {
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
-            border: 2px solid rgba(102, 126, 234, 0.2);
-            border-radius: 15px;
-            padding: 2rem;
-            margin-top: 2rem;
-            display: none;
-            backdrop-filter: blur(10px);
-        }
-
-        .tracking-result.show {
-            display: block;
-            animation: fadeInUp 0.6s ease-out;
-        }
-
-        @keyframes fadeInUp {
-            from { 
-                opacity: 0; 
-                transform: translateY(20px); 
-            }
-            to { 
-                opacity: 1; 
-                transform: translateY(0); 
-            }
-        }
-
-        .case-info {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .info-item {
-            background: white;
-            padding: 1.5rem;
-            border-radius: 12px;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
-            border: 1px solid rgba(102, 126, 234, 0.1);
+            padding: 12px 16px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            border: 2px solid #e5e7eb;
             transition: all 0.3s ease;
         }
-
-        .info-item:hover {
+        .wallet-connected {
+            border-color: #10b981;
+            background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+        }
+        .wallet-disconnected {
+            border-color: #ef4444;
+            background: linear-gradient(135deg, #fef2f2 0%, #fecaca 100%);
+        }
+        .wallet-status:hover {
             transform: translateY(-2px);
-            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
         }
-
-        .info-item strong {
-            color: #667eea;
-            display: block;
-            margin-bottom: 0.8rem;
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+        .transaction-loading {
+            display: inline-flex;
+            align-items: center;
         }
-
-        .info-item span {
-            color: #333;
-            font-size: 1rem;
-            word-break: break-word;
-        }
-
-        .readonly {
-            background-color: #f8f9fa !important;
-            cursor: not-allowed;
-            border-color: #dee2e6 !important;
-        }
-
-        .error {
-            color: #e74c3c;
-            font-size: 0.9rem;
-            margin-top: 0.5rem;
-            padding: 0.5rem;
-            background: rgba(231, 76, 60, 0.1);
-            border-radius: 6px;
-        }
-
-        .success {
-            color: #27ae60;
-            font-size: 0.9rem;
-            margin-top: 0.5rem;
-            padding: 0.5rem;
-            background: rgba(39, 174, 96, 0.1);
-            border-radius: 6px;
-        }
-
-        .loading {
-            opacity: 0.7;
-            pointer-events: none;
-        }
-
-        .loading::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
+        .spinner {
             width: 20px;
             height: 20px;
-            margin: -10px 0 0 -10px;
-            border: 2px solid #f3f3f3;
-            border-top: 2px solid #667eea;
+            border: 2px solid #f3f4f6;
+            border-top: 2px solid #3b82f6;
             border-radius: 50%;
             animation: spin 1s linear infinite;
+            margin-right: 8px;
         }
-
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-
-        .cases-history {
-            background: rgba(255, 255, 255, 0.7);
-            padding: 1.5rem;
-            border-radius: 12px;
-            margin-top: 1rem;
-            border: 1px solid rgba(102, 126, 234, 0.2);
-        }
-
-        .case-item {
-            padding: 1rem;
-            background: white;
-            border-radius: 8px;
-            margin-bottom: 1rem;
-            border-left: 4px solid #667eea;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-        }
-
-        .case-item:last-child {
-            margin-bottom: 0;
-        }
-
-        /* Scrollbar Styling */
-        .panel::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        .panel::-webkit-scrollbar-track {
-            background: rgba(0, 0, 0, 0.1);
-            border-radius: 10px;
-        }
-
-        .panel::-webkit-scrollbar-thumb {
-            background: rgba(102, 126, 234, 0.5);
-            border-radius: 10px;
-        }
-
-        .panel::-webkit-scrollbar-thumb:hover {
-            background: rgba(102, 126, 234, 0.7);
-        }
-
-        /* Mobile Responsive */
-        @media (max-width: 768px) {
-            .header {
-                flex-direction: column;
-                gap: 1rem;
-                padding: 1rem;
-            }
-
-            .nav-buttons {
-                flex-wrap: wrap;
-                justify-content: center;
-            }
-
-            .form-row {
-                grid-template-columns: 1fr;
-            }
-
-            .case-info {
-                grid-template-columns: 1fr;
-            }
-
-            .panel {
-                margin: 1rem;
-                padding: 1.5rem;
-                max-width: none;
-            }
-
-            .metamask-status {
-                position: relative;
-                top: auto;
-                right: auto;
-                margin: 0.5rem 0;
-            }
-
-            .logout-btn {
-                position: relative;
-                top: auto;
-                right: auto;
-                margin: 0.5rem 0;
-            }
-        }
     </style>
 </head>
-<body>
-    <div class="header">
-        <div class="logo">🏛️ Blockchain Evidence Tracking System</div>
-        <div class="nav-buttons">
-            <button class="nav-btn active" onclick="showPanel('public')">👥 Public Portal</button>
-            <button class="nav-btn" onclick="showPanel('police')">👮‍♂️ Police Portal</button>
-            <button class="nav-btn" onclick="showPanel('court')">⚖️ Court Portal</button>
+<body class="min-h-screen gradient-bg">
+    <!-- Wallet Status Display -->
+    <div id="walletStatus" class="wallet-status wallet-disconnected">
+        <div class="flex items-center">
+            <i data-lucide="wallet" class="w-5 h-5 mr-2 text-gray-600"></i>
+            <div>
+                <div id="walletStatusText" class="text-sm font-medium text-gray-800">🔴 Wallet Disconnected</div>
+                <div id="walletAddress" class="text-xs text-gray-600 hidden"></div>
+            </div>
+            <button id="connectWalletBtn" onclick="connectWallet()" class="ml-3 bg-blue-600 text-white px-3 py-1 rounded-lg text-xs hover:bg-blue-700 transition-colors">
+                Connect
+            </button>
         </div>
     </div>
 
-    <div class="metamask-status" id="metamaskStatus" onclick="connectMetaMask()">
-        🦊 MetaMask: Not Connected
-    </div>
+    <!-- Home Page -->
+    <div id="homePage" class="min-h-screen">
+        <div class="container mx-auto px-4 py-8">
+            <div class="text-center mb-12">
+                <div class="flex items-center justify-center mb-4">
+                    <i data-lucide="shield" class="w-16 h-16 text-blue-600 mr-4"></i>
+                    <h1 class="text-4xl font-bold text-gray-900">🔐 Evidence Tracking System</h1>
+                </div>
+                <p class="text-xl text-gray-600 max-w-2xl mx-auto">
+                    Secure blockchain-based evidence management for law enforcement and judicial processes
+                </p>
+            </div>
 
-    <button class="logout-btn" id="logoutBtn" onclick="logout()">🚪 Logout</button>
-
-    <div class="container">
-        <!-- PUBLIC PORTAL -->
-        <div class="panel active" id="publicPanel">
-            <h2>👥 Public Case Tracking Portal</h2>
-            
-            <div class="form-section">
-                <div class="section-title">🔍 Search Cases</div>
-                
-                <div class="form-group">
-                    <label>🔍 Search By:</label>
-                    <select id="publicSearchType" onchange="updatePublicSearch()">
-                        <option value="evidence">📋 Evidence ID</option>
-                        <option value="aadhar">🆔 Aadhar Number</option>
-                        <option value="accused">👤 Accused Name</option>
-                    </select>
+            <div class="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+                <!-- Police Portal -->
+                <div class="bg-white rounded-xl shadow-lg p-8 card-hover">
+                    <div class="text-center">
+                        <i data-lucide="shield" class="w-16 h-16 text-blue-600 mx-auto mb-4"></i>
+                        <h2 class="text-2xl font-bold text-gray-900 mb-4">👮‍♂️ Police Portal</h2>
+                        <p class="text-gray-600 mb-6">Register and manage evidence cases with secure blockchain storage.</p>
+                        <button onclick="showPoliceLogin()" class="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold btn-primary hover:bg-blue-700">
+                            Access Portal
+                        </button>
+                    </div>
                 </div>
 
-                <div class="form-group">
-                    <label id="publicSearchLabel">📋 Evidence ID:</label>
-                    <input type="text" id="publicSearchInput" placeholder="Enter Evidence ID (e.g., EV000001)">
-                    <button class="btn btn-search" onclick="trackCase()">🔍 Track Case</button>
+                <!-- Public Portal -->
+                <div class="bg-white rounded-xl shadow-lg p-8 card-hover">
+                    <div class="text-center">
+                        <i data-lucide="eye" class="w-16 h-16 text-green-600 mx-auto mb-4"></i>
+                        <h2 class="text-2xl font-bold text-gray-900 mb-4">👥 Public Portal</h2>
+                        <p class="text-gray-600 mb-6">Track case status using Evidence ID, Aadhaar, or Accused name.</p>
+                        <button onclick="showPublicPortal()" class="w-full bg-green-600 text-white py-3 px-6 rounded-lg font-semibold btn-primary hover:bg-green-700">
+                            Track Cases
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Court Portal -->
+                <div class="bg-white rounded-xl shadow-lg p-8 card-hover">
+                    <div class="text-center">
+                        <i data-lucide="gavel" class="w-16 h-16 text-orange-600 mx-auto mb-4"></i>
+                        <h2 class="text-2xl font-bold text-gray-900 mb-4">⚖️ Court Portal</h2>
+                        <p class="text-gray-600 mb-6">Review cases and submit judicial decisions with blockchain verification.</p>
+                        <button onclick="showCourtLogin()" class="w-full bg-orange-600 text-white py-3 px-6 rounded-lg font-semibold btn-primary hover:bg-orange-700">
+                            Access Portal
+                        </button>
+                    </div>
                 </div>
             </div>
 
-            <div class="tracking-result" id="publicTrackingResult">
-                <h3>📊 Case Information</h3>
-                <div class="case-info" id="publicCaseInfo">
-                    <!-- Case details will be populated here -->
+            <div class="text-center mt-12">
+                <div class="inline-flex items-center bg-white rounded-lg px-6 py-3 shadow-md">
+                    <i data-lucide="hash" class="w-5 h-5 text-blue-600 mr-2"></i>
+                    <span class="text-gray-700 font-medium">🔗 Powered by Blockchain Technology</span>
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- POLICE PORTAL -->
-        <div class="panel" id="policePanel">
-            <div id="policeLogin">
-                <h2>👮‍♂️ Police Portal Login</h2>
-                
-                <div class="form-section">
-                    <div class="form-group">
-                        <label>👤 Username:</label>
-                        <input type="text" id="policeUsername" placeholder="Enter police username">
+    <!-- Police Login Page -->
+    <div id="policeLoginPage" class="min-h-screen police-bg hidden">
+        <div class="flex items-center justify-center min-h-screen">
+            <div class="bg-white rounded-xl shadow-lg p-8 w-full max-w-md">
+                <div class="text-center mb-8">
+                    <i data-lucide="shield" class="w-16 h-16 text-blue-600 mx-auto mb-4"></i>
+                    <h2 class="text-2xl font-bold text-gray-900">👮‍♂️ Police Login</h2>
+                    <p class="text-gray-600">Secure access to evidence management</p>
+                </div>
+
+                <form id="policeLoginForm" class="space-y-6">
+                    <div>
+                        <label class="flex items-center text-sm font-medium text-gray-700 mb-2">
+                            <i data-lucide="user" class="w-4 h-4 mr-2"></i>
+                            Username
+                        </label>
+                        <input type="text" id="policeUsername" class="w-full px-4 py-3 border border-gray-300 rounded-lg form-input focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Enter username" required>
                     </div>
-                    <div class="form-group">
-                        <label>🔒 Password:</label>
-                        <input type="password" id="policePassword" placeholder="Enter password">
+
+                    <div>
+                        <label class="flex items-center text-sm font-medium text-gray-700 mb-2">
+                            <i data-lucide="lock" class="w-4 h-4 mr-2"></i>
+                            Password
+                        </label>
+                        <input type="password" id="policePassword" class="w-full px-4 py-3 border border-gray-300 rounded-lg form-input focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Enter password" required>
                     </div>
-                    <button class="btn" onclick="policeLoginSubmit()">🚪 Login to Police Portal</button>
+
+                    <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold btn-primary hover:bg-blue-700">
+                        🔐 Login
+                    </button>
+                </form>
+
+                <div class="mt-6 text-center">
+                    <button onclick="showHome()" class="text-blue-600 hover:text-blue-700 font-medium">
+                        ← Back to Home
+                    </button>
                 </div>
             </div>
+        </div>
+    </div>
 
-            <div id="policeDashboard" style="display: none;">
-                <h2>👮‍♂️ Police Dashboard</h2>
+    <!-- Police Portal -->
+    <div id="policePortal" class="min-h-screen police-bg hidden">
+        <div class="bg-white shadow-sm border-b">
+            <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+                <div class="flex items-center">
+                    <i data-lucide="shield" class="w-8 h-8 text-blue-600 mr-3"></i>
+                    <h1 class="text-xl font-bold text-gray-900">👮‍♂️ Police Portal</h1>
+                </div>
+                <button onclick="logout()" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors">
+                    🚪 Logout
+                </button>
+            </div>
+        </div>
 
-                <!-- Case Registration Section -->
-                <div class="form-section">
-                    <div class="section-title">📝 Case Registration</div>
-                    
-                    <div class="form-group">
-                        <label>🆔 Aadhar Number (12 digits):</label>
-                        <input type="text" id="policeAadhar" placeholder="Enter 12-digit Aadhar number" maxlength="12" oninput="checkExistingCase(this.value)">
-                        <div class="success" id="aadharMessage" style="display: none;"></div>
-                    </div>
+        <div class="container mx-auto px-4 py-8">
+            <div class="grid lg:grid-cols-2 gap-8">
+                <!-- Case Registration Form -->
+                <div class="bg-white rounded-xl shadow-lg p-8">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+                        <i data-lucide="file-text" class="w-6 h-6 mr-2 text-blue-600"></i>
+                        📝 Register New Case
+                    </h2>
 
-                    <div class="form-group">
-                        <label>👤 Accused Name:</label>
-                        <input type="text" id="policeAccusedName" placeholder="Enter accused full name">
-                    </div>
-
-                    <div class="form-group">
-                        <label>📝 Case Details:</label>
-                        <textarea id="policeCaseDetails" placeholder="Enter detailed case information, charges, and evidence details" rows="4"></textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <label>📍 Crime Location:</label>
-                        <input type="text" id="policeCrimeLocation" placeholder="Enter complete crime location with address">
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>📅 Crime Date:</label>
-                            <input type="date" id="policeCrimeDate">
+                    <form id="policeForm" class="space-y-6">
+                        <div>
+                            <label class="flex items-center text-sm font-medium text-gray-700 mb-2">
+                                <i data-lucide="user-check" class="w-4 h-4 mr-2"></i>
+                                🆔 Aadhaar Number (12 digits)
+                            </label>
+                            <input type="text" id="aadhaar" maxlength="12" pattern="\d{12}" class="w-full px-4 py-3 border border-gray-300 rounded-lg form-input focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Enter 12-digit Aadhaar number" required>
                         </div>
-                        <div class="form-group">
-                            <label>🕐 Crime Time:</label>
-                            <input type="time" id="policeCrimeTime">
-                        </div>
-                    </div>
 
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>📋 Evidence ID (Auto-Generated):</label>
-                            <input type="text" id="policeEvidenceId" class="readonly" readonly>
+                        <div>
+                            <label class="flex items-center text-sm font-medium text-gray-700 mb-2">
+                                <i data-lucide="user" class="w-4 h-4 mr-2"></i>
+                                👤 Accused Name
+                            </label>
+                            <input type="text" id="accusedName" class="w-full px-4 py-3 border border-gray-300 rounded-lg form-input focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Enter accused person's name" required>
                         </div>
-                        <div class="form-group">
-                            <label>🆔 Unique ID (Auto-Generated):</label>
-                            <input type="text" id="policeUniqueId" class="readonly" readonly>
-                        </div>
-                    </div>
 
-                    <button class="btn" onclick="registerCase()">📋 Register Case & Connect MetaMask</button>
+                        <div>
+                            <label class="flex items-center text-sm font-medium text-gray-700 mb-2">
+                                <i data-lucide="file-text" class="w-4 h-4 mr-2"></i>
+                                📋 Case Details
+                            </label>
+                            <textarea id="caseDetails" rows="3" class="w-full px-4 py-3 border border-gray-300 rounded-lg form-input focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Enter detailed case description" required></textarea>
+                        </div>
+
+                        <div>
+                            <label class="flex items-center text-sm font-medium text-gray-700 mb-2">
+                                <i data-lucide="map-pin" class="w-4 h-4 mr-2"></i>
+                                📍 Crime Location
+                            </label>
+                            <input type="text" id="crimeLocation" class="w-full px-4 py-3 border border-gray-300 rounded-lg form-input focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Enter crime location" required>
+                        </div>
+
+                        <div>
+                            <label class="flex items-center text-sm font-medium text-gray-700 mb-2">
+                                <i data-lucide="calendar" class="w-4 h-4 mr-2"></i>
+                                🕐 Crime Date & Time
+                            </label>
+                            <input type="datetime-local" id="crimeDateTime" class="w-full px-4 py-3 border border-gray-300 rounded-lg form-input focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
+                        </div>
+
+                        <div>
+                            <label class="flex items-center text-sm font-medium text-gray-700 mb-2">
+                                <i data-lucide="clock" class="w-4 h-4 mr-2"></i>
+                                📅 Case Register Date & Time
+                            </label>
+                            <input type="datetime-local" id="registerDateTime" class="w-full px-4 py-3 border border-gray-300 rounded-lg form-input focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
+                        </div>
+
+                        <div>
+                            <label class="flex items-center text-sm font-medium text-gray-700 mb-2">
+                                <i data-lucide="hash" class="w-4 h-4 mr-2"></i>
+                                🏷️ Evidence ID
+                            </label>
+                            <input type="text" id="evidenceId" readonly class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 cursor-not-allowed" placeholder="Auto-generated Evidence ID">
+                        </div>
+
+                        <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold btn-primary hover:bg-blue-700 flex items-center justify-center">
+                            <i data-lucide="check-circle" class="w-5 h-5 mr-2"></i>
+                            <span id="policeSubmitText">📝 Register Case on Blockchain</span>
+                        </button>
+                    </form>
                 </div>
 
                 <!-- Case Tracking Section -->
-                <div class="form-section">
-                    <div class="section-title">🔍 Case Tracking</div>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>🔍 Search Type:</label>
-                            <select id="policeSearchType">
-                                <option value="evidence">📋 Evidence ID</option>
-                                <option value="aadhar">🆔 Aadhar Number</option>
-                                <option value="accused">👤 Accused Name</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>🔍 Search Value:</label>
-                            <input type="text" id="policeSearchInput" placeholder="Enter search value">
+                <div class="bg-white rounded-xl shadow-lg p-8">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+                        <i data-lucide="search" class="w-6 h-6 mr-2 text-blue-600"></i>
+                        🔍 Case Tracking
+                    </h2>
+
+                    <div class="mb-4">
+                        <input type="text" id="policeSearch" placeholder="🔍 Search by Evidence ID, Aadhaar, or Name..." class="w-full px-4 py-3 border border-gray-300 rounded-lg form-input focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+
+                    <div id="policeSearchResults" class="space-y-4 max-h-96 overflow-y-auto">
+                        <div class="text-center text-gray-500 py-8">
+                            📂 No cases found. Try a different search term.
                         </div>
                     </div>
-                    <button class="btn btn-secondary" onclick="policeTrackCase()">🔍 Track Case</button>
-                </div>
-
-                <div class="tracking-result" id="policeTrackingResult">
-                    <h3>📊 Case Information</h3>
-                    <div class="case-info" id="policeCaseInfo"></div>
-                    <div class="cases-history" id="policeCasesHistory" style="display: none;">
-                        <h4>📋 All Cases for this Aadhar</h4>
-                        <div id="policeHistoryList"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- COURT PORTAL -->
-        <div class="panel" id="courtPanel">
-            <div id="courtLogin">
-                <h2>⚖️ Court Portal Login</h2>
-                
-                <div class="form-section">
-                    <div class="form-group">
-                        <label>👤 Username:</label>
-                        <input type="text" id="courtUsername" placeholder="Enter court username">
-                    </div>
-                    <div class="form-group">
-                        <label>🔒 Password:</label>
-                        <input type="password" id="courtPassword" placeholder="Enter password">
-                    </div>
-                    <button class="btn" onclick="courtLoginSubmit()">🚪 Login to Court Portal</button>
-                </div>
-            </div>
-
-            <div id="courtDashboard" style="display: none;">
-                <h2>⚖️ Court Dashboard</h2>
-
-                <!-- Case Search and Judgement Section -->
-                <div class="form-section">
-                    <div class="section-title">🔍 Case Search & Judgement</div>
-                    
-                    <div class="form-group">
-                        <label>🔍 Search Type:</label>
-                        <select id="courtSearchType" onchange="updateCourtSearch()">
-                            <option value="evidence">📋 Evidence ID</option>
-                            <option value="aadhar">🆔 Aadhar Number</option>
-                            <option value="accused">👤 Accused Name</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label id="courtSearchLabel">📋 Evidence ID:</label>
-                        <input type="text" id="courtSearchInput" placeholder="Enter Evidence ID (e.g., EV000001)" onchange="loadCaseForJudgement()">
-                        <button class="btn btn-search" onclick="courtSearchCase()">🔍 Search Case</button>
-                    </div>
-
-                    <div class="form-group">
-                        <label>⚖️ Judgement:</label>
-                        <textarea id="courtJudgement" placeholder="Enter detailed court judgement, verdict, and reasoning" rows="5"></textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <label>📅 Closing Date:</label>
-                        <input type="date" id="courtClosingDate">
-                    </div>
-
-                    <div class="form-group">
-                        <label>🔄 Re-judgement (Optional):</label>
-                        <textarea id="courtRejudgement" placeholder="Enter re-judgement details if case is being reviewed" rows="3"></textarea>
-                    </div>
-
-                    <button class="btn" onclick="submitJudgement()">⚖️ Submit Judgement & Connect MetaMask</button>
-                </div>
-
-                <!-- Case Tracking Section -->
-                <div class="form-section">
-                    <div class="section-title">🔍 Case Tracking</div>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>🔍 Track By:</label>
-                            <select id="courtTrackType">
-                                <option value="evidence">📋 Evidence ID</option>
-                                <option value="aadhar">🆔 Aadhar Number</option>
-                                <option value="accused">👤 Accused Name</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>🔍 Search Value:</label>
-                            <input type="text" id="courtTrackInput" placeholder="Enter search value">
-                        </div>
-                    </div>
-                    <button class="btn btn-secondary" onclick="courtTrackCase()">🔍 Track Case</button>
-                </div>
-
-                <div class="tracking-result" id="courtTrackingResult">
-                    <h3>📊 Case Information</h3>
-                    <div class="case-info" id="courtCaseInfo"></div>
                 </div>
             </div>
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/web3/1.7.3/web3.min.js"></script>
+    <!-- Public Portal -->
+    <div id="publicPortal" class="min-h-screen public-bg hidden">
+        <div class="bg-white shadow-sm border-b">
+            <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+                <div class="flex items-center">
+                    <i data-lucide="eye" class="w-8 h-8 text-green-600 mr-3"></i>
+                    <h1 class="text-xl font-bold text-gray-900">👥 Public Portal</h1>
+                </div>
+                <button onclick="showHome()" class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors">
+                    🏠 Home
+                </button>
+            </div>
+        </div>
+
+        <div class="container mx-auto px-4 py-8">
+            <div class="bg-white rounded-xl shadow-lg p-8 max-w-4xl mx-auto">
+                <div class="text-center mb-8">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-4">🔍 Case Tracking</h2>
+                    <p class="text-gray-600">Track your case status using Evidence ID, Aadhaar Number, or Accused Name</p>
+                </div>
+
+                <div class="mb-8">
+                    <div class="relative">
+                        <i data-lucide="search" class="absolute left-4 top-4 w-5 h-5 text-gray-400"></i>
+                        <input type="text" id="publicSearch" placeholder="🔍 Enter Evidence ID, Aadhaar Number, or Accused Name..." class="w-full pl-12 pr-4 py-4 border border-gray-300 rounded-lg text-lg form-input focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                    </div>
+                </div>
+
+                <div id="publicSearchResults" class="space-y-6">
+                    <div class="text-center text-gray-500 py-12">
+                        <i data-lucide="eye" class="w-16 h-16 text-gray-300 mx-auto mb-4"></i>
+                        <h3 class="text-xl font-medium mb-2">🔍 Enter Search Terms</h3>
+                        <p>Enter an Evidence ID, Aadhaar Number, or Accused Name to track case status.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Court Login Page -->
+    <div id="courtLoginPage" class="min-h-screen court-bg hidden">
+        <div class="flex items-center justify-center min-h-screen">
+            <div class="bg-white rounded-xl shadow-lg p-8 w-full max-w-md">
+                <div class="text-center mb-8">
+                    <i data-lucide="gavel" class="w-16 h-16 text-orange-600 mx-auto mb-4"></i>
+                    <h2 class="text-2xl font-bold text-gray-900">⚖️ Court Login</h2>
+                    <p class="text-gray-600">Secure access to judicial decisions</p>
+                </div>
+
+                <form id="courtLoginForm" class="space-y-6">
+                    <div>
+                        <label class="flex items-center text-sm font-medium text-gray-700 mb-2">
+                            <i data-lucide="user" class="w-4 h-4 mr-2"></i>
+                            Username
+                        </label>
+                        <input type="text" id="courtUsername" class="w-full px-4 py-3 border border-gray-300 rounded-lg form-input focus:ring-2 focus:ring-orange-500 focus:border-transparent" placeholder="Enter username" required>
+                    </div>
+
+                    <div>
+                        <label class="flex items-center text-sm font-medium text-gray-700 mb-2">
+                            <i data-lucide="lock" class="w-4 h-4 mr-2"></i>
+                            Password
+                        </label>
+                        <input type="password" id="courtPassword" class="w-full px-4 py-3 border border-gray-300 rounded-lg form-input focus:ring-2 focus:ring-orange-500 focus:border-transparent" placeholder="Enter password" required>
+                    </div>
+
+                    <button type="submit" class="w-full bg-orange-600 text-white py-3 rounded-lg font-semibold btn-primary hover:bg-orange-700">
+                        🔐 Login
+                    </button>
+                </form>
+
+                <div class="mt-6 text-center">
+                    <button onclick="showHome()" class="text-orange-600 hover:text-orange-700 font-medium">
+                        ← Back to Home
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Court Portal -->
+    <div id="courtPortal" class="min-h-screen court-bg hidden">
+        <div class="bg-white shadow-sm border-b">
+            <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+                <div class="flex items-center">
+                    <i data-lucide="gavel" class="w-8 h-8 text-orange-600 mr-3"></i>
+                    <h1 class="text-xl font-bold text-gray-900">⚖️ Court Portal</h1>
+                </div>
+                <button onclick="logout()" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors">
+                    🚪 Logout
+                </button>
+            </div>
+        </div>
+
+        <div class="container mx-auto px-4 py-8">
+            <div class="grid lg:grid-cols-2 gap-8">
+                <!-- Case Search & Judgment Form -->
+                <div class="bg-white rounded-xl shadow-lg p-8">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+                        <i data-lucide="scale" class="w-6 h-6 mr-2 text-orange-600"></i>
+                        ⚖️ Case Judgment
+                    </h2>
+
+                    <form id="courtForm" class="space-y-6">
+                        <div>
+                            <label class="flex items-center text-sm font-medium text-gray-700 mb-2">
+                                <i data-lucide="search" class="w-4 h-4 mr-2"></i>
+                                🔍 Search Case
+                            </label>
+                            <input type="text" id="courtSearch" placeholder="Search by Evidence ID, Aadhaar, or Name..." class="w-full px-4 py-3 border border-gray-300 rounded-lg form-input focus:ring-2 focus:ring-orange-500 focus:border-transparent">
+                            
+                            <div id="courtSearchDropdown" class="mt-2 border border-gray-200 rounded-lg max-h-48 overflow-y-auto hidden">
+                                <!-- Search results will be populated here -->
+                            </div>
+                        </div>
+
+                        <div id="selectedCaseInfo" class="bg-gray-50 p-4 rounded-lg hidden">
+                            <h3 class="font-bold text-gray-900 mb-2">📋 Selected Case</h3>
+                            <div id="selectedCaseDetails" class="text-sm space-y-1">
+                                <!-- Selected case details will be populated here -->
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="flex items-center text-sm font-medium text-gray-700 mb-2">
+                                <i data-lucide="gavel" class="w-4 h-4 mr-2"></i>
+                                ⚖️ Court Judgment
+                            </label>
+                            <textarea id="judgment" rows="4" class="w-full px-4 py-3 border border-gray-300 rounded-lg form-input focus:ring-2 focus:ring-orange-500 focus:border-transparent" placeholder="Enter court judgment and decision..." required></textarea>
+                        </div>
+
+                        <div>
+                            <label class="flex items-center text-sm font-medium text-gray-700 mb-2">
+                                <i data-lucide="calendar" class="w-4 h-4 mr-2"></i>
+                                📅 Closing Date
+                            </label>
+                            <input type="date" id="closingDate" class="w-full px-4 py-3 border border-gray-300 rounded-lg form-input focus:ring-2 focus:ring-orange-500 focus:border-transparent" required>
+                        </div>
+
+                        <div>
+                            <label class="flex items-center text-sm font-medium text-gray-700 mb-2">
+                                <i data-lucide="file-text" class="w-4 h-4 mr-2"></i>
+                                🔄 Re-judgment (Optional)
+                            </label>
+                            <textarea id="rejudgment" rows="3" class="w-full px-4 py-3 border border-gray-300 rounded-lg form-input focus:ring-2 focus:ring-orange-500 focus:border-transparent" placeholder="Enter re-judgment details if applicable..."></textarea>
+                        </div>
+
+                        <button type="submit" id="courtSubmitBtn" disabled class="w-full bg-orange-600 text-white py-3 rounded-lg font-semibold btn-primary hover:bg-orange-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center">
+                            <i data-lucide="check-circle" class="w-5 h-5 mr-2"></i>
+                            <span id="courtSubmitText">⚖️ Submit Judgment on Blockchain</span>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Case Tracking Section -->
+                <div class="bg-white rounded-xl shadow-lg p-8">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+                        <i data-lucide="search" class="w-6 h-6 mr-2 text-orange-600"></i>
+                        🔍 Case Tracking
+                    </h2>
+
+                    <div class="mb-4">
+                        <input type="text" id="courtTrackingSearch" placeholder="🔍 Search by Evidence ID, Aadhaar, or Name..." class="w-full px-4 py-3 border border-gray-300 rounded-lg form-input focus:ring-2 focus:ring-orange-500 focus:border-transparent">
+                    </div>
+
+                    <div id="courtTrackingResults" class="space-y-4 max-h-96 overflow-y-auto">
+                        <div class="text-center text-gray-500 py-8">
+                            📂 No cases available for review.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // Global variables
-        let web3;
-        let contract;
-        let userAccount;
-        let evidenceCounter = 1;
-        let uniqueIdCounter = 1;
-        let currentUser = null;
-        let cases = {}; // Temporary storage for demo (will be replaced by blockchain)
+        // Global variables for data storage
+        let cases = JSON.parse(localStorage.getItem('evidenceCases')) || [];
+        let evidenceCounter = parseInt(localStorage.getItem('evidenceCounter')) || 1;
+        let selectedCase = null;
+        let walletConnected = false;
+        let userAccount = null;
+        let web3 = null;
 
-        // Contract configuration (to be updated with deployed contract)
-        const contractAddress = "0xA80f5Efb648e358D6fd9339700bCE086E6ba6dD3";
-        const contractABI = [
+        // Login credentials
+        const credentials = {
+            police: { username: 'police_admin', password: 'police123' },
+            court: { username: 'court_admin', password: 'court123' }
+        };
+
+        // Contract ABI and Address (you'll need to deploy the contract and update these)
+        const CONTRACT_ADDRESS = "0x6a33A701C31342B6301588Eb2F315ccFE8200d22"; // Update with deployed contract address
+        const CONTRACT_ABI = [
 	{
 		"anonymous": false,
 		"inputs": [
@@ -1300,798 +1099,604 @@
 		"stateMutability": "view",
 		"type": "function"
 	}
-]; // Will be filled with actual ABI after deployment
+];
+        // Save data to localStorage for permanent storage
+        function saveData() {
+            localStorage.setItem('evidenceCases', JSON.stringify(cases));
+            localStorage.setItem('evidenceCounter', evidenceCounter.toString());
+        }
 
-        // Initialize the application
-        document.addEventListener('DOMContentLoaded', function() {
-            generateIds();
-            checkMetaMaskConnection();
-            loadSampleData(); // For demo purposes
-            setInterval(checkMetaMaskConnection, 5000);
-        });
+        // Wallet connection functions
+        async function connectWallet() {
+            if (typeof window.ethereum !== 'undefined') {
+                try {
+                    // Request account access
+                    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    userAccount = accounts[0];
+                    walletConnected = true;
+                    
+                    // Initialize Web3
+                    web3 = new Web3(window.ethereum);
+                    
+                    updateWalletStatus();
+                    
+                    // Listen for account changes
+                    window.ethereum.on('accountsChanged', function (accounts) {
+                        if (accounts.length === 0) {
+                            disconnectWallet();
+                        } else {
+                            userAccount = accounts[0];
+                            updateWalletStatus();
+                        }
+                    });
+                    
+                    // Listen for chain changes
+                    window.ethereum.on('chainChanged', function (chainId) {
+                        window.location.reload();
+                    });
+                    
+                } catch (error) {
+                    console.error('Error connecting wallet:', error);
+                    alert('❌ Failed to connect wallet. Please try again.');
+                }
+            } else {
+                alert('🦊 Please install MetaMask to use blockchain features.');
+            }
+        }
 
-        // MetaMask Connection Management
+        function disconnectWallet() {
+            walletConnected = false;
+            userAccount = null;
+            web3 = null;
+            updateWalletStatus();
+        }
+
+        function updateWalletStatus() {
+            const statusDiv = document.getElementById('walletStatus');
+            const statusText = document.getElementById('walletStatusText');
+            const addressDiv = document.getElementById('walletAddress');
+            const connectBtn = document.getElementById('connectWalletBtn');
+            
+            if (walletConnected && userAccount) {
+                statusDiv.className = 'wallet-status wallet-connected';
+                statusText.textContent = '🟢 Wallet Connected';
+                addressDiv.textContent = `${userAccount.substring(0, 6)}...${userAccount.substring(38)}`;
+                addressDiv.classList.remove('hidden');
+                connectBtn.textContent = 'Disconnect';
+                connectBtn.onclick = disconnectWallet;
+            } else {
+                statusDiv.className = 'wallet-status wallet-disconnected';
+                statusText.textContent = '🔴 Wallet Disconnected';
+                addressDiv.classList.add('hidden');
+                connectBtn.textContent = 'Connect';
+                connectBtn.onclick = connectWallet;
+            }
+        }
+
+        // Blockchain transaction functions
+        async function registerCaseOnBlockchain(caseData) {
+            if (!walletConnected || !web3) {
+                throw new Error('Wallet not connected');
+            }
+            
+            try {
+                const contract = new web3.eth.Contract(CONTRACT_ABI, CONTRACT_ADDRESS);
+                
+                const crimeTimestamp = Math.floor(new Date(caseData.crimeDateTime).getTime() / 1000);
+                const registerTimestamp = Math.floor(new Date(caseData.registerDateTime).getTime() / 1000);
+                
+                const transaction = await contract.methods.registerCase(
+                    caseData.evidenceId,
+                    caseData.aadhaar,
+                    caseData.accusedName,
+                    caseData.caseDetails,
+                    caseData.crimeLocation,
+                    crimeTimestamp,
+                    registerTimestamp
+                ).send({ from: userAccount });
+                
+                return transaction;
+            } catch (error) {
+                console.error('Blockchain transaction failed:', error);
+                throw error;
+            }
+        }
+
+        async function submitJudgmentOnBlockchain(judgmentData) {
+            if (!walletConnected || !web3) {
+                throw new Error('Wallet not connected');
+            }
+            
+            try {
+                const contract = new web3.eth.Contract(CONTRACT_ABI, CONTRACT_ADDRESS);
+                
+                const closingTimestamp = Math.floor(new Date(judgmentData.closingDate).getTime() / 1000);
+                
+                const transaction = await contract.methods.submitJudgment(
+                    judgmentData.evidenceId,
+                    judgmentData.judgment,
+                    closingTimestamp,
+                    judgmentData.rejudgment || ""
+                ).send({ from: userAccount });
+                
+                return transaction;
+            } catch (error) {
+                console.error('Blockchain transaction failed:', error);
+                throw error;
+            }
+        }
+
+        function setLoadingState(buttonId, textId, loading, loadingText, normalText) {
+            const button = document.getElementById(buttonId);
+            const text = document.getElementById(textId);
+            
+            if (loading) {
+                button.disabled = true;
+                text.innerHTML = `<div class="transaction-loading"><div class="spinner"></div>${loadingText}</div>`;
+            } else {
+                button.disabled = false;
+                text.textContent = normalText;
+            }
+        }
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // Navigation functions
+        function showHome() {
+            hideAllPages();
+            document.getElementById('homePage').classList.remove('hidden');
+            clearLoginForms();
+        }
+
+        function showPoliceLogin() {
+            hideAllPages();
+            document.getElementById('policeLoginPage').classList.remove('hidden');
+        }
+
+        function showPublicPortal() {
+            hideAllPages();
+            document.getElementById('publicPortal').classList.remove('hidden');
+        }
+
+        function showCourtLogin() {
+            hideAllPages();
+            document.getElementById('courtLoginPage').classList.remove('hidden');
+        }
+
+        function hideAllPages() {
+            const pages = ['homePage', 'policeLoginPage', 'policePortal', 'publicPortal', 'courtLoginPage', 'courtPortal'];
+            pages.forEach(page => {
+                document.getElementById(page).classList.add('hidden');
+            });
+        }
+
+        function logout() {
+            clearAllForms();
+            showHome();
+        }
+
+        function clearLoginForms() {
+            document.getElementById('policeLoginForm').reset();
+            document.getElementById('courtLoginForm').reset();
+        }
+
+        function clearAllForms() {
+            // Clear police form
+            document.getElementById('policeForm').reset();
+            document.getElementById('evidenceId').value = '';
+            
+            // Clear court form
+            document.getElementById('courtForm').reset();
+            document.getElementById('selectedCaseInfo').classList.add('hidden');
+            document.getElementById('courtSearchDropdown').classList.add('hidden');
+            document.getElementById('courtSubmitBtn').disabled = true;
+            selectedCase = null;
+            
+            // Clear login forms
+            clearLoginForms();
+            
+            // Clear search fields
+            document.getElementById('policeSearch').value = '';
+            document.getElementById('publicSearch').value = '';
+            document.getElementById('courtTrackingSearch').value = '';
+            
+            // Clear search results
+            updateSearchResults('policeSearchResults', []);
+            updateSearchResults('publicSearchResults', []);
+            updateSearchResults('courtTrackingResults', []);
+        }
+
+        // Generate Evidence ID
+        function generateEvidenceId() {
+            return `EV${evidenceCounter.toString().padStart(6, '0')}`;
+        }
+
+        // MetaMask connection
         async function connectMetaMask() {
             if (typeof window.ethereum !== 'undefined') {
                 try {
                     await window.ethereum.request({ method: 'eth_requestAccounts' });
-                    web3 = new Web3(window.ethereum);
-                    const accounts = await web3.eth.getAccounts();
-                    userAccount = accounts[0];
-                    
-                    updateMetaMaskStatus('Connected: ' + userAccount.substring(0, 6) + '...' + userAccount.substring(38), true);
-                    
-                    // Initialize contract if deployed
-                    if (contractAddress && contractABI.length > 0) {
-                        contract = new web3.eth.Contract(contractABI, contractAddress);
-                        console.log('Contract initialized successfully');
-                    }
-                    
+                    alert('🔗 MetaMask connected successfully! Data stored on blockchain.');
                     return true;
                 } catch (error) {
-                    console.error('Error connecting to MetaMask:', error);
-                    updateMetaMaskStatus('Connection Failed', false);
+                    alert('❌ MetaMask connection failed. Please try again.');
                     return false;
                 }
             } else {
-                updateMetaMaskStatus('MetaMask not installed', false);
-                alert('Please install MetaMask extension to use this application');
+                alert('🦊 Please install MetaMask to store data on blockchain.');
                 return false;
             }
         }
 
-        function checkMetaMaskConnection() {
+        // Search functionality
+        function searchCases(searchTerm) {
+            if (!searchTerm.trim()) {
+                return [];
+            }
+            return cases.filter(caseData => 
+                caseData.evidenceId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                caseData.aadhaar.includes(searchTerm) ||
+                caseData.accusedName.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+        }
+
+        function updateSearchResults(containerId, results) {
+            const container = document.getElementById(containerId);
+            
+            if (results.length === 0) {
+                if (containerId === 'publicSearchResults') {
+                    container.innerHTML = `
+                        <div class="text-center text-gray-500 py-12">
+                            <i data-lucide="search" class="w-16 h-16 text-gray-300 mx-auto mb-4"></i>
+                            <h3 class="text-xl font-medium mb-2">📂 No Cases Found</h3>
+                            <p>No cases match your search criteria. Please check the spelling and try again.</p>
+                        </div>
+                    `;
+                } else {
+                    container.innerHTML = `
+                        <div class="text-center text-gray-500 py-8">
+                            📂 No cases found. Try a different search term.
+                        </div>
+                    `;
+                }
+            } else {
+                container.innerHTML = results.map(caseData => {
+                    if (containerId === 'publicSearchResults') {
+                        return `
+                            <div class="border border-gray-200 rounded-lg p-6 hover:border-green-300 transition-colors bg-gray-50">
+                                <div class="grid md:grid-cols-2 gap-4">
+                                    <div class="space-y-3">
+                                        <div class="flex items-center">
+                                            <i data-lucide="hash" class="w-5 h-5 text-green-600 mr-2"></i>
+                                            <span><strong>🏷️ Evidence ID:</strong> ${caseData.evidenceId}</span>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <i data-lucide="user-check" class="w-5 h-5 text-green-600 mr-2"></i>
+                                            <span><strong>🆔 Aadhaar:</strong> ${caseData.aadhaar}</span>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <i data-lucide="user" class="w-5 h-5 text-green-600 mr-2"></i>
+                                            <span><strong>👤 Accused:</strong> ${caseData.accusedName}</span>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <i data-lucide="map-pin" class="w-5 h-5 text-green-600 mr-2"></i>
+                                            <span><strong>📍 Location:</strong> ${caseData.crimeLocation}</span>
+                                        </div>
+                                    </div>
+                                    <div class="space-y-3">
+                                        <div class="flex items-center">
+                                            <i data-lucide="calendar" class="w-5 h-5 text-green-600 mr-2"></i>
+                                            <span><strong>🕐 Crime Date:</strong> ${new Date(caseData.crimeDateTime).toLocaleString()}</span>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <i data-lucide="clock" class="w-5 h-5 text-green-600 mr-2"></i>
+                                            <span><strong>📅 Registered:</strong> ${new Date(caseData.registerDateTime).toLocaleString()}</span>
+                                        </div>
+                                        ${caseData.judgment ? `
+                                            <div class="flex items-center">
+                                                <i data-lucide="scale" class="w-5 h-5 text-green-600 mr-2"></i>
+                                                <span><strong>⚖️ Status:</strong> Judgment Given</span>
+                                            </div>
+                                        ` : `
+                                            <div class="flex items-center">
+                                                <i data-lucide="clock" class="w-5 h-5 text-orange-600 mr-2"></i>
+                                                <span><strong>⏳ Status:</strong> Pending Judgment</span>
+                                            </div>
+                                        `}
+                                        ${caseData.closingDate ? `
+                                            <div class="flex items-center">
+                                                <i data-lucide="check-circle" class="w-5 h-5 text-green-600 mr-2"></i>
+                                                <span><strong>📅 Closed:</strong> ${new Date(caseData.closingDate).toLocaleDateString()}</span>
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                </div>
+                                <div class="mt-4 pt-4 border-t border-gray-200">
+                                    <p><strong>📋 Case Details:</strong> ${caseData.caseDetails}</p>
+                                    ${caseData.judgment ? `<p class="mt-2"><strong>⚖️ Court Judgment:</strong> ${caseData.judgment}</p>` : ''}
+                                    ${caseData.rejudgment ? `<p class="mt-2"><strong>🔄 Re-judgment:</strong> ${caseData.rejudgment}</p>` : ''}
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        const statusColor = caseData.judgment ? 'text-green-600' : 'text-orange-600';
+                        const statusText = caseData.judgment ? '✅ Judgment Given' : '⏳ Pending Judgment';
+                        
+                        return `
+                            <div class="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors">
+                                <div class="grid grid-cols-2 gap-2 text-sm">
+                                    <div><strong>🏷️ Evidence ID:</strong> ${caseData.evidenceId}</div>
+                                    <div><strong>🆔 Aadhaar:</strong> ${caseData.aadhaar}</div>
+                                    <div><strong>👤 Accused:</strong> ${caseData.accusedName}</div>
+                                    <div><strong>📍 Location:</strong> ${caseData.crimeLocation}</div>
+                                    <div class="col-span-2"><strong>📋 Details:</strong> ${caseData.caseDetails}</div>
+                                    <div class="col-span-2 ${statusColor}"><strong>Status:</strong> ${statusText}</div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                }).join('');
+            }
+            
+            // Reinitialize Lucide icons for new content
+            lucide.createIcons();
+        }
+
+        // Police login
+        document.getElementById('policeLoginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const username = document.getElementById('policeUsername').value;
+            const password = document.getElementById('policePassword').value;
+            
+            if (username === credentials.police.username && password === credentials.police.password) {
+                hideAllPages();
+                document.getElementById('policePortal').classList.remove('hidden');
+                document.getElementById('evidenceId').value = generateEvidenceId();
+                // Clear login form only
+                document.getElementById('policeLoginForm').reset();
+            } else {
+                alert('❌ Invalid credentials. Please try again.');
+            }
+        });
+
+        // Court login
+        document.getElementById('courtLoginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const username = document.getElementById('courtUsername').value;
+            const password = document.getElementById('courtPassword').value;
+            
+            if (username === credentials.court.username && password === credentials.court.password) {
+                hideAllPages();
+                document.getElementById('courtPortal').classList.remove('hidden');
+                // Clear login form only
+                document.getElementById('courtLoginForm').reset();
+            } else {
+                alert('❌ Invalid credentials. Please try again.');
+            }
+        });
+
+        // Police form submission
+        document.getElementById('policeForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            if (!walletConnected) {
+                alert('❌ Please connect your wallet first to register cases on blockchain.');
+                return;
+            }
+            
+            const aadhaar = document.getElementById('aadhaar').value;
+            
+            // Validate Aadhaar
+            if (aadhaar.length !== 12 || !/^\d{12}$/.test(aadhaar)) {
+                alert('❌ Aadhaar number must be exactly 12 digits.');
+                return;
+            }
+
+            const newCase = {
+                evidenceId: document.getElementById('evidenceId').value,
+                aadhaar: aadhaar,
+                accusedName: document.getElementById('accusedName').value,
+                caseDetails: document.getElementById('caseDetails').value,
+                crimeLocation: document.getElementById('crimeLocation').value,
+                crimeDateTime: document.getElementById('crimeDateTime').value,
+                registerDateTime: document.getElementById('registerDateTime').value,
+                timestamp: new Date().toISOString()
+            };
+
+            // Set loading state
+            setLoadingState('policeForm', 'policeSubmitText', true, '⏳ Processing Transaction...', '📝 Register Case on Blockchain');
+            
+            try {
+                // Register case on blockchain
+                const transaction = await registerCaseOnBlockchain(newCase);
+                
+                // Add transaction hash to case data
+                newCase.transactionHash = transaction.transactionHash;
+                newCase.blockNumber = transaction.blockNumber;
+                
+                // Save to local storage
+                cases.push(newCase);
+                evidenceCounter++;
+                saveData(); // Save to localStorage
+                
+                // Clear form and set new evidence ID
+                document.getElementById('policeForm').reset();
+                document.getElementById('evidenceId').value = generateEvidenceId();
+                
+                alert(`✅ Case registered successfully on blockchain!\n\nEvidence ID: ${newCase.evidenceId}\nTransaction Hash: ${transaction.transactionHash}\nBlock Number: ${transaction.blockNumber}`);
+                
+            } catch (error) {
+                console.error('Error registering case:', error);
+                alert('❌ Failed to register case on blockchain. Please try again.');
+            } finally {
+                // Reset loading state
+                setLoadingState('policeForm', 'policeSubmitText', false, '', '📝 Register Case on Blockchain');
+            }
+        });
+
+        // Court form submission
+        document.getElementById('courtForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            if (!walletConnected) {
+                alert('❌ Please connect your wallet first to submit judgments on blockchain.');
+                return;
+            }
+            
+            if (!selectedCase) {
+                alert('❌ Please select a case first.');
+                return;
+            }
+
+            const judgmentData = {
+                evidenceId: selectedCase.evidenceId,
+                judgment: document.getElementById('judgment').value,
+                closingDate: document.getElementById('closingDate').value,
+                rejudgment: document.getElementById('rejudgment').value
+            };
+
+            const updatedCase = {
+                ...selectedCase,
+                ...judgmentData,
+                judgmentTimestamp: new Date().toISOString()
+            };
+
+            // Set loading state
+            setLoadingState('courtSubmitBtn', 'courtSubmitText', true, '⏳ Processing Transaction...', '⚖️ Submit Judgment on Blockchain');
+            
+            try {
+                // Submit judgment on blockchain
+                const transaction = await submitJudgmentOnBlockchain(judgmentData);
+                
+                // Add transaction hash to case data
+                updatedCase.judgmentTransactionHash = transaction.transactionHash;
+                updatedCase.judgmentBlockNumber = transaction.blockNumber;
+                
+                // Update local storage
+                const index = cases.findIndex(c => c.evidenceId === selectedCase.evidenceId);
+                if (index !== -1) {
+                    cases[index] = updatedCase;
+                    saveData(); // Save to localStorage
+                }
+
+                // Clear form
+                document.getElementById('courtForm').reset();
+                document.getElementById('selectedCaseInfo').classList.add('hidden');
+                document.getElementById('courtSearchDropdown').classList.add('hidden');
+                document.getElementById('courtSubmitBtn').disabled = true;
+                selectedCase = null;
+
+                alert(`✅ Court judgment submitted successfully on blockchain!\n\nEvidence ID: ${updatedCase.evidenceId}\nTransaction Hash: ${transaction.transactionHash}\nBlock Number: ${transaction.blockNumber}`);
+                
+            } catch (error) {
+                console.error('Error submitting judgment:', error);
+                alert('❌ Failed to submit judgment on blockchain. Please try again.');
+            } finally {
+                // Reset loading state
+                setLoadingState('courtSubmitBtn', 'courtSubmitText', false, '', '⚖️ Submit Judgment on Blockchain');
+            }
+        });
+
+        // Aadhaar auto-fill functionality
+        document.getElementById('aadhaar').addEventListener('input', function(e) {
+            const aadhaar = e.target.value;
+            if (aadhaar.length === 12) {
+                const existingCase = cases.find(c => c.aadhaar === aadhaar);
+                if (existingCase) {
+                    document.getElementById('accusedName').value = existingCase.accusedName;
+                    // Show notification that name was auto-filled
+                    const nameField = document.getElementById('accusedName');
+                    nameField.style.backgroundColor = '#dcfce7';
+                    setTimeout(() => {
+                        nameField.style.backgroundColor = '';
+                    }, 2000);
+                }
+            }
+        });
+
+        // Search functionality for all portals
+        document.getElementById('policeSearch').addEventListener('input', function(e) {
+            const results = searchCases(e.target.value);
+            updateSearchResults('policeSearchResults', results);
+        });
+
+        document.getElementById('publicSearch').addEventListener('input', function(e) {
+            const results = searchCases(e.target.value);
+            updateSearchResults('publicSearchResults', results);
+        });
+
+        document.getElementById('courtTrackingSearch').addEventListener('input', function(e) {
+            const results = searchCases(e.target.value);
+            updateSearchResults('courtTrackingResults', results);
+        });
+
+        // Court search with dropdown
+        document.getElementById('courtSearch').addEventListener('input', function(e) {
+            const searchTerm = e.target.value;
+            const results = searchCases(searchTerm);
+            const dropdown = document.getElementById('courtSearchDropdown');
+            
+            if (searchTerm && results.length > 0 && !selectedCase) {
+                dropdown.innerHTML = results.map(caseData => `
+                    <div class="p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0 search-result" onclick="selectCase('${caseData.evidenceId}')">
+                        <div class="font-medium">${caseData.evidenceId} - ${caseData.accusedName}</div>
+                        <div class="text-sm text-gray-600">${caseData.caseDetails.substring(0, 100)}...</div>
+                    </div>
+                `).join('');
+                dropdown.classList.remove('hidden');
+            } else {
+                dropdown.classList.add('hidden');
+            }
+        });
+
+        // Select case for court judgment
+        function selectCase(evidenceId) {
+            selectedCase = cases.find(c => c.evidenceId === evidenceId);
+            if (selectedCase) {
+                document.getElementById('courtSearch').value = selectedCase.evidenceId;
+                document.getElementById('courtSearchDropdown').classList.add('hidden');
+                
+                document.getElementById('selectedCaseDetails').innerHTML = `
+                    <div><strong>🏷️ Evidence ID:</strong> ${selectedCase.evidenceId}</div>
+                    <div><strong>👤 Accused:</strong> ${selectedCase.accusedName}</div>
+                    <div><strong>🆔 Aadhaar:</strong> ${selectedCase.aadhaar}</div>
+                    <div><strong>📋 Details:</strong> ${selectedCase.caseDetails}</div>
+                    <div><strong>📍 Location:</strong> ${selectedCase.crimeLocation}</div>
+                    <div><strong>🕐 Crime Date:</strong> ${new Date(selectedCase.crimeDateTime).toLocaleString()}</div>
+                `;
+                document.getElementById('selectedCaseInfo').classList.remove('hidden');
+                document.getElementById('courtSubmitBtn').disabled = false;
+            }
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            showHome();
+            lucide.createIcons();
+            updateWalletStatus();
+            
+            // Load existing cases on page load
+            if (cases.length > 0) {
+                console.log(`📊 Loaded ${cases.length} existing cases from storage`);
+            }
+            
+            // Check if wallet is already connected
             if (typeof window.ethereum !== 'undefined') {
                 window.ethereum.request({ method: 'eth_accounts' })
                     .then(accounts => {
                         if (accounts.length > 0) {
                             userAccount = accounts[0];
-                            updateMetaMaskStatus('Connected: ' + userAccount.substring(0, 6) + '...' + userAccount.substring(38), true);
-                        } else {
-                            updateMetaMaskStatus('Click to Connect MetaMask', false);
+                            walletConnected = true;
+                            web3 = new Web3(window.ethereum);
+                            updateWalletStatus();
                         }
                     })
-                    .catch(() => {
-                        updateMetaMaskStatus('MetaMask Error', false);
-                    });
-            } else {
-                updateMetaMaskStatus('MetaMask not installed', false);
-            }
-        }
-
-        function updateMetaMaskStatus(status, connected) {
-            const statusElement = document.getElementById('metamaskStatus');
-            statusElement.textContent = '🦊 ' + status;
-            
-            if (connected) {
-                statusElement.classList.add('connected');
-                statusElement.onclick = null;
-            } else {
-                statusElement.classList.remove('connected');
-                statusElement.onclick = connectMetaMask;
-            }
-        }
-
-        // Panel Navigation
-        function showPanel(panelName) {
-            // Hide all panels
-            document.querySelectorAll('.panel').forEach(panel => {
-                panel.classList.remove('active');
-            });
-            
-            // Remove active class from all nav buttons
-            document.querySelectorAll('.nav-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            
-            // Show selected panel
-            document.getElementById(panelName + 'Panel').classList.add('active');
-            
-            // Add active class to clicked button
-            event.target.classList.add('active');
-            
-            // Hide logout button for public panel
-            if (panelName === 'public') {
-                document.getElementById('logoutBtn').classList.remove('show');
-                currentUser = null;
-            }
-        }
-
-        // ID Generation
-        function generateIds() {
-            document.getElementById('policeEvidenceId').value = 'EV' + String(evidenceCounter).padStart(6, '0');
-            document.getElementById('policeUniqueId').value = 'UI' + String(uniqueIdCounter).padStart(6, '0');
-        }
-
-        // Authentication Functions
-        function policeLoginSubmit() {
-            const username = document.getElementById('policeUsername').value.trim();
-            const password = document.getElementById('policePassword').value.trim();
-            
-            if (!username || !password) {
-                alert('❌ Please enter both username and password');
-                return;
-            }
-            
-            // Demo credentials (in production, use proper authentication)
-            if (username === 'police' && password === 'police123') {
-                document.getElementById('policeLogin').style.display = 'none';
-                document.getElementById('policeDashboard').style.display = 'block';
-                document.getElementById('logoutBtn').classList.add('show');
-                currentUser = 'police';
-                clearLoginForm('police');
-                generateIds();
-            } else {
-                alert('❌ Invalid credentials. Use: police / police123');
-            }
-        }
-
-        function courtLoginSubmit() {
-            const username = document.getElementById('courtUsername').value.trim();
-            const password = document.getElementById('courtPassword').value.trim();
-            
-            if (!username || !password) {
-                alert('❌ Please enter both username and password');
-                return;
-            }
-            
-            if (username === 'court' && password === 'court123') {
-                document.getElementById('courtLogin').style.display = 'none';
-                document.getElementById('courtDashboard').style.display = 'block';
-                document.getElementById('logoutBtn').classList.add('show');
-                currentUser = 'court';
-                clearLoginForm('court');
-            } else {
-                alert('❌ Invalid credentials. Use: court / court123');
-            }
-        }
-
-        // Logout Function
-        function logout() {
-            currentUser = null;
-            document.getElementById('logoutBtn').classList.remove('show');
-            
-            // Reset police panel
-            document.getElementById('policeLogin').style.display = 'block';
-            document.getElementById('policeDashboard').style.display = 'none';
-            
-            // Reset court panel
-            document.getElementById('courtLogin').style.display = 'block';
-            document.getElementById('courtDashboard').style.display = 'none';
-            
-            // Clear all forms
-            clearAllForms();
-            hideAllResults();
-            
-            // Show public panel
-            showPanel('public');
-        }
-
-        // Case Registration (Police)
-        function checkExistingCase(aadhar) {
-            const messageElement = document.getElementById('aadharMessage');
-            
-            if (aadhar.length === 12) {
-                // Check if case exists for this Aadhar
-                let existingCase = null;
-                for (let caseId in cases) {
-                    if (cases[caseId].aadhar === aadhar) {
-                        existingCase = cases[caseId];
-                        break;
-                    }
-                }
-                
-                if (existingCase) {
-                    document.getElementById('policeAccusedName').value = existingCase.accusedName;
-                    messageElement.innerHTML = '✅ Existing record found. Name auto-filled. New case will be added to existing records.';
-                    messageElement.style.display = 'block';
-                } else {
-                    messageElement.style.display = 'none';
-                }
-            } else {
-                messageElement.style.display = 'none';
-                if (aadhar.length > 0) {
-                    document.getElementById('policeAccusedName').value = '';
-                }
-            }
-        }
-
-        async function registerCase() {
-            const aadhar = document.getElementById('policeAadhar').value.trim();
-            const accusedName = document.getElementById('policeAccusedName').value.trim();
-            const caseDetails = document.getElementById('policeCaseDetails').value.trim();
-            const crimeLocation = document.getElementById('policeCrimeLocation').value.trim();
-            const crimeDate = document.getElementById('policeCrimeDate').value;
-            const crimeTime = document.getElementById('policeCrimeTime').value;
-            const evidenceId = document.getElementById('policeEvidenceId').value;
-            const uniqueId = document.getElementById('policeUniqueId').value;
-
-            // Validation
-            if (!aadhar || aadhar.length !== 12) {
-                alert('❌ Please enter a valid 12-digit Aadhar number');
-                return;
-            }
-            if (!accusedName) {
-                alert('❌ Please enter accused name');
-                return;
-            }
-            if (!caseDetails) {
-                alert('❌ Please enter case details');
-                return;
-            }
-            if (!crimeLocation) {
-                alert('❌ Please enter crime location');
-                return;
-            }
-            if (!crimeDate || !crimeTime) {
-                alert('❌ Please enter crime date and time');
-                return;
-            }
-
-            // Connect MetaMask
-            if (!userAccount) {
-                if (!(await connectMetaMask())) {
-                    alert('❌ Please connect MetaMask to proceed');
-                    return;
-                }
-            }
-
-            try {
-                // Show loading state
-                const button = event.target;
-                const originalText = button.textContent;
-                button.textContent = '⏳ Registering Case...';
-                button.disabled = true;
-
-                // Create case object
-                const caseData = {
-                    aadhar: aadhar,
-                    accusedName: accusedName,
-                    caseDetails: caseDetails,
-                    crimeLocation: crimeLocation,
-                    crimeDate: crimeDate,
-                    crimeTime: crimeTime,
-                    evidenceId: evidenceId,
-                    uniqueId: uniqueId,
-                    registerDate: new Date().toISOString(),
-                    registerDateTime: new Date().toLocaleString(),
-                    status: 'Registered',
-                    judgement: '',
-                    closingDate: '',
-                    rejudgement: '',
-                    registeredBy: userAccount
-                };
-
-                // Store case (in production, this will be stored on blockchain)
-                cases[evidenceId] = caseData;
-
-                // If there's an existing case with same Aadhar, link them
-                let linkedCases = [];
-                for (let caseId in cases) {
-                    if (cases[caseId].aadhar === aadhar) {
-                        linkedCases.push(cases[caseId]);
-                    }
-                }
-
-                alert(`✅ Case registered successfully!\n📋 Evidence ID: ${evidenceId}\n🔗 Connected with MetaMask\n👤 Registered by: ${userAccount.substring(0, 6)}...${userAccount.substring(38)}\n📊 Total cases for this Aadhar: ${linkedCases.length}`);
-
-                // Clear form and generate new IDs
-                clearRegistrationForm();
-                evidenceCounter++;
-                uniqueIdCounter++;
-                generateIds();
-
-                // Reset button
-                button.textContent = originalText;
-                button.disabled = false;
-
-            } catch (error) {
-                alert('❌ Error registering case: ' + error.message);
-                
-                // Reset button
-                const button = document.querySelector('#policeDashboard .btn');
-                button.textContent = '📋 Register Case & Connect MetaMask';
-                button.disabled = false;
-            }
-        }
-
-        // Judgement Submission (Court)
-        async function submitJudgement() {
-            const evidenceId = document.getElementById('courtSearchInput').value.trim();
-            const judgement = document.getElementById('courtJudgement').value.trim();
-            const closingDate = document.getElementById('courtClosingDate').value;
-            const rejudgement = document.getElementById('courtRejudgement').value.trim();
-
-            // Validation
-            if (!evidenceId) {
-                alert('❌ Please enter Evidence ID');
-                return;
-            }
-            if (!judgement) {
-                alert('❌ Please enter judgement');
-                return;
-            }
-            if (!closingDate) {
-                alert('❌ Please select closing date');
-                return;
-            }
-
-            // Check if case exists
-            if (!cases[evidenceId] && !findCaseBySearch('evidence', evidenceId)) {
-                alert('❌ Case not found. Please search and verify the case first.');
-                return;
-            }
-
-            // Connect MetaMask
-            if (!userAccount) {
-                if (!(await connectMetaMask())) {
-                    alert('❌ Please connect MetaMask to proceed');
-                    return;
-                }
-            }
-
-            try {
-                // Show loading state
-                const button = event.target;
-                const originalText = button.textContent;
-                button.textContent = '⏳ Submitting Judgement...';
-                button.disabled = true;
-
-                // Find and update case
-                let caseData = cases[evidenceId] || findCaseBySearch('evidence', evidenceId);
-                if (caseData) {
-                    caseData.judgement = judgement;
-                    caseData.closingDate = closingDate;
-                    caseData.rejudgement = rejudgement;
-                    caseData.status = 'Closed';
-                    caseData.judgedBy = userAccount;
-                    caseData.judgementDate = new Date().toLocaleString();
-                    
-                    // Update in cases storage
-                    cases[evidenceId] = caseData;
-                }
-
-                alert(`✅ Judgement submitted successfully!\n📋 Evidence ID: ${evidenceId}\n⚖️ Status: Closed\n🔗 Connected with MetaMask\n👨‍⚖️ Judged by: ${userAccount.substring(0, 6)}...${userAccount.substring(38)}`);
-
-                // Clear form
-                clearJudgementForm();
-
-                // Reset button
-                button.textContent = originalText;
-                button.disabled = false;
-
-            } catch (error) {
-                alert('❌ Error submitting judgement: ' + error.message);
-                
-                // Reset button
-                const button = document.querySelector('#courtDashboard .btn');
-                button.textContent = '⚖️ Submit Judgement & Connect MetaMask';
-                button.disabled = false;
-            }
-        }
-
-        // Case Tracking Functions
-        function trackCase() {
-            const searchType = document.getElementById('publicSearchType').value;
-            const searchValue = document.getElementById('publicSearchInput').value.trim();
-            
-            if (!searchValue) {
-                alert('❌ Please enter search value');
-                return;
-            }
-            
-            performCaseSearch(searchType, searchValue, 'publicTrackingResult', 'publicCaseInfo');
-        }
-
-        function policeTrackCase() {
-            const searchType = document.getElementById('policeSearchType').value;
-            const searchValue = document.getElementById('policeSearchInput').value.trim();
-            
-            if (!searchValue) {
-                alert('❌ Please enter search value');
-                return;
-            }
-            
-            performCaseSearch(searchType, searchValue, 'policeTrackingResult', 'policeCaseInfo', true);
-        }
-
-        function courtSearchCase() {
-            const searchType = document.getElementById('courtSearchType').value;
-            const searchValue = document.getElementById('courtSearchInput').value.trim();
-            
-            if (!searchValue) {
-                alert('❌ Please enter search value');
-                return;
-            }
-            
-            performCaseSearch(searchType, searchValue, 'courtTrackingResult', 'courtCaseInfo');
-        }
-
-        function courtTrackCase() {
-            const searchType = document.getElementById('courtTrackType').value;
-            const searchValue = document.getElementById('courtTrackInput').value.trim();
-            
-            if (!searchValue) {
-                alert('❌ Please enter search value');
-                return;
-            }
-            
-            performCaseSearch(searchType, searchValue, 'courtTrackingResult', 'courtCaseInfo');
-        }
-
-        function performCaseSearch(searchType, searchValue, resultId, infoId, showHistory = false) {
-            const foundCases = findCasesBySearch(searchType, searchValue);
-            const resultDiv = document.getElementById(resultId);
-            const infoDiv = document.getElementById(infoId);
-            
-            if (foundCases.length > 0) {
-                // Show the first/most recent case
-                const primaryCase = foundCases[foundCases.length - 1];
-                displayCaseInfo(primaryCase, infoDiv);
-                
-                // If multiple cases found (for same Aadhar), show history
-                if (showHistory && foundCases.length > 1 && searchType === 'aadhar') {
-                    const historyDiv = document.getElementById('policeCasesHistory');
-                    const historyList = document.getElementById('policeHistoryList');
-                    
-                    if (historyDiv && historyList) {
-                        historyList.innerHTML = '';
-                        foundCases.forEach((caseData, index) => {
-                            const caseItem = document.createElement('div');
-                            caseItem.className = 'case-item';
-                            caseItem.innerHTML = `
-                                <strong>Case ${index + 1}: ${caseData.evidenceId}</strong><br>
-                                📅 Registered: ${caseData.registerDateTime}<br>
-                                📝 Details: ${caseData.caseDetails.substring(0, 100)}...<br>
-                                🔄 Status: ${caseData.status}
-                            `;
-                            historyList.appendChild(caseItem);
-                        });
-                        historyDiv.style.display = 'block';
-                    }
-                }
-                
-                resultDiv.classList.add('show');
-            } else {
-                infoDiv.innerHTML = '<div class="info-item"><strong>❌ No Case Found</strong><span>No case found for the given search criteria.</span></div>';
-                resultDiv.classList.add('show');
-                
-                // Hide history if no cases found
-                const historyDiv = document.getElementById('policeCasesHistory');
-                if (historyDiv) {
-                    historyDiv.style.display = 'none';
-                }
-            }
-        }
-
-        function findCasesBySearch(searchType, searchValue) {
-            const results = [];
-            
-            for (let caseId in cases) {
-                const caseData = cases[caseId];
-                
-                switch (searchType) {
-                    case 'evidence':
-                        if (caseData.evidenceId.toLowerCase() === searchValue.toLowerCase()) {
-                            results.push(caseData);
-                        }
-                        break;
-                    case 'aadhar':
-                        if (caseData.aadhar === searchValue) {
-                            results.push(caseData);
-                        }
-                        break;
-                    case 'accused':
-                        if (caseData.accusedName.toLowerCase().includes(searchValue.toLowerCase())) {
-                            results.push(caseData);
-                        }
-                        break;
-                }
-            }
-            
-            return results;
-        }
-
-        function findCaseBySearch(searchType, searchValue) {
-            const results = findCasesBySearch(searchType, searchValue);
-            return results.length > 0 ? results[0] : null;
-        }
-
-        function displayCaseInfo(caseData, infoDiv) {
-            const statusColor = caseData.status === 'Closed' ? '#e74c3c' : (caseData.status === 'Registered' ? '#27ae60' : '#f39c12');
-            
-            infoDiv.innerHTML = `
-                <div class="info-item">
-                    <strong>📋 Evidence ID</strong>
-                    <span>${caseData.evidenceId}</span>
-                </div>
-                <div class="info-item">
-                    <strong>🆔 Unique ID</strong>
-                    <span>${caseData.uniqueId}</span>
-                </div>
-                <div class="info-item">
-                    <strong>🆔 Aadhar Number</strong>
-                    <span>${caseData.aadhar}</span>
-                </div>
-                <div class="info-item">
-                    <strong>👤 Accused Name</strong>
-                    <span>${caseData.accusedName}</span>
-                </div>
-                <div class="info-item">
-                    <strong>📝 Case Details</strong>
-                    <span>${caseData.caseDetails}</span>
-                </div>
-                <div class="info-item">
-                    <strong>📍 Crime Location</strong>
-                    <span>${caseData.crimeLocation}</span>
-                </div>
-                <div class="info-item">
-                    <strong>📅 Crime Date & Time</strong>
-                    <span>${caseData.crimeDate} at ${caseData.crimeTime}</span>
-                </div>
-                <div class="info-item">
-                    <strong>📋 Registration Date</strong>
-                    <span>${caseData.registerDateTime}</span>
-                </div>
-                <div class="info-item">
-                    <strong>🔄 Status</strong>
-                    <span style="color: ${statusColor}; font-weight: bold;">${caseData.status}</span>
-                </div>
-                ${caseData.registeredBy ? `
-                <div class="info-item">
-                    <strong>👮‍♂️ Registered By</strong>
-                    <span>${caseData.registeredBy.substring(0, 10)}...${caseData.registeredBy.substring(32)}</span>
-                </div>
-                ` : ''}
-                ${caseData.judgement ? `
-                <div class="info-item">
-                    <strong>⚖️ Judgement</strong>
-                    <span>${caseData.judgement}</span>
-                </div>
-                <div class="info-item">
-                    <strong>📅 Closing Date</strong>
-                    <span>${caseData.closingDate}</span>
-                </div>
-                <div class="info-item">
-                    <strong>📅 Judgement Date</strong>
-                    <span>${caseData.judgementDate || 'Not Available'}</span>
-                </div>
-                ${caseData.judgedBy ? `
-                <div class="info-item">
-                    <strong>👨‍⚖️ Judged By</strong>
-                    <span>${caseData.judgedBy.substring(0, 10)}...${caseData.judgedBy.substring(32)}</span>
-                </div>
-                ` : ''}
-                ${caseData.rejudgement ? `
-                <div class="info-item">
-                    <strong>🔄 Re-judgement</strong>
-                    <span>${caseData.rejudgement}</span>
-                </div>
-                ` : ''}
-                ` : ''}
-            `;
-        }
-
-        // Search Label Updates
-        function updatePublicSearch() {
-            const searchType = document.getElementById('publicSearchType').value;
-            const label = document.getElementById('publicSearchLabel');
-            const input = document.getElementById('publicSearchInput');
-            
-            updateSearchFields(searchType, label, input);
-        }
-
-        function updateCourtSearch() {
-            const searchType = document.getElementById('courtSearchType').value;
-            const label = document.getElementById('courtSearchLabel');
-            const input = document.getElementById('courtSearchInput');
-            
-            updateSearchFields(searchType, label, input);
-        }
-
-        function updateSearchFields(searchType, label, input) {
-            switch (searchType) {
-                case 'evidence':
-                    label.textContent = '📋 Evidence ID:';
-                    input.placeholder = 'Enter Evidence ID (e.g., EV000001)';
-                    break;
-                case 'aadhar':
-                    label.textContent = '🆔 Aadhar Number:';
-                    input.placeholder = 'Enter 12-digit Aadhar number';
-                    break;
-                case 'accused':
-                    label.textContent = '👤 Accused Name:';
-                    input.placeholder = 'Enter accused name';
-                    break;
-            }
-            input.value = '';
-        }
-
-        function loadCaseForJudgement() {
-            const evidenceId = document.getElementById('courtSearchInput').value.trim();
-            
-            if (evidenceId && cases[evidenceId]) {
-                // Case exists, could pre-populate some fields or show case preview
-                console.log('Case found for judgement:', cases[evidenceId]);
-            }
-        }
-
-        // Form Clearing Functions
-        function clearLoginForm(type) {
-            if (type === 'police') {
-                document.getElementById('policeUsername').value = '';
-                document.getElementById('policePassword').value = '';
-            } else if (type === 'court') {
-                document.getElementById('courtUsername').value = '';
-                document.getElementById('courtPassword').value = '';
-            }
-        }
-
-        function clearRegistrationForm() {
-            document.getElementById('policeAadhar').value = '';
-            document.getElementById('policeAccusedName').value = '';
-            document.getElementById('policeCaseDetails').value = '';
-            document.getElementById('policeCrimeLocation').value = '';
-            document.getElementById('policeCrimeDate').value = '';
-            document.getElementById('policeCrimeTime').value = '';
-            document.getElementById('aadharMessage').style.display = 'none';
-        }
-
-        function clearJudgementForm() {
-            document.getElementById('courtSearchInput').value = '';
-            document.getElementById('courtJudgement').value = '';
-            document.getElementById('courtClosingDate').value = '';
-            document.getElementById('courtRejudgement').value = '';
-        }
-
-        function clearAllForms() {
-            // Clear all input fields except readonly ones
-            const inputs = document.querySelectorAll('input, textarea, select');
-            inputs.forEach(input => {
-                if (!input.classList.contains('readonly') && input.type !== 'submit' && input.type !== 'button') {
-                    input.value = '';
-                }
-            });
-            
-            // Hide all messages
-            document.getElementById('aadharMessage').style.display = 'none';
-        }
-
-        function hideAllResults() {
-            document.querySelectorAll('.tracking-result').forEach(result => {
-                result.classList.remove('show');
-            });
-            
-            const historyDiv = document.getElementById('policeCasesHistory');
-            if (historyDiv) {
-                historyDiv.style.display = 'none';
-            }
-        }
-
-        // Sample Data for Demo
-        function loadSampleData() {
-            // Sample case 1
-            cases['EV000001'] = {
-                aadhar: '123456789012',
-                accusedName: 'John Doe',
-                caseDetails: 'Theft case involving stolen mobile phone and wallet from a public transport bus',
-                crimeLocation: 'Bus Stop, MG Road, Mumbai Central',
-                crimeDate: '2024-01-15',
-                crimeTime: '14:30',
-                evidenceId: 'EV000001',
-                uniqueId: 'UI000001',
-                registerDate: '2024-01-16T10:00:00.000Z',
-                registerDateTime: '16/1/2024, 10:00:00 am',
-                status: 'Under Investigation',
-                judgement: '',
-                closingDate: '',
-                rejudgement: '',
-                registeredBy: '0x1234...5678'
-            };
-
-            // Sample case 2 (closed case)
-            cases['EV000002'] = {
-                aadhar: '987654321098',
-                accusedName: 'Jane Smith',
-                caseDetails: 'Financial fraud case involving fake investment scheme and money laundering',
-                crimeLocation: 'Commercial Complex, Bandra West, Mumbai',
-                crimeDate: '2024-02-20',
-                crimeTime: '11:15',
-                evidenceId: 'EV000002',
-                uniqueId: 'UI000002',
-                registerDate: '2024-02-21T09:30:00.000Z',
-                registerDateTime: '21/2/2024, 9:30:00 am',
-                status: 'Closed',
-                judgement: 'Guilty of financial fraud. Sentenced to 3 years imprisonment and fine of Rs. 2,00,000',
-                closingDate: '2024-03-15',
-                rejudgement: '',
-                registeredBy: '0x1234...5678',
-                judgedBy: '0x9876...4321',
-                judgementDate: '15/3/2024, 2:30:00 pm'
-            };
-
-            // Sample case 3 (multiple cases for same person)
-            cases['EV000003'] = {
-                aadhar: '123456789012', // Same as case 1
-                accusedName: 'John Doe',
-                caseDetails: 'Assault case involving physical altercation at a restaurant',
-                crimeLocation: 'Food Court, Phoenix Mall, Mumbai',
-                crimeDate: '2024-03-10',
-                crimeTime: '20:45',
-                evidenceId: 'EV000003',
-                uniqueId: 'UI000003',
-                registerDate: '2024-03-11T11:15:00.000Z',
-                registerDateTime: '11/3/2024, 11:15:00 am',
-                status: 'Registered',
-                judgement: '',
-                closingDate: '',
-                rejudgement: '',
-                registeredBy: '0x1234...5678'
-            };
-
-            console.log('Sample data loaded:', Object.keys(cases).length, 'cases');
-        }
-
-        // MetaMask Event Listeners
-        if (typeof window.ethereum !== 'undefined') {
-            window.ethereum.on('accountsChanged', function (accounts) {
-                if (accounts.length === 0) {
-                    updateMetaMaskStatus('Not Connected', false);
-                    userAccount = null;
-                } else {
-                    userAccount = accounts[0];
-                    updateMetaMaskStatus('Connected: ' + userAccount.substring(0, 6) + '...' + userAccount.substring(38), true);
-                }
-            });
-
-            window.ethereum.on('chainChanged', function (chainId) {
-                console.log('Chain changed to:', chainId);
-                // Reload page on chain change to avoid inconsistencies
-                window.location.reload();
-            });
-        }
-
-        // Additional Utility Functions
-        function validateAadhar(aadhar) {
-            return /^\d{12}$/.test(aadhar);
-        }
-
-        function validateEvidenceId(evidenceId) {
-            return /^EV\d{6}$/.test(evidenceId);
-        }
-
-        function formatDate(dateString) {
-            return new Date(dateString).toLocaleDateString('en-IN');
-        }
-
-        function formatDateTime(dateString) {
-            return new Date(dateString).toLocaleString('en-IN');
-        }
-
-        // Auto-save functionality (optional)
-        function autoSave() {
-            // In a real application, you might want to periodically save form data
-            // For security, we don't auto-save login credentials
-            console.log('Auto-save check completed');
-        }
-
-        // Initialize auto-save timer (every 30 seconds)
-        setInterval(autoSave, 30000);
-
-        // Keyboard shortcuts
-        document.addEventListener('keydown', function(event) {
-            if (event.ctrlKey && event.key === 'l' && currentUser) {
-                event.preventDefault();
-                logout();
+                    .catch(console.error);
             }
         });
-
-        console.log('🏛️ Blockchain Evidence Tracking System Initialized');
-        console.log('📝 Demo Credentials:');
-        console.log('👮‍♂️ Police: police / police123');
-        console.log('⚖️ Court: court / court123');
     </script>
+    
+    <!-- Web3.js Library -->
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.8.0/dist/web3.min.js"></script>
 </body>
 </html>
-
-
