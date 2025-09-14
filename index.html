@@ -514,21 +514,72 @@
         };
 
         // Contract ABI and Address (you'll need to deploy the contract and update these)
-        const CONTRACT_ADDRESS = "0x6a33A701C31342B6301588Eb2F315ccFE8200d22"; // Update with deployed contract address
+        const CONTRACT_ADDRESS = "0xf8e81D47203A594245E36C48e151709F0C19fBe8"; // Update with deployed contract address
         const CONTRACT_ABI = [
+	{
+		"inputs": [],
+		"stateMutability": "nonpayable",
+		"type": "constructor"
+	},
+	{
+		"inputs": [],
+		"name": "AccessControlBadConfirmation",
+		"type": "error"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "account",
+				"type": "address"
+			},
+			{
+				"internalType": "bytes32",
+				"name": "neededRole",
+				"type": "bytes32"
+			}
+		],
+		"name": "AccessControlUnauthorizedAccount",
+		"type": "error"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "account",
+				"type": "address"
+			}
+		],
+		"name": "grantCourtRole",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "account",
+				"type": "address"
+			}
+		],
+		"name": "grantPoliceRole",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "ReentrancyGuardReentrantCall",
+		"type": "error"
+	},
 	{
 		"anonymous": false,
 		"inputs": [
 			{
-				"indexed": false,
+				"indexed": true,
 				"internalType": "string",
-				"name": "uniqueCaseID",
-				"type": "string"
-			},
-			{
-				"indexed": false,
-				"internalType": "string",
-				"name": "evidenceID",
+				"name": "evidenceId",
 				"type": "string"
 			},
 			{
@@ -540,21 +591,93 @@
 			{
 				"indexed": false,
 				"internalType": "string",
-				"name": "accused",
+				"name": "accusedName",
 				"type": "string"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "caseDetails",
+				"type": "string"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "crimeLocation",
+				"type": "string"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "crimeTimestamp",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "registerTimestamp",
+				"type": "uint256"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "registeredBy",
+				"type": "address"
 			}
 		],
 		"name": "CaseRegistered",
 		"type": "event"
 	},
 	{
+		"inputs": [
+			{
+				"internalType": "bytes32",
+				"name": "role",
+				"type": "bytes32"
+			},
+			{
+				"internalType": "address",
+				"name": "account",
+				"type": "address"
+			}
+		],
+		"name": "grantRole",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
 		"anonymous": false,
 		"inputs": [
 			{
+				"indexed": true,
+				"internalType": "string",
+				"name": "evidenceId",
+				"type": "string"
+			},
+			{
 				"indexed": false,
 				"internalType": "string",
-				"name": "evidenceID",
+				"name": "judgment",
 				"type": "string"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "closingTimestamp",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "rejudgment",
+				"type": "string"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "judgedBy",
+				"type": "address"
 			}
 		],
 		"name": "JudgmentSubmitted",
@@ -564,72 +687,198 @@
 		"inputs": [
 			{
 				"internalType": "string",
+				"name": "evidenceId",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
 				"name": "aadhaar",
 				"type": "string"
 			},
 			{
 				"internalType": "string",
-				"name": "accused",
+				"name": "accusedName",
 				"type": "string"
 			},
 			{
 				"internalType": "string",
-				"name": "details",
+				"name": "caseDetails",
 				"type": "string"
 			},
 			{
 				"internalType": "string",
-				"name": "location",
+				"name": "crimeLocation",
 				"type": "string"
 			},
 			{
-				"internalType": "string",
-				"name": "officer",
-				"type": "string"
+				"internalType": "uint256",
+				"name": "crimeTimestamp",
+				"type": "uint256"
 			},
 			{
-				"internalType": "string",
-				"name": "crimeDate",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "regDate",
-				"type": "string"
+				"internalType": "uint256",
+				"name": "registerTimestamp",
+				"type": "uint256"
 			}
 		],
 		"name": "registerCase",
-		"outputs": [
-			{
-				"internalType": "string",
-				"name": "",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "",
-				"type": "string"
-			}
-		],
+		"outputs": [],
 		"stateMutability": "nonpayable",
 		"type": "function"
 	},
 	{
 		"inputs": [
 			{
+				"internalType": "bytes32",
+				"name": "role",
+				"type": "bytes32"
+			},
+			{
+				"internalType": "address",
+				"name": "callerConfirmation",
+				"type": "address"
+			}
+		],
+		"name": "renounceRole",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "account",
+				"type": "address"
+			}
+		],
+		"name": "revokeCourtRole",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "account",
+				"type": "address"
+			}
+		],
+		"name": "revokePoliceRole",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "bytes32",
+				"name": "role",
+				"type": "bytes32"
+			},
+			{
+				"internalType": "address",
+				"name": "account",
+				"type": "address"
+			}
+		],
+		"name": "revokeRole",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "bytes32",
+				"name": "role",
+				"type": "bytes32"
+			},
+			{
+				"indexed": true,
+				"internalType": "bytes32",
+				"name": "previousAdminRole",
+				"type": "bytes32"
+			},
+			{
+				"indexed": true,
+				"internalType": "bytes32",
+				"name": "newAdminRole",
+				"type": "bytes32"
+			}
+		],
+		"name": "RoleAdminChanged",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "bytes32",
+				"name": "role",
+				"type": "bytes32"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "account",
+				"type": "address"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "sender",
+				"type": "address"
+			}
+		],
+		"name": "RoleGranted",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "bytes32",
+				"name": "role",
+				"type": "bytes32"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "account",
+				"type": "address"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "sender",
+				"type": "address"
+			}
+		],
+		"name": "RoleRevoked",
+		"type": "event"
+	},
+	{
+		"inputs": [
+			{
 				"internalType": "string",
-				"name": "evidenceID",
+				"name": "evidenceId",
 				"type": "string"
 			},
 			{
 				"internalType": "string",
-				"name": "judgmentText",
+				"name": "judgment",
 				"type": "string"
 			},
 			{
-				"internalType": "string",
-				"name": "closingDate",
-				"type": "string"
+				"internalType": "uint256",
+				"name": "closingTimestamp",
+				"type": "uint256"
 			},
 			{
 				"internalType": "string",
@@ -643,67 +892,13 @@
 		"type": "function"
 	},
 	{
-		"inputs": [
-			{
-				"internalType": "string",
-				"name": "",
-				"type": "string"
-			},
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"name": "aadhaarCases",
+		"inputs": [],
+		"name": "COURT_ROLE",
 		"outputs": [
 			{
-				"internalType": "string",
+				"internalType": "bytes32",
 				"name": "",
-				"type": "string"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "string",
-				"name": "",
-				"type": "string"
-			}
-		],
-		"name": "aadhaarUniqueID",
-		"outputs": [
-			{
-				"internalType": "string",
-				"name": "",
-				"type": "string"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "string",
-				"name": "",
-				"type": "string"
-			},
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"name": "accusedCases",
-		"outputs": [
-			{
-				"internalType": "string",
-				"name": "",
-				"type": "string"
+				"type": "bytes32"
 			}
 		],
 		"stateMutability": "view",
@@ -711,71 +906,12 @@
 	},
 	{
 		"inputs": [],
-		"name": "caseCounter",
+		"name": "DEFAULT_ADMIN_ROLE",
 		"outputs": [
 			{
-				"internalType": "uint256",
+				"internalType": "bytes32",
 				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "string",
-				"name": "",
-				"type": "string"
-			}
-		],
-		"name": "cases",
-		"outputs": [
-			{
-				"internalType": "string",
-				"name": "uniqueCaseID",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "evidenceID",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "aadhaar",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "accused",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "details",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "location",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "officer",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "crimeDate",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "regDate",
-				"type": "string"
+				"type": "bytes32"
 			}
 		],
 		"stateMutability": "view",
@@ -783,12 +919,12 @@
 	},
 	{
 		"inputs": [],
-		"name": "evidenceCounter",
+		"name": "getAllEvidenceIds",
 		"outputs": [
 			{
-				"internalType": "uint256",
+				"internalType": "string[]",
 				"name": "",
-				"type": "uint256"
+				"type": "string[]"
 			}
 		],
 		"stateMutability": "view",
@@ -798,56 +934,17 @@
 		"inputs": [
 			{
 				"internalType": "string",
-				"name": "",
+				"name": "evidenceId",
 				"type": "string"
 			}
 		],
-		"name": "judgments",
-		"outputs": [
-			{
-				"internalType": "string",
-				"name": "evidenceID",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "judgmentText",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "closingDate",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "rejudgment",
-				"type": "string"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "string",
-				"name": "aadhaar",
-				"type": "string"
-			}
-		],
-		"name": "trackByAadhaar",
+		"name": "getCase",
 		"outputs": [
 			{
 				"components": [
 					{
 						"internalType": "string",
-						"name": "uniqueCaseID",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "evidenceID",
+						"name": "evidenceId",
 						"type": "string"
 					},
 					{
@@ -857,251 +954,214 @@
 					},
 					{
 						"internalType": "string",
-						"name": "accused",
+						"name": "accusedName",
 						"type": "string"
 					},
 					{
 						"internalType": "string",
-						"name": "details",
+						"name": "caseDetails",
 						"type": "string"
 					},
 					{
 						"internalType": "string",
-						"name": "location",
+						"name": "crimeLocation",
 						"type": "string"
 					},
 					{
-						"internalType": "string",
-						"name": "officer",
-						"type": "string"
+						"internalType": "uint256",
+						"name": "crimeTimestamp",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "registerTimestamp",
+						"type": "uint256"
 					},
 					{
 						"internalType": "string",
-						"name": "crimeDate",
+						"name": "judgment",
 						"type": "string"
 					},
 					{
-						"internalType": "string",
-						"name": "regDate",
-						"type": "string"
-					}
-				],
-				"internalType": "struct EvidenceTracking.Case[]",
-				"name": "",
-				"type": "tuple[]"
-			},
-			{
-				"components": [
-					{
-						"internalType": "string",
-						"name": "evidenceID",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "judgmentText",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "closingDate",
-						"type": "string"
+						"internalType": "uint256",
+						"name": "closingTimestamp",
+						"type": "uint256"
 					},
 					{
 						"internalType": "string",
 						"name": "rejudgment",
 						"type": "string"
+					},
+					{
+						"internalType": "address",
+						"name": "registeredBy",
+						"type": "address"
+					},
+					{
+						"internalType": "address",
+						"name": "judgedBy",
+						"type": "address"
 					}
 				],
-				"internalType": "struct EvidenceTracking.Judgment[]",
-				"name": "",
-				"type": "tuple[]"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "string",
-				"name": "accusedName",
-				"type": "string"
-			}
-		],
-		"name": "trackByAccused",
-		"outputs": [
-			{
-				"components": [
-					{
-						"internalType": "string",
-						"name": "uniqueCaseID",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "evidenceID",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "aadhaar",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "accused",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "details",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "location",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "officer",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "crimeDate",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "regDate",
-						"type": "string"
-					}
-				],
-				"internalType": "struct EvidenceTracking.Case[]",
-				"name": "",
-				"type": "tuple[]"
-			},
-			{
-				"components": [
-					{
-						"internalType": "string",
-						"name": "evidenceID",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "judgmentText",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "closingDate",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "rejudgment",
-						"type": "string"
-					}
-				],
-				"internalType": "struct EvidenceTracking.Judgment[]",
-				"name": "",
-				"type": "tuple[]"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "string",
-				"name": "evidenceID",
-				"type": "string"
-			}
-		],
-		"name": "trackByEvidenceID",
-		"outputs": [
-			{
-				"components": [
-					{
-						"internalType": "string",
-						"name": "uniqueCaseID",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "evidenceID",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "aadhaar",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "accused",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "details",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "location",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "officer",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "crimeDate",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "regDate",
-						"type": "string"
-					}
-				],
-				"internalType": "struct EvidenceTracking.Case",
+				"internalType": "struct EvidenceTrackingSystem.Case",
 				"name": "",
 				"type": "tuple"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "bytes32",
+				"name": "role",
+				"type": "bytes32"
+			}
+		],
+		"name": "getRoleAdmin",
+		"outputs": [
+			{
+				"internalType": "bytes32",
+				"name": "",
+				"type": "bytes32"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "bytes32",
+				"name": "role",
+				"type": "bytes32"
 			},
+			{
+				"internalType": "address",
+				"name": "account",
+				"type": "address"
+			}
+		],
+		"name": "hasRole",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "POLICE_ROLE",
+		"outputs": [
+			{
+				"internalType": "bytes32",
+				"name": "",
+				"type": "bytes32"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "searchTerm",
+				"type": "string"
+			}
+		],
+		"name": "searchCases",
+		"outputs": [
 			{
 				"components": [
 					{
 						"internalType": "string",
-						"name": "evidenceID",
+						"name": "evidenceId",
 						"type": "string"
 					},
 					{
 						"internalType": "string",
-						"name": "judgmentText",
+						"name": "aadhaar",
 						"type": "string"
 					},
 					{
 						"internalType": "string",
-						"name": "closingDate",
+						"name": "accusedName",
 						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "caseDetails",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "crimeLocation",
+						"type": "string"
+					},
+					{
+						"internalType": "uint256",
+						"name": "crimeTimestamp",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "registerTimestamp",
+						"type": "uint256"
+					},
+					{
+						"internalType": "string",
+						"name": "judgment",
+						"type": "string"
+					},
+					{
+						"internalType": "uint256",
+						"name": "closingTimestamp",
+						"type": "uint256"
 					},
 					{
 						"internalType": "string",
 						"name": "rejudgment",
 						"type": "string"
+					},
+					{
+						"internalType": "address",
+						"name": "registeredBy",
+						"type": "address"
+					},
+					{
+						"internalType": "address",
+						"name": "judgedBy",
+						"type": "address"
 					}
 				],
-				"internalType": "struct EvidenceTracking.Judgment",
+				"internalType": "struct EvidenceTrackingSystem.Case[]",
 				"name": "",
-				"type": "tuple"
+				"type": "tuple[]"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "bytes4",
+				"name": "interfaceId",
+				"type": "bytes4"
+			}
+		],
+		"name": "supportsInterface",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
 			}
 		],
 		"stateMutability": "view",
@@ -1113,7 +1173,6 @@
             localStorage.setItem('evidenceCases', JSON.stringify(cases));
             localStorage.setItem('evidenceCounter', evidenceCounter.toString());
         }
-
         // Wallet connection functions
         async function connectWallet() {
             if (typeof window.ethereum !== 'undefined') {
